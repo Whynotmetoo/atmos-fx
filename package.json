@@ -1,0 +1,57 @@
+{
+  "name": "atoms-fx",
+  "version": "0.0.0",
+  "description": "DOM-aware atmosphere effects for creative interfaces.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Whynotmetoo/atoms-fx.git"
+  },
+  "keywords": [
+    "atmosphere",
+    "canvas",
+    "creative-coding",
+    "dom-effects",
+    "weather"
+  ],
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react.js"
+    },
+    "./styles.css": "./dist/atoms-fx.css"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && npm run build:bundle && npm run build:types && npm run build:styles",
+    "build:bundle": "vite build",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build:styles": "mkdir -p dist/styles && cp src/styles/atoms-fx.css dist/atoms-fx.css && cp src/styles/atoms-fx.css dist/styles/atoms-fx.css",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0 || >=19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@vitejs/plugin-react": "^6.0.2",
+    "react": "^19.2.7",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
+  }
+}
