@@ -28,6 +28,9 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
   const previousPosition = root.style.position
   const computedPosition =
     typeof window === 'undefined' ? '' : window.getComputedStyle(root).position
+  const shouldSetPosition =
+    previousPosition === 'static' ||
+    (!previousPosition && (!computedPosition || computedPosition === 'static'))
 
   canvas.dataset.atomsLayer = 'weather'
   canvas.setAttribute('aria-hidden', 'true')
@@ -38,7 +41,7 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
   canvas.style.pointerEvents = 'none'
   canvas.style.zIndex = '0'
 
-  if (!previousPosition && (!computedPosition || computedPosition === 'static')) {
+  if (shouldSetPosition) {
     root.style.position = 'relative'
   }
 

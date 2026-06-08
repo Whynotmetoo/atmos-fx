@@ -56,6 +56,24 @@ function setReducedMotion(matches: boolean) {
   return mediaQuery
 }
 
+function setLegacyReducedMotion(matches: boolean) {
+  const mediaQuery = {
+    matches,
+    media: '(prefers-reduced-motion: reduce)',
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }
+
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn(() => mediaQuery),
+  })
+
+  return mediaQuery
+}
+
 describe('createAtmosphere', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
@@ -115,6 +133,17 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBe('running')
   })
 
+  it('does not resume a manual pause during option updates', () => {
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+    controller.pause()
+    controller.update({ density: 0.8 })
+
+    expect(root.dataset.atomsFx).toBe('paused')
+  })
+
   it('pauses while the document is hidden and resumes when visible', () => {
     const root = createRoot()
     const controller = createAtmosphere(root)
@@ -131,6 +160,20 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBe('running')
   })
 
+  it('resumes when hidden-document auto-pause is disabled by update', () => {
+    setDocumentHidden(true)
+
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+    expect(root.dataset.atomsFx).toBe('paused')
+
+    controller.update({ pauseWhenHidden: false })
+
+    expect(root.dataset.atomsFx).toBe('running')
+  })
+
   it('starts paused when reduced motion is requested', () => {
     setReducedMotion(true)
 
@@ -140,6 +183,20 @@ describe('createAtmosphere', () => {
     controller.start()
 
     expect(root.dataset.atomsFx).toBe('paused')
+  })
+
+  it('resumes when reduced-motion auto-pause is disabled by update', () => {
+    setReducedMotion(true)
+
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+    expect(root.dataset.atomsFx).toBe('paused')
+
+    controller.update({ respectReducedMotion: false })
+
+    expect(root.dataset.atomsFx).toBe('running')
   })
 
   it('reacts to reduced motion preference changes', () => {
@@ -161,6 +218,26 @@ describe('createAtmosphere', () => {
     handleChange(new Event('change'))
 
     expect(root.dataset.atomsFx).toBe('running')
+  })
+
+  it('supports legacy reduced-motion media query listeners', () => {
+    const mediaQuery = setLegacyReducedMotion(false)
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+
+    expect(mediaQuery.addListener).toHaveBeenCalledOnce()
+
+    const handleChange = mediaQuery.addListener.mock.calls[0]?.[0]
+    mediaQuery.matches = true
+    handleChange()
+
+    expect(root.dataset.atomsFx).toBe('paused')
+
+    controller.destroy()
+
+    expect(mediaQuery.removeListener).toHaveBeenCalledWith(handleChange)
   })
 
   it('resizes the canvas layer on demand', () => {
@@ -187,5 +264,20 @@ describe('createAtmosphere', () => {
 
     expect(canvas?.width).toBe(400)
     expect(canvas?.height).toBe(200)
+  })
+
+  it('overrides inline static positioning while the canvas layer exists', () => {
+    const root = createRoot()
+    root.style.position = 'static'
+
+    const controller = createAtmosphere(root)
+
+    controller.start()
+
+    expect(root.style.position).toBe('relative')
+
+    controller.destroy()
+
+    expect(root.style.position).toBe('static')
   })
 })

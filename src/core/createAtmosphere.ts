@@ -18,6 +18,23 @@ function getReducedMotionQuery(): MediaQueryList | undefined {
   return window.matchMedia('(prefers-reduced-motion: reduce)')
 }
 
+function addReducedMotionListener(
+  query: MediaQueryList | undefined,
+  listener: () => void,
+): () => void {
+  if (!query) {
+    return () => undefined
+  }
+
+  if (typeof query.addEventListener === 'function') {
+    query.addEventListener('change', listener)
+    return () => query.removeEventListener('change', listener)
+  }
+
+  query.addListener(listener)
+  return () => query.removeListener(listener)
+}
+
 export function createAtmosphere(
   element: HTMLElement,
   options: AtmosphereOptions = {},
@@ -33,6 +50,7 @@ export function createAtmosphere(
   let canvasLayer: CanvasLayer | undefined
   let visibilityPaused = false
   let reducedMotionPaused = false
+  let manuallyPaused = false
 
   const scheduler = createAnimationScheduler(() => {
     canvasLayer?.resize()
@@ -75,20 +93,28 @@ export function createAtmosphere(
   const shouldPauseForHiddenDocument = () =>
     normalizedOptions.pauseWhenHidden && ownerDocument.hidden
 
+  const hasAutoPause = () => visibilityPaused || reducedMotionPaused
+
+  const refreshAutoPauseFlags = () => {
+    visibilityPaused = shouldPauseForHiddenDocument()
+    reducedMotionPaused = shouldReduceMotion()
+  }
+
   const startAnimationIfAllowed = () => {
-    if (state !== 'running') {
+    if (state === 'destroyed' || state === 'stopped' || manuallyPaused) {
       scheduler.stop()
       return
     }
 
-    if (shouldReduceMotion() || shouldPauseForHiddenDocument()) {
+    refreshAutoPauseFlags()
+
+    if (hasAutoPause()) {
       scheduler.stop()
       setState('paused')
-      reducedMotionPaused = shouldReduceMotion()
-      visibilityPaused = shouldPauseForHiddenDocument()
       return
     }
 
+    setState('running')
     scheduler.start()
   }
 
@@ -107,8 +133,7 @@ export function createAtmosphere(
     if (!ownerDocument.hidden && visibilityPaused) {
       visibilityPaused = false
 
-      if (!reducedMotionPaused) {
-        setState('running')
+      if (!hasAutoPause() && !manuallyPaused) {
         startAnimationIfAllowed()
       }
     }
@@ -129,21 +154,24 @@ export function createAtmosphere(
     if (!shouldReduceMotion() && reducedMotionPaused) {
       reducedMotionPaused = false
 
-      if (!visibilityPaused) {
-        setState('running')
+      if (!hasAutoPause() && !manuallyPaused) {
         startAnimationIfAllowed()
       }
     }
   }
 
   ownerDocument.addEventListener('visibilitychange', handleVisibilityChange)
-  reducedMotionQuery?.addEventListener('change', handleReducedMotionChange)
+  const removeReducedMotionListener = addReducedMotionListener(
+    reducedMotionQuery,
+    handleReducedMotionChange,
+  )
 
   const controller: AtmosphereController = {
     start() {
       assertActive()
       ensureCanvasLayer()
       syncDataset()
+      manuallyPaused = false
       setState('running')
       startAnimationIfAllowed()
     },
@@ -151,12 +179,16 @@ export function createAtmosphere(
       assertActive()
       visibilityPaused = false
       reducedMotionPaused = false
+      manuallyPaused = false
       scheduler.stop()
       setState('stopped')
     },
     pause() {
       assertActive()
       if (state === 'running') {
+        manuallyPaused = true
+        visibilityPaused = false
+        reducedMotionPaused = false
         scheduler.stop()
         setState('paused')
       }
@@ -164,6 +196,7 @@ export function createAtmosphere(
     resume() {
       assertActive()
       if (state === 'paused') {
+        manuallyPaused = false
         visibilityPaused = false
         reducedMotionPaused = false
         setState('running')
@@ -185,7 +218,7 @@ export function createAtmosphere(
     },
     destroy() {
       ownerDocument.removeEventListener('visibilitychange', handleVisibilityChange)
-      reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
+      removeReducedMotionListener()
       scheduler.stop()
       canvasLayer?.destroy()
       canvasLayer = undefined
