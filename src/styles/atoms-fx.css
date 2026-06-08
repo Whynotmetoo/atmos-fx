@@ -1,0 +1,15 @@
+[data-atoms-fx] {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[data-atoms-fx] > :not([data-atoms-opaque]) {
+  position: relative;
+  z-index: 1;
+}
+
+[data-atoms-fx][data-atoms-transparency='glass'] > :not([data-atoms-opaque]) {
+  background-color: color-mix(in srgb, white 12%, transparent);
+  backdrop-filter: blur(16px) saturate(1.15);
+}
