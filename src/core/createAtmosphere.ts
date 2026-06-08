@@ -1,11 +1,39 @@
+import { createCanvasLayer } from '../dom/canvasLayer'
 import { normalizeAtmosphereOptions } from './options'
+import { createAnimationScheduler } from './scheduler'
 import type {
   AtmosphereController,
   AtmosphereOptions,
   NormalizedAtmosphereOptions,
 } from './types'
+import type { CanvasLayer } from '../dom/canvasLayer'
 
 type ControllerState = 'idle' | 'running' | 'paused' | 'stopped' | 'destroyed'
+
+function getReducedMotionQuery(): MediaQueryList | undefined {
+  if (typeof window === 'undefined' || !window.matchMedia) {
+    return undefined
+  }
+
+  return window.matchMedia('(prefers-reduced-motion: reduce)')
+}
+
+function addReducedMotionListener(
+  query: MediaQueryList | undefined,
+  listener: () => void,
+): () => void {
+  if (!query) {
+    return () => undefined
+  }
+
+  if (typeof query.addEventListener === 'function') {
+    query.addEventListener('change', listener)
+    return () => query.removeEventListener('change', listener)
+  }
+
+  query.addListener(listener)
+  return () => query.removeListener(listener)
+}
 
 export function createAtmosphere(
   element: HTMLElement,
@@ -15,8 +43,18 @@ export function createAtmosphere(
     throw new TypeError('createAtmosphere requires an HTMLElement root.')
   }
 
+  const ownerDocument = element.ownerDocument
+  const reducedMotionQuery = getReducedMotionQuery()
   let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(options)
   let state: ControllerState = 'idle'
+  let canvasLayer: CanvasLayer | undefined
+  let visibilityPaused = false
+  let reducedMotionPaused = false
+  let manuallyPaused = false
+
+  const scheduler = createAnimationScheduler(() => {
+    canvasLayer?.resize()
+  })
 
   const assertActive = () => {
     if (state === 'destroyed') {
@@ -27,36 +65,147 @@ export function createAtmosphere(
   const syncDataset = () => {
     element.dataset.atomsFxPreset = normalizedOptions.preset
     element.dataset.atomsTransparency = normalizedOptions.transparency
+    element.dataset.atomsParticle = normalizedOptions.particle
   }
 
-  return {
+  const setState = (nextState: ControllerState) => {
+    state = nextState
+
+    if (nextState === 'destroyed') {
+      delete element.dataset.atomsFx
+      return
+    }
+
+    element.dataset.atomsFx = nextState
+  }
+
+  const ensureCanvasLayer = () => {
+    if (!canvasLayer) {
+      canvasLayer = createCanvasLayer(element)
+    }
+
+    canvasLayer.resize()
+  }
+
+  const shouldReduceMotion = () =>
+    normalizedOptions.respectReducedMotion && Boolean(reducedMotionQuery?.matches)
+
+  const shouldPauseForHiddenDocument = () =>
+    normalizedOptions.pauseWhenHidden && ownerDocument.hidden
+
+  const hasAutoPause = () => visibilityPaused || reducedMotionPaused
+
+  const refreshAutoPauseFlags = () => {
+    visibilityPaused = shouldPauseForHiddenDocument()
+    reducedMotionPaused = shouldReduceMotion()
+  }
+
+  const startAnimationIfAllowed = () => {
+    if (state === 'destroyed' || state === 'stopped' || manuallyPaused) {
+      scheduler.stop()
+      return
+    }
+
+    refreshAutoPauseFlags()
+
+    if (hasAutoPause()) {
+      scheduler.stop()
+      setState('paused')
+      return
+    }
+
+    setState('running')
+    scheduler.start()
+  }
+
+  const handleVisibilityChange = () => {
+    if (!normalizedOptions.pauseWhenHidden || state === 'destroyed' || state === 'stopped') {
+      return
+    }
+
+    if (ownerDocument.hidden && state === 'running') {
+      visibilityPaused = true
+      scheduler.stop()
+      setState('paused')
+      return
+    }
+
+    if (!ownerDocument.hidden && visibilityPaused) {
+      visibilityPaused = false
+
+      if (!hasAutoPause() && !manuallyPaused) {
+        startAnimationIfAllowed()
+      }
+    }
+  }
+
+  const handleReducedMotionChange = () => {
+    if (!normalizedOptions.respectReducedMotion || state === 'destroyed' || state === 'stopped') {
+      return
+    }
+
+    if (shouldReduceMotion() && state === 'running') {
+      reducedMotionPaused = true
+      scheduler.stop()
+      setState('paused')
+      return
+    }
+
+    if (!shouldReduceMotion() && reducedMotionPaused) {
+      reducedMotionPaused = false
+
+      if (!hasAutoPause() && !manuallyPaused) {
+        startAnimationIfAllowed()
+      }
+    }
+  }
+
+  ownerDocument.addEventListener('visibilitychange', handleVisibilityChange)
+  const removeReducedMotionListener = addReducedMotionListener(
+    reducedMotionQuery,
+    handleReducedMotionChange,
+  )
+
+  const controller: AtmosphereController = {
     start() {
       assertActive()
-      state = 'running'
-      element.dataset.atomsFx = 'running'
+      ensureCanvasLayer()
       syncDataset()
+      manuallyPaused = false
+      setState('running')
+      startAnimationIfAllowed()
     },
     stop() {
       assertActive()
-      state = 'stopped'
-      element.dataset.atomsFx = 'stopped'
+      visibilityPaused = false
+      reducedMotionPaused = false
+      manuallyPaused = false
+      scheduler.stop()
+      setState('stopped')
     },
     pause() {
       assertActive()
       if (state === 'running') {
-        state = 'paused'
-        element.dataset.atomsFx = 'paused'
+        manuallyPaused = true
+        visibilityPaused = false
+        reducedMotionPaused = false
+        scheduler.stop()
+        setState('paused')
       }
     },
     resume() {
       assertActive()
       if (state === 'paused') {
-        state = 'running'
-        element.dataset.atomsFx = 'running'
+        manuallyPaused = false
+        visibilityPaused = false
+        reducedMotionPaused = false
+        setState('running')
+        startAnimationIfAllowed()
       }
     },
     resize() {
       assertActive()
+      canvasLayer?.resize()
     },
     update(nextOptions) {
       assertActive()
@@ -65,12 +214,20 @@ export function createAtmosphere(
         ...nextOptions,
       })
       syncDataset()
+      startAnimationIfAllowed()
     },
     destroy() {
-      state = 'destroyed'
-      delete element.dataset.atomsFx
+      ownerDocument.removeEventListener('visibilitychange', handleVisibilityChange)
+      removeReducedMotionListener()
+      scheduler.stop()
+      canvasLayer?.destroy()
+      canvasLayer = undefined
+      setState('destroyed')
       delete element.dataset.atomsFxPreset
       delete element.dataset.atomsTransparency
+      delete element.dataset.atomsParticle
     },
   }
+
+  return controller
 }

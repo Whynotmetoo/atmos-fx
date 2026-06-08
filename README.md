@@ -39,8 +39,9 @@ export function WeatherPanel() {
 
 ```bash
 npm install
+npm run typecheck
 npm run build
 npm test
 ```
 
-The current implementation is the project foundation. Rendering, glass orchestration, collision, and docs playground work will land in focused follow-up PRs.
+The current implementation includes the project foundation plus the core lifecycle shell: canvas layer management, start/stop/pause/resume/update/destroy behavior, visibility pausing, and reduced-motion handling. Weather rendering, glass orchestration, collision, and docs playground work will land in focused follow-up PRs.
