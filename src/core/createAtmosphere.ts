@@ -1,4 +1,5 @@
 import { createCanvasLayer } from '../dom/canvasLayer'
+import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
 import { createRainRenderer } from '../renderers/canvas2d/rain'
 import { normalizeAtmosphereOptions } from './options'
@@ -62,6 +63,14 @@ export function createAtmosphere(
     renderer?.render(time)
   })
 
+  const collisionTargetManager = createCollisionTargetManager(
+    element,
+    normalizedOptions,
+    (targets) => {
+      renderer?.setCollisionTargets(targets)
+    },
+  )
+
   const assertActive = () => {
     if (state === 'destroyed') {
       throw new Error('Cannot use an atmosphere controller after destroy().')
@@ -72,6 +81,10 @@ export function createAtmosphere(
     element.dataset.atomsFxPreset = normalizedOptions.preset
     element.dataset.atomsParticle = normalizedOptions.particle
     glassController.sync(normalizedOptions)
+  }
+
+  const syncCollisionTargets = () => {
+    renderer?.setCollisionTargets(collisionTargetManager.updateOptions(normalizedOptions))
   }
 
   const setState = (nextState: ControllerState) => {
@@ -98,6 +111,7 @@ export function createAtmosphere(
 
     if (size) {
       renderer?.resize(size)
+      renderer?.setCollisionTargets(collisionTargetManager.refresh())
     }
 
     return size
@@ -116,10 +130,12 @@ export function createAtmosphere(
 
     if (!renderer) {
       renderer = createRainRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      renderer.setCollisionTargets(collisionTargetManager.getTargets())
       return
     }
 
     renderer.updateOptions(normalizedOptions)
+    renderer.setCollisionTargets(collisionTargetManager.getTargets())
   }
 
   const shouldReduceMotion = () =>
@@ -215,6 +231,7 @@ export function createAtmosphere(
       assertActive()
       const size = ensureCanvasLayer()
       syncDataset()
+      syncCollisionTargets()
       ensureRenderer()
       renderer?.resize(size)
       manuallyPaused = false
@@ -261,6 +278,7 @@ export function createAtmosphere(
         ...nextOptions,
       })
       syncDataset()
+      syncCollisionTargets()
       ensureRenderer()
       startAnimationIfAllowed()
     },
@@ -270,6 +288,7 @@ export function createAtmosphere(
       resizeObserver?.disconnect()
       removeReducedMotionListener()
       scheduler.stop()
+      collisionTargetManager.destroy()
       renderer?.destroy()
       renderer = undefined
       glassController.destroy()

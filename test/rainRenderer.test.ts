@@ -3,6 +3,17 @@ import type { NormalizedAtmosphereOptions } from '../src/core/types'
 import type { CanvasLayerSize } from '../src/dom/canvasLayer'
 import { createRainRenderer } from '../src/renderers/canvas2d/rain'
 
+type MutableRainParticle = {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  length: number
+  width: number
+  alpha: number
+  depth: number
+}
+
 function createContext() {
   return {
     setTransform: vi.fn(),
@@ -102,5 +113,34 @@ describe('RainRenderer', () => {
 
     expect(context.clearRect).toHaveBeenCalledWith(0, 0, 800, 600)
     expect(renderer.getParticleCount()).toBe(count)
+  })
+
+  it('spawns splash particles when rain crosses a collision top edge', () => {
+    const renderer = createRainRenderer(createCanvas(createContext()), size, options)
+    const particle = (renderer as unknown as { particles: MutableRainParticle[] }).particles[0]
+
+    particle.x = 120
+    particle.y = 90
+    particle.vx = 0
+    particle.vy = 1200
+    particle.length = 18
+    particle.width = 1
+    particle.alpha = 0.7
+    particle.depth = 1
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    renderer.render(16)
+
+    expect(renderer.getActiveSplashCount()).toBeGreaterThan(0)
   })
 })
