@@ -70,8 +70,16 @@ export class SnowRenderer implements Canvas2DRenderer {
   }
 
   updateOptions(options: NormalizedAtmosphereOptions) {
+    const shouldReseedMotion =
+      options.speed !== this.options.speed || options.wind !== this.options.wind
     this.options = options
     this.syncParticleBudget(false)
+
+    if (shouldReseedMotion) {
+      for (const particle of this.particles) {
+        recycleParticle(particle, this.size, this.options, true)
+      }
+    }
   }
 
   setCollisionTargets(_targets: readonly CollisionTargetRect[]) {

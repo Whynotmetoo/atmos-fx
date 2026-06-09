@@ -3,6 +3,11 @@ import type { NormalizedAtmosphereOptions } from '../src/core/types'
 import type { CanvasLayerSize } from '../src/dom/canvasLayer'
 import { createSnowRenderer } from '../src/renderers/canvas2d/snow'
 
+type MutableSnowParticle = {
+  vx: number
+  vy: number
+}
+
 function createContext() {
   return {
     setTransform: vi.fn(),
@@ -79,6 +84,25 @@ describe('SnowRenderer', () => {
     expect(context.arc).toHaveBeenCalled()
     expect(context.fill).toHaveBeenCalled()
     expect(renderer.getParticleCount()).toBe(count)
+  })
+
+  it('re-seeds existing flake motion when speed changes from zero', () => {
+    const renderer = createSnowRenderer(createCanvas(createContext()), size, {
+      ...options,
+      speed: 0,
+      wind: 0,
+    })
+    const particles = (renderer as unknown as { particles: MutableSnowParticle[] }).particles
+
+    expect(particles.every((particle) => particle.vx === 0 && particle.vy === 0)).toBe(true)
+
+    renderer.updateOptions({
+      ...options,
+      speed: 1,
+      wind: 0.2,
+    })
+
+    expect(particles.some((particle) => particle.vx !== 0 || particle.vy > 0)).toBe(true)
   })
 
   it('clears the canvas and releases particles on destroy', () => {

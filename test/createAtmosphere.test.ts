@@ -199,6 +199,21 @@ describe('createAtmosphere', () => {
     controller.destroy()
   })
 
+  it('keeps controller options isolated from caller object mutations', () => {
+    const root = createRoot()
+    const options = { preset: 'snow' as 'rain' | 'snow' }
+    const controller = createAtmosphere(root, options)
+
+    controller.start()
+    options.preset = 'rain'
+    controller.update({ density: 0.8 })
+
+    expect(root.dataset.atomsFxPreset).toBe('snow')
+    expect(root.dataset.atomsParticle).toBe('snow')
+
+    controller.destroy()
+  })
+
   it('supports manual pause and resume', () => {
     const root = createRoot()
     const controller = createAtmosphere(root)

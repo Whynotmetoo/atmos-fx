@@ -53,7 +53,7 @@ export function createAtmosphere(
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   const glassController = createGlassController(element)
-  let currentOptions: AtmosphereOptions = options
+  let currentOptions: AtmosphereOptions = { ...options }
   let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(currentOptions)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
