@@ -72,6 +72,8 @@ React is available from `atoms-fx/react`:
 <Atmosphere preset="snow" density={0.5} />
 ```
 
+React is an optional peer dependency. Install it only when using the React adapter.
+
 ## Performance Notes
 
 - Prefer `quality: 'auto'` for responsive pages.
@@ -104,3 +106,14 @@ Then visit `http://127.0.0.1:4173/examples/rain.html` and use the preset switche
 The React adapter smoke page is available at `http://127.0.0.1:4173/examples/react.html`.
 
 The interactive docs playground is available at `http://127.0.0.1:4173/docs/`.
+
+## Release and Contribution Docs
+
+- Accessibility guidance: `docs/accessibility.md`
+- Release checklist: `docs/release-checklist.md`
+- Changelog: `CHANGELOG.md`
+- Contributing: `CONTRIBUTING.md`
+
+## License
+
+MIT
