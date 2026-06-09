@@ -1,6 +1,9 @@
 import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
+import type { CollisionTargetRect } from '../../dom/collisionTargets'
+import { findTopEdgeCollision } from './collision'
 import { calculateRainParticleBudget } from './quality'
+import { SplashPool } from './splash'
 import type { Canvas2DRenderer } from './types'
 
 type RainParticle = {
@@ -43,6 +46,8 @@ function recycleParticle(
 export class RainRenderer implements Canvas2DRenderer {
   private readonly context: CanvasRenderingContext2D | null
   private particles: RainParticle[] = []
+  private collisionTargets: readonly CollisionTargetRect[] = []
+  private readonly splashes = new SplashPool()
   private lastTime: number | undefined
   private size: CanvasLayerSize
   private options: NormalizedAtmosphereOptions
@@ -68,6 +73,10 @@ export class RainRenderer implements Canvas2DRenderer {
     this.syncParticleBudget(false)
   }
 
+  setCollisionTargets(targets: readonly CollisionTargetRect[]) {
+    this.collisionTargets = targets
+  }
+
   render(time: number) {
     if (!this.context || this.size.width <= 0 || this.size.height <= 0) {
       return
@@ -90,8 +99,26 @@ export class RainRenderer implements Canvas2DRenderer {
 
     for (let index = 0; index < this.particles.length; index += 1) {
       const particle = this.particles[index]
-      particle.x += particle.vx * deltaSeconds
-      particle.y += particle.vy * deltaSeconds
+      const previousX = particle.x
+      const previousY = particle.y
+      const nextX = particle.x + particle.vx * deltaSeconds
+      const nextY = particle.y + particle.vy * deltaSeconds
+      const collision = findTopEdgeCollision(
+        previousX,
+        previousY,
+        nextX,
+        nextY,
+        this.collisionTargets,
+      )
+
+      if (collision) {
+        this.splashes.spawn(collision.x, collision.y, particle.vx, particle.depth)
+        recycleParticle(particle, this.size, this.options)
+        continue
+      }
+
+      particle.x = nextX
+      particle.y = nextY
 
       if (
         particle.y - particle.length > this.size.height ||
@@ -112,10 +139,13 @@ export class RainRenderer implements Canvas2DRenderer {
       context.stroke()
     }
 
+    this.splashes.render(context, deltaSeconds, this.size, this.options.color)
     context.globalAlpha = 1
   }
 
   clear() {
+    this.splashes.clear()
+
     if (this.context) {
       this.context.setTransform(this.size.pixelRatio, 0, 0, this.size.pixelRatio, 0, 0)
       this.context.clearRect(0, 0, this.size.width, this.size.height)
@@ -130,6 +160,10 @@ export class RainRenderer implements Canvas2DRenderer {
 
   getParticleCount() {
     return this.particles.length
+  }
+
+  getActiveSplashCount() {
+    return this.splashes.getActiveCount()
   }
 
   private syncParticleBudget(initial: boolean) {

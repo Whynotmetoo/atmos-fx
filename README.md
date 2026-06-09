@@ -27,7 +27,7 @@ export function WeatherPanel() {
   return (
     <Atmosphere preset="rain" density={0.7}>
       <section data-atoms-collision>
-        Rain can eventually land on this surface.
+        Rain can land on this surface and splash from the top edge.
       </section>
       <button data-atoms-opaque>Opaque action</button>
       <span data-atoms-opacity="0.64">Custom opacity</span>
@@ -43,6 +43,7 @@ Import `atoms-fx/styles.css` to enable the default content integration styles.
 - `data-atoms-opaque` keeps an element out of automatic glass or opacity treatment.
 - `data-atoms-opacity="0.64"` applies a per-element opacity value.
 - `data-atoms-glass` opts nested elements into the glass surface style.
+- `data-atoms-collision` makes the element's top edge a rain collision surface.
 - `transparency: 'glass' | 'opacity' | 'none'` controls the root integration mode.
 
 ## Development
@@ -54,7 +55,7 @@ npm run build
 npm test
 ```
 
-The current implementation includes the project foundation, the core lifecycle shell, and a Canvas 2D rain renderer with particle budgeting. Glass orchestration, collision, snow, and docs playground work will land in focused follow-up PRs.
+The current implementation includes the project foundation, the core lifecycle shell, a Canvas 2D rain renderer with particle budgeting, glass orchestration, and top-edge collision splashes. Snow and docs playground work will land in focused follow-up PRs.
 
 ## Local Smoke Test
 
