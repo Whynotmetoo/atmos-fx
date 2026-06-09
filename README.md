@@ -20,12 +20,15 @@ controller.start()
 ```
 
 ```tsx
+import { useRef } from 'react'
 import { Atmosphere } from 'atoms-fx/react'
 import 'atoms-fx/styles.css'
 
 export function WeatherPanel() {
+  const rootRef = useRef<HTMLDivElement>(null)
+
   return (
-    <Atmosphere preset="rain" density={0.7}>
+    <Atmosphere ref={rootRef} preset="rain" density={0.7} className="weather-panel">
       <section data-atoms-collision>
         Rain can land on this surface and splash from the top edge.
       </section>
@@ -67,3 +70,5 @@ npx vite --host 127.0.0.1 --port 4173
 ```
 
 Then visit `http://127.0.0.1:4173/examples/rain.html`.
+
+The React adapter smoke page is available at `http://127.0.0.1:4173/examples/react.html`.
