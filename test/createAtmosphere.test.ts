@@ -137,6 +137,32 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBeUndefined()
     expect(root.dataset.atomsFxPreset).toBeUndefined()
     expect(root.dataset.atomsParticle).toBeUndefined()
+    expect(root.dataset.atomsTransparency).toBeUndefined()
+  })
+
+  it('syncs glass controls during lifecycle updates', () => {
+    const root = createRoot()
+    const solid = document.createElement('button')
+    const translucent = document.createElement('div')
+    solid.className = 'solid'
+    translucent.dataset.atomsOpacity = '0.35'
+    root.append(solid, translucent)
+
+    const controller = createAtmosphere(root, { opaqueSelector: '.solid' })
+
+    controller.start()
+
+    expect(solid.dataset.atomsOpaque).toBe('managed')
+    expect(translucent.style.getPropertyValue('--atoms-fx-opacity')).toBe('0.35')
+
+    controller.update({ transparency: 'opacity' })
+
+    expect(root.dataset.atomsTransparency).toBe('opacity')
+
+    controller.destroy()
+
+    expect(solid.dataset.atomsOpaque).toBeUndefined()
+    expect(translucent.style.getPropertyValue('--atoms-fx-opacity')).toBe('')
   })
 
   it('clears rendered rain when stopped', () => {
