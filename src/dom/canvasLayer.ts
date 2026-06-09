@@ -1,7 +1,16 @@
 export type CanvasLayer = {
   canvas: HTMLCanvasElement
-  resize(): void
+  getSize(): CanvasLayerSize
+  resize(): CanvasLayerSize
   destroy(): void
+}
+
+export type CanvasLayerSize = {
+  width: number
+  height: number
+  pixelRatio: number
+  canvasWidth: number
+  canvasHeight: number
 }
 
 const MAX_DEVICE_PIXEL_RATIO = 2
@@ -47,6 +56,14 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
 
   root.prepend(canvas)
 
+  let size: CanvasLayerSize = {
+    width: 0,
+    height: 0,
+    pixelRatio: getPixelRatio(),
+    canvasWidth: 0,
+    canvasHeight: 0,
+  }
+
   const resize = () => {
     const { width, height } = getRootSize(root)
     const pixelRatio = getPixelRatio()
@@ -60,12 +77,25 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
     if (canvas.height !== nextHeight) {
       canvas.height = nextHeight
     }
+
+    size = {
+      width,
+      height,
+      pixelRatio,
+      canvasWidth: nextWidth,
+      canvasHeight: nextHeight,
+    }
+
+    return size
   }
 
   resize()
 
   return {
     canvas,
+    getSize() {
+      return size
+    },
     resize,
     destroy() {
       canvas.remove()

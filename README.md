@@ -44,4 +44,15 @@ npm run build
 npm test
 ```
 
-The current implementation includes the project foundation plus the core lifecycle shell: canvas layer management, start/stop/pause/resume/update/destroy behavior, visibility pausing, and reduced-motion handling. Weather rendering, glass orchestration, collision, and docs playground work will land in focused follow-up PRs.
+The current implementation includes the project foundation, the core lifecycle shell, and a Canvas 2D rain renderer with particle budgeting. Glass orchestration, collision, snow, and docs playground work will land in focused follow-up PRs.
+
+## Local Smoke Test
+
+After building, open the rain smoke example:
+
+```bash
+npm run build
+npx vite --host 127.0.0.1 --port 4173
+```
+
+Then visit `http://127.0.0.1:4173/examples/rain.html`.

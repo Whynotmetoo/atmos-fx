@@ -1,4 +1,5 @@
 import { createCanvasLayer } from '../dom/canvasLayer'
+import { createRainRenderer } from '../renderers/canvas2d/rain'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
 import type {
@@ -7,6 +8,7 @@ import type {
   NormalizedAtmosphereOptions,
 } from './types'
 import type { CanvasLayer } from '../dom/canvasLayer'
+import type { Canvas2DRenderer } from '../renderers/canvas2d/types'
 
 type ControllerState = 'idle' | 'running' | 'paused' | 'stopped' | 'destroyed'
 
@@ -44,16 +46,18 @@ export function createAtmosphere(
   }
 
   const ownerDocument = element.ownerDocument
+  const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(options)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
+  let renderer: Canvas2DRenderer | undefined
   let visibilityPaused = false
   let reducedMotionPaused = false
   let manuallyPaused = false
 
-  const scheduler = createAnimationScheduler(() => {
-    canvasLayer?.resize()
+  const scheduler = createAnimationScheduler((time) => {
+    renderer?.render(time)
   })
 
   const assertActive = () => {
@@ -84,7 +88,36 @@ export function createAtmosphere(
       canvasLayer = createCanvasLayer(element)
     }
 
-    canvasLayer.resize()
+    return canvasLayer.resize()
+  }
+
+  const resizeLayerAndRenderer = () => {
+    const size = canvasLayer?.resize()
+
+    if (size) {
+      renderer?.resize(size)
+    }
+
+    return size
+  }
+
+  const ensureRenderer = () => {
+    if (!canvasLayer) {
+      return
+    }
+
+    if (normalizedOptions.particle !== 'rain') {
+      renderer?.destroy()
+      renderer = undefined
+      return
+    }
+
+    if (!renderer) {
+      renderer = createRainRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      return
+    }
+
+    renderer.updateOptions(normalizedOptions)
   }
 
   const shouldReduceMotion = () =>
@@ -160,7 +193,16 @@ export function createAtmosphere(
     }
   }
 
+  const handleContainerResize = () => {
+    resizeLayerAndRenderer()
+  }
+
   ownerDocument.addEventListener('visibilitychange', handleVisibilityChange)
+  ownerWindow?.addEventListener('resize', handleContainerResize)
+  const ResizeObserverCtor = ownerWindow?.ResizeObserver
+  const resizeObserver =
+    ResizeObserverCtor === undefined ? undefined : new ResizeObserverCtor(handleContainerResize)
+  resizeObserver?.observe(element)
   const removeReducedMotionListener = addReducedMotionListener(
     reducedMotionQuery,
     handleReducedMotionChange,
@@ -169,8 +211,10 @@ export function createAtmosphere(
   const controller: AtmosphereController = {
     start() {
       assertActive()
-      ensureCanvasLayer()
+      const size = ensureCanvasLayer()
       syncDataset()
+      ensureRenderer()
+      renderer?.resize(size)
       manuallyPaused = false
       setState('running')
       startAnimationIfAllowed()
@@ -181,6 +225,7 @@ export function createAtmosphere(
       reducedMotionPaused = false
       manuallyPaused = false
       scheduler.stop()
+      renderer?.clear()
       setState('stopped')
     },
     pause() {
@@ -205,7 +250,7 @@ export function createAtmosphere(
     },
     resize() {
       assertActive()
-      canvasLayer?.resize()
+      resizeLayerAndRenderer()
     },
     update(nextOptions) {
       assertActive()
@@ -214,12 +259,17 @@ export function createAtmosphere(
         ...nextOptions,
       })
       syncDataset()
+      ensureRenderer()
       startAnimationIfAllowed()
     },
     destroy() {
       ownerDocument.removeEventListener('visibilitychange', handleVisibilityChange)
+      ownerWindow?.removeEventListener('resize', handleContainerResize)
+      resizeObserver?.disconnect()
       removeReducedMotionListener()
       scheduler.stop()
+      renderer?.destroy()
+      renderer = undefined
       canvasLayer?.destroy()
       canvasLayer = undefined
       setState('destroyed')
