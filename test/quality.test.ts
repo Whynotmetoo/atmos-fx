@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateRainParticleBudget,
+  calculateSnowParticleBudget,
   resolveAutoQuality,
 } from '../src/renderers/canvas2d/quality'
 
@@ -51,5 +52,24 @@ describe('canvas rain quality budgets', () => {
         quality: 'high',
       }),
     ).toBe(1200)
+  })
+
+  it('budgets snow independently from rain density', () => {
+    const lowDensityBudget = calculateSnowParticleBudget({
+      width: 800,
+      height: 600,
+      density: 0.2,
+      quality: 'medium',
+    })
+    const highDensityBudget = calculateSnowParticleBudget({
+      width: 800,
+      height: 600,
+      density: 1,
+      quality: 'medium',
+    })
+
+    expect(lowDensityBudget).toBeGreaterThan(0)
+    expect(highDensityBudget).toBeGreaterThan(lowDensityBudget)
+    expect(highDensityBudget).toBeLessThanOrEqual(680)
   })
 })

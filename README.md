@@ -58,17 +58,17 @@ npm run build
 npm test
 ```
 
-The current implementation includes the project foundation, the core lifecycle shell, a Canvas 2D rain renderer with particle budgeting, glass orchestration, and top-edge collision splashes. Snow and docs playground work will land in focused follow-up PRs.
+The current implementation includes the project foundation, the core lifecycle shell, Canvas 2D rain and snow renderers with particle budgeting, glass orchestration, and top-edge collision splashes for rain. Docs playground work will land in a focused follow-up PR.
 
 ## Local Smoke Test
 
-After building, open the rain smoke example:
+After building, open the weather smoke example:
 
 ```bash
 npm run build
 npx vite --host 127.0.0.1 --port 4173
 ```
 
-Then visit `http://127.0.0.1:4173/examples/rain.html`.
+Then visit `http://127.0.0.1:4173/examples/rain.html` and use the preset switcher to compare rain, storm, and snow.
 
 The React adapter smoke page is available at `http://127.0.0.1:4173/examples/react.html`.
