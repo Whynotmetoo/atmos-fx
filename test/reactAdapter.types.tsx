@@ -2,6 +2,13 @@ import { createRef } from 'react'
 import { Atmosphere, type AtmosphereProps } from '../src/react'
 
 const rootRef = createRef<HTMLDivElement>()
+const cleanupRef = (node: HTMLDivElement | null) => {
+  if (!node) {
+    return undefined
+  }
+
+  return () => undefined
+}
 
 export const reactAtmosphereProps: AtmosphereProps = {
   preset: 'storm',
@@ -19,6 +26,7 @@ export function ReactAdapterTypeSmoke() {
       <section data-atoms-collision>
         <button data-atoms-opaque>Action</button>
       </section>
+      <Atmosphere ref={cleanupRef} preset="rain" />
     </Atmosphere>
   )
 }

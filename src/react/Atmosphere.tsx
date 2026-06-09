@@ -6,13 +6,13 @@ import { createAtmosphere } from '../core/createAtmosphere'
 import type { AtmosphereController, AtmosphereOptions } from '../core/types'
 
 type AtmosphereElementProps = Omit<ComponentPropsWithoutRef<'div'>, keyof AtmosphereOptions>
+type RefCleanup = void | (() => void)
 
 export type AtmosphereProps = AtmosphereOptions & AtmosphereElementProps
 
-function assignRef<T>(ref: ForwardedRef<T>, value: T | null) {
+function assignRef<T>(ref: ForwardedRef<T>, value: T | null): RefCleanup {
   if (typeof ref === 'function') {
-    ref(value)
-    return
+    return ref(value)
   }
 
   if (ref) {
@@ -115,7 +115,24 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
   const setRootRef = useCallback(
     (node: HTMLDivElement | null) => {
       rootRef.current = node
-      assignRef(forwardedRef, node)
+      const cleanup = assignRef(forwardedRef, node)
+
+      if (node === null) {
+        return undefined
+      }
+
+      return () => {
+        if (rootRef.current === node) {
+          rootRef.current = null
+        }
+
+        if (typeof cleanup === 'function') {
+          cleanup()
+          return
+        }
+
+        assignRef(forwardedRef, null)
+      }
     },
     [forwardedRef],
   )
