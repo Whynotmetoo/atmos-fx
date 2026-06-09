@@ -1,4 +1,5 @@
 import { createCanvasLayer } from '../dom/canvasLayer'
+import { createGlassController } from '../dom/glass'
 import { createRainRenderer } from '../renderers/canvas2d/rain'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
@@ -48,6 +49,7 @@ export function createAtmosphere(
   const ownerDocument = element.ownerDocument
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
+  const glassController = createGlassController(element)
   let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(options)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
@@ -68,8 +70,8 @@ export function createAtmosphere(
 
   const syncDataset = () => {
     element.dataset.atomsFxPreset = normalizedOptions.preset
-    element.dataset.atomsTransparency = normalizedOptions.transparency
     element.dataset.atomsParticle = normalizedOptions.particle
+    glassController.sync(normalizedOptions)
   }
 
   const setState = (nextState: ControllerState) => {
@@ -270,11 +272,11 @@ export function createAtmosphere(
       scheduler.stop()
       renderer?.destroy()
       renderer = undefined
+      glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined
       setState('destroyed')
       delete element.dataset.atomsFxPreset
-      delete element.dataset.atomsTransparency
       delete element.dataset.atomsParticle
     },
   }

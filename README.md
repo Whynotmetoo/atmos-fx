@@ -30,10 +30,20 @@ export function WeatherPanel() {
         Rain can eventually land on this surface.
       </section>
       <button data-atoms-opaque>Opaque action</button>
+      <span data-atoms-opacity="0.64">Custom opacity</span>
     </Atmosphere>
   )
 }
 ```
+
+## DOM Controls
+
+Import `atoms-fx/styles.css` to enable the default content integration styles.
+
+- `data-atoms-opaque` keeps an element out of automatic glass or opacity treatment.
+- `data-atoms-opacity="0.64"` applies a per-element opacity value.
+- `data-atoms-glass` opts nested elements into the glass surface style.
+- `transparency: 'glass' | 'opacity' | 'none'` controls the root integration mode.
 
 ## Development
 
