@@ -17,6 +17,9 @@ export function findTopEdgeCollision(
     return undefined
   }
 
+  let nearestCollision: TopEdgeCollision | undefined
+  let nearestProgress = Number.POSITIVE_INFINITY
+
   for (const target of targets) {
     if (previousY > target.y || nextY < target.y) {
       continue
@@ -25,8 +28,9 @@ export function findTopEdgeCollision(
     const progress = (target.y - previousY) / (nextY - previousY)
     const hitX = previousX + (nextX - previousX) * progress
 
-    if (hitX >= target.x && hitX <= target.right) {
-      return {
+    if (hitX >= target.x && hitX <= target.right && progress < nearestProgress) {
+      nearestProgress = progress
+      nearestCollision = {
         x: hitX,
         y: target.y,
         target,
@@ -34,5 +38,5 @@ export function findTopEdgeCollision(
     }
   }
 
-  return undefined
+  return nearestCollision
 }
