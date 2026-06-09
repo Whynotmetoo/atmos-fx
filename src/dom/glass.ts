@@ -118,7 +118,6 @@ export function createGlassController(root: HTMLElement): GlassController {
     attributes: true,
     childList: true,
     subtree: true,
-    attributeFilter: ['class', 'data-atoms-opacity', 'data-atoms-opaque'],
   })
 
   return {

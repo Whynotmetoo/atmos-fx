@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { DEFAULT_OPTIONS } from '../src/core/presets'
 import type { NormalizedAtmosphereOptions } from '../src/core/types'
 import { createGlassController } from '../src/dom/glass'
@@ -71,5 +71,42 @@ describe('createGlassController', () => {
 
     controller.destroy()
     expect(explicit.dataset.atomsOpaque).toBe('')
+  })
+
+  it('observes attribute changes used by custom opaque selectors', () => {
+    let observerCallback: MutationCallback | undefined
+
+    class MockMutationObserver {
+      observe = vi.fn()
+      disconnect = vi.fn()
+
+      constructor(callback: MutationCallback) {
+        observerCallback = callback
+      }
+    }
+
+    Object.defineProperty(window, 'MutationObserver', {
+      configurable: true,
+      value: MockMutationObserver,
+    })
+
+    const root = document.createElement('section')
+    const child = document.createElement('button')
+    root.append(child)
+
+    const controller = createGlassController(root)
+    controller.sync(createOptions({ opaqueSelector: '[data-solid]' }))
+
+    expect(child.dataset.atomsOpaque).toBeUndefined()
+
+    child.dataset.solid = ''
+    observerCallback?.([], {} as MutationObserver)
+
+    expect(child.dataset.atomsOpaque).toBe('managed')
+
+    delete child.dataset.solid
+    observerCallback?.([], {} as MutationObserver)
+
+    expect(child.dataset.atomsOpaque).toBeUndefined()
   })
 })
