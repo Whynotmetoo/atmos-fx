@@ -35,8 +35,9 @@
 
 [data-atoms-fx][data-atoms-transparency='opacity'] > :not(
     [data-atoms-layer],
-    [data-atoms-opaque]
-  ):not(:has([data-atoms-opaque])) {
+    [data-atoms-opaque],
+    [data-atoms-contains-opaque]
+  ) {
   opacity: var(--atoms-fx-content-opacity);
 }
 

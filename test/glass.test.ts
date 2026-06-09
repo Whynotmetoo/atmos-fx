@@ -109,4 +109,29 @@ describe('createGlassController', () => {
 
     expect(child.dataset.atomsOpaque).toBeUndefined()
   })
+
+  it('marks direct children that contain opaque descendants', () => {
+    const root = document.createElement('section')
+    const panel = document.createElement('div')
+    const button = document.createElement('button')
+    panel.append(button)
+    root.append(panel)
+
+    const controller = createGlassController(root)
+    controller.sync(createOptions({ opaqueSelector: 'button[disabled]' }))
+
+    expect(panel.dataset.atomsContainsOpaque).toBeUndefined()
+
+    button.disabled = true
+    controller.sync(createOptions({ opaqueSelector: 'button[disabled]' }))
+
+    expect(button.dataset.atomsOpaque).toBe('managed')
+    expect(panel.dataset.atomsContainsOpaque).toBe('managed')
+
+    button.disabled = false
+    controller.sync(createOptions({ opaqueSelector: 'button[disabled]' }))
+
+    expect(button.dataset.atomsOpaque).toBeUndefined()
+    expect(panel.dataset.atomsContainsOpaque).toBeUndefined()
+  })
 })

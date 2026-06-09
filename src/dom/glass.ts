@@ -2,6 +2,7 @@ import type { NormalizedAtmosphereOptions } from '../core/types'
 
 const OPACITY_VARIABLE = '--atoms-fx-opacity'
 const MANAGED_OPAQUE_VALUE = 'managed'
+const MANAGED_CONTAINS_OPAQUE_VALUE = 'managed'
 
 function clampOpacity(value: string): string | undefined {
   const parsed = Number.parseFloat(value)
@@ -22,7 +23,15 @@ export function createGlassController(root: HTMLElement): GlassController {
   const ownerWindow = root.ownerDocument.defaultView
   const trackedOpacityElements = new Set<HTMLElement>()
   const managedOpaqueElements = new Set<HTMLElement>()
+  const managedOpaqueContainerElements = new Set<HTMLElement>()
   let options: NormalizedAtmosphereOptions | undefined
+  let observing = false
+
+  const observeOptions: MutationObserverInit = {
+    attributes: true,
+    childList: true,
+    subtree: true,
+  }
 
   const clearManagedOpaqueElements = (nextElements = new Set<HTMLElement>()) => {
     for (const element of managedOpaqueElements) {
@@ -59,7 +68,9 @@ export function createGlassController(root: HTMLElement): GlassController {
       managedOpaqueElements.add(element)
 
       if (element.dataset.atomsOpaque === undefined) {
-        element.dataset.atomsOpaque = MANAGED_OPAQUE_VALUE
+        if (element.dataset.atomsOpaque !== MANAGED_OPAQUE_VALUE) {
+          element.dataset.atomsOpaque = MANAGED_OPAQUE_VALUE
+        }
       }
 
       if (element.dataset.atomsOpaque === MANAGED_OPAQUE_VALUE) {
@@ -84,7 +95,9 @@ export function createGlassController(root: HTMLElement): GlassController {
       if (opacity === undefined) {
         element.style.removeProperty(OPACITY_VARIABLE)
       } else {
-        element.style.setProperty(OPACITY_VARIABLE, opacity)
+        if (element.style.getPropertyValue(OPACITY_VARIABLE) !== opacity) {
+          element.style.setProperty(OPACITY_VARIABLE, opacity)
+        }
       }
     }
 
@@ -101,9 +114,48 @@ export function createGlassController(root: HTMLElement): GlassController {
     }
   }
 
+  const syncOpaqueContainers = () => {
+    const nextElements = new Set<HTMLElement>()
+
+    for (const element of Array.from(root.children)) {
+      if (
+        !(element instanceof HTMLElement) ||
+        element.dataset.atomsLayer !== undefined ||
+        element.dataset.atomsOpaque !== undefined
+      ) {
+        continue
+      }
+
+      if (element.querySelector('[data-atoms-opaque]')) {
+        if (element.dataset.atomsContainsOpaque !== MANAGED_CONTAINS_OPAQUE_VALUE) {
+          element.dataset.atomsContainsOpaque = MANAGED_CONTAINS_OPAQUE_VALUE
+        }
+        nextElements.add(element)
+      }
+    }
+
+    for (const element of managedOpaqueContainerElements) {
+      if (
+        !nextElements.has(element) &&
+        element.dataset.atomsContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE
+      ) {
+        delete element.dataset.atomsContainsOpaque
+      }
+    }
+
+    managedOpaqueContainerElements.clear()
+
+    for (const element of nextElements) {
+      managedOpaqueContainerElements.add(element)
+    }
+  }
+
   const syncDomState = () => {
+    stopObserving()
     syncOpaqueSelector()
     syncOpacityElements()
+    syncOpaqueContainers()
+    startObserving()
   }
 
   const MutationObserverCtor = ownerWindow?.MutationObserver
@@ -114,11 +166,25 @@ export function createGlassController(root: HTMLElement): GlassController {
           syncDomState()
         })
 
-  mutationObserver?.observe(root, {
-    attributes: true,
-    childList: true,
-    subtree: true,
-  })
+  const startObserving = () => {
+    if (!mutationObserver || observing) {
+      return
+    }
+
+    mutationObserver.observe(root, observeOptions)
+    observing = true
+  }
+
+  const stopObserving = () => {
+    if (!mutationObserver || !observing) {
+      return
+    }
+
+    mutationObserver.disconnect()
+    observing = false
+  }
+
+  startObserving()
 
   return {
     sync(nextOptions) {
@@ -127,14 +193,21 @@ export function createGlassController(root: HTMLElement): GlassController {
       syncDomState()
     },
     destroy() {
-      mutationObserver?.disconnect()
+      stopObserving()
       clearManagedOpaqueElements()
 
       for (const element of trackedOpacityElements) {
         element.style.removeProperty(OPACITY_VARIABLE)
       }
 
+      for (const element of managedOpaqueContainerElements) {
+        if (element.dataset.atomsContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE) {
+          delete element.dataset.atomsContainsOpaque
+        }
+      }
+
       trackedOpacityElements.clear()
+      managedOpaqueContainerElements.clear()
       delete root.dataset.atomsTransparency
     },
   }
