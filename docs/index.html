@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>atoms-fx playground</title>
+    <link rel="stylesheet" href="../dist/atoms-fx.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f6f4ea;
+        --muted: rgb(246 244 234 / 0.68);
+        --line: rgb(246 244 234 / 0.16);
+        --panel: rgb(18 24 24 / 0.78);
+        --panel-strong: rgb(11 16 16 / 0.88);
+        --accent: #f4c35d;
+        --cyan: #8ccdd1;
+        --green: #91b66e;
+        --root-bg: linear-gradient(145deg, #17251f, #151818 48%, #2a2831);
+        font-family:
+          "Avenir Next", "SF Pro Display", ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(90deg, rgb(244 195 93 / 0.06) 1px, transparent 1px),
+          linear-gradient(rgb(246 244 234 / 0.035) 1px, transparent 1px),
+          #111514;
+        background-size:
+          72px 72px,
+          72px 72px,
+          auto;
+        color: var(--ink);
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 390px);
+      }
+
+      .preview-column {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto minmax(520px, 1fr);
+        border-right: 1px solid var(--line);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 76px;
+        padding: 18px clamp(18px, 3vw, 34px);
+        border-bottom: 1px solid var(--line);
+        background: rgb(17 21 20 / 0.82);
+      }
+
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .brand strong {
+        font-size: 1.28rem;
+        letter-spacing: 0;
+      }
+
+      .brand span {
+        color: var(--muted);
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+
+      .status-strip {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .status-pill {
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0 10px;
+        color: rgb(246 244 234 / 0.76);
+        background: rgb(246 244 234 / 0.04);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .stage-wrap {
+        min-width: 0;
+        padding: clamp(18px, 4vw, 48px);
+        display: grid;
+      }
+
+      #weather-stage {
+        min-height: min(700px, calc(100vh - 140px));
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        align-content: end;
+        gap: 22px;
+        padding: clamp(18px, 4vw, 44px);
+        border: 1px solid rgb(246 244 234 / 0.2);
+        border-radius: 8px;
+        background: var(--root-bg);
+        box-shadow:
+          0 32px 100px rgb(0 0 0 / 0.42),
+          inset 0 1px 0 rgb(255 255 255 / 0.08);
+        transition:
+          background 180ms ease,
+          border-color 180ms ease;
+      }
+
+      #weather-stage[data-playground-preset='snow'] {
+        --root-bg: linear-gradient(145deg, #1a3030, #172022 48%, #27343a);
+        border-color: rgb(140 205 209 / 0.26);
+      }
+
+      #weather-stage[data-playground-preset='rain'] {
+        --root-bg: linear-gradient(145deg, #17251f, #151818 48%, #243329);
+      }
+
+      #weather-stage[data-playground-preset='storm'] {
+        --root-bg: linear-gradient(145deg, #1d241d, #161818 44%, #302a22);
+        border-color: rgb(244 195 93 / 0.22);
+      }
+
+      .forecast-card {
+        width: min(720px, 100%);
+        border: 1px solid rgb(246 244 234 / 0.2);
+        border-radius: 8px;
+        padding: clamp(20px, 4vw, 34px);
+      }
+
+      .station {
+        margin: 0 0 12px;
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .forecast-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: clamp(18px, 4vw, 42px);
+        align-items: end;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(3rem, 10vw, 7rem);
+        line-height: 0.86;
+        letter-spacing: 0;
+      }
+
+      .summary {
+        max-width: 34rem;
+        margin: 16px 0 0;
+        color: rgb(246 244 234 / 0.78);
+        font-size: clamp(1rem, 1.5vw, 1.15rem);
+        line-height: 1.55;
+      }
+
+      .temp {
+        display: grid;
+        justify-items: end;
+        gap: 8px;
+      }
+
+      .temp strong {
+        font-size: clamp(3.1rem, 7vw, 6rem);
+        line-height: 0.9;
+      }
+
+      .temp span {
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .card-actions {
+        margin-top: 26px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .solid-button,
+      .ghost-chip {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0 15px;
+        font-weight: 850;
+      }
+
+      .solid-button {
+        border: 0;
+        background: var(--ink);
+        color: #151818;
+      }
+
+      .ghost-chip {
+        border: 1px solid rgb(246 244 234 / 0.18);
+        color: rgb(246 244 234 / 0.78);
+      }
+
+      .control-column {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        background: var(--panel-strong);
+      }
+
+      .tabs {
+        min-height: 76px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        border-bottom: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .tab-button {
+        border: 0;
+        background: #111514;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .tab-button[aria-selected='true'] {
+        background: rgb(31 39 35 / 0.94);
+        color: var(--ink);
+      }
+
+      .tab-panel {
+        min-height: 0;
+        overflow: auto;
+        padding: 22px;
+      }
+
+      .tab-panel[hidden] {
+        display: none;
+      }
+
+      .control-group {
+        padding: 18px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .control-group:first-child {
+        padding-top: 0;
+      }
+
+      .control-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+        color: rgb(246 244 234 / 0.82);
+        font-size: 0.82rem;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .control-value {
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+        gap: 4px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgb(246 244 234 / 0.04);
+      }
+
+      .segmented button {
+        min-height: 36px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 900;
+      }
+
+      .segmented button[aria-pressed='true'] {
+        background: var(--ink);
+        color: #111514;
+      }
+
+      .range-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 74px;
+        gap: 12px;
+        align-items: center;
+      }
+
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+
+      input[type='number'] {
+        width: 74px;
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 8px;
+        background: rgb(246 244 234 / 0.05);
+        color: var(--ink);
+      }
+
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
+
+      .swatch {
+        height: 36px;
+        border: 1px solid rgb(246 244 234 / 0.24);
+        border-radius: 999px;
+        background: var(--swatch);
+      }
+
+      .swatch[aria-pressed='true'] {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 42px;
+      }
+
+      .toggle-row span {
+        color: rgb(246 244 234 / 0.78);
+        font-weight: 800;
+      }
+
+      .toggle-row input {
+        width: 22px;
+        height: 22px;
+        accent-color: var(--accent);
+      }
+
+      pre,
+      code {
+        font-family: "SF Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
+      }
+
+      pre {
+        margin: 0;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        background: rgb(0 0 0 / 0.28);
+        color: rgb(246 244 234 / 0.82);
+        font-size: 0.8rem;
+        line-height: 1.55;
+      }
+
+      .doc-section {
+        padding: 0 0 22px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 22px;
+      }
+
+      .doc-section:last-child {
+        border-bottom: 0;
+        margin-bottom: 0;
+      }
+
+      .doc-section h2 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+      }
+
+      .doc-section p,
+      .doc-section li {
+        color: rgb(246 244 234 / 0.74);
+        line-height: 1.55;
+      }
+
+      .doc-section ul {
+        padding-left: 18px;
+      }
+
+      .api-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86rem;
+      }
+
+      .api-table th,
+      .api-table td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 6px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .api-table th {
+        color: var(--accent);
+        font-size: 0.76rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .api-table td {
+        color: rgb(246 244 234 / 0.74);
+      }
+
+      @media (max-width: 980px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .preview-column {
+          border-right: 0;
+        }
+
+        .control-column {
+          min-height: auto;
+          border-top: 1px solid var(--line);
+        }
+
+        .tab-panel {
+          max-height: none;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .topbar,
+        .brand {
+          align-items: flex-start;
+        }
+
+        .topbar {
+          display: grid;
+        }
+
+        .status-strip {
+          justify-content: flex-start;
+        }
+
+        .brand {
+          display: grid;
+        }
+
+        .brand span {
+          white-space: normal;
+        }
+
+        .stage-wrap {
+          padding: 14px;
+        }
+
+        #weather-stage {
+          min-height: 620px;
+          padding: 18px;
+        }
+
+        .forecast-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .temp {
+          justify-items: start;
+        }
+
+        .control-column {
+          min-height: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <section class="preview-column" aria-label="Playground preview">
+        <header class="topbar">
+          <div class="brand">
+            <strong>atoms-fx</strong>
+            <span>DOM-aware weather engine</span>
+          </div>
+          <div class="status-strip">
+            <span class="status-pill" id="status-preset">storm</span>
+            <span class="status-pill" id="status-quality">quality high</span>
+            <span class="status-pill" id="status-transparency">glass</span>
+          </div>
+        </header>
+
+        <div class="stage-wrap">
+          <main id="weather-stage" data-playground-preset="storm">
+            <section class="forecast-card" id="collision-card" data-atoms-collision>
+              <p class="station">North pier console</p>
+              <div class="forecast-grid">
+                <div>
+                  <h1 id="forecast-title">Hard rain</h1>
+                  <p class="summary" id="forecast-summary">
+                    Heavy bands are moving across the interface with enough density to test glass,
+                    collision, and contrast.
+                  </p>
+                </div>
+                <div class="temp">
+                  <strong id="forecast-temp">48</strong>
+                  <span id="forecast-meta">wind -0.28</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="solid-button" data-atoms-opaque type="button">Radar</button>
+                <span class="ghost-chip" data-atoms-opacity="0.68" id="density-chip"
+                  >Density 0.90</span
+                >
+              </div>
+            </section>
+          </main>
+        </div>
+      </section>
+
+      <aside class="control-column">
+        <div class="tabs" role="tablist" aria-label="Documentation panels">
+          <button class="tab-button" type="button" role="tab" aria-selected="true" data-tab="tune">
+            Tune
+          </button>
+          <button class="tab-button" type="button" role="tab" aria-selected="false" data-tab="api">
+            API
+          </button>
+          <button
+            class="tab-button"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-tab="perf"
+          >
+            Perf
+          </button>
+        </div>
+
+        <section class="tab-panel" data-panel="tune">
+          <div class="control-group">
+            <div class="control-label">Preset</div>
+            <div class="segmented" style="--count: 3" data-control="preset">
+              <button type="button" data-value="rain">Rain</button>
+              <button type="button" data-value="storm" aria-pressed="true">Storm</button>
+              <button type="button" data-value="snow">Snow</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="density">
+              <span>Density</span>
+              <span class="control-value" id="density-value">0.90</span>
+            </label>
+            <div class="range-row">
+              <input id="density" type="range" min="0" max="1" step="0.01" value="0.9" />
+              <input id="density-number" type="number" min="0" max="1" step="0.01" value="0.9" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="speed">
+              <span>Speed</span>
+              <span class="control-value" id="speed-value">1.25</span>
+            </label>
+            <div class="range-row">
+              <input id="speed" type="range" min="0" max="1.8" step="0.01" value="1.25" />
+              <input id="speed-number" type="number" min="0" max="1.8" step="0.01" value="1.25" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="wind">
+              <span>Wind</span>
+              <span class="control-value" id="wind-value">-0.28</span>
+            </label>
+            <div class="range-row">
+              <input id="wind" type="range" min="-1" max="1" step="0.01" value="-0.28" />
+              <input id="wind-number" type="number" min="-1" max="1" step="0.01" value="-0.28" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">Quality</div>
+            <div class="segmented" style="--count: 4" data-control="quality">
+              <button type="button" data-value="auto">Auto</button>
+              <button type="button" data-value="low">Low</button>
+              <button type="button" data-value="medium">Medium</button>
+              <button type="button" data-value="high" aria-pressed="true">High</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">Transparency</div>
+            <div class="segmented" style="--count: 3" data-control="transparency">
+              <button type="button" data-value="glass" aria-pressed="true">Glass</button>
+              <button type="button" data-value="opacity">Opacity</button>
+              <button type="button" data-value="none">None</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">Color</div>
+            <div class="swatches" data-control="color">
+              <button
+                class="swatch"
+                type="button"
+                style="--swatch: rgba(210, 228, 255, 0.82)"
+                data-value="rgba(210, 228, 255, 0.82)"
+                aria-label="Cold blue"
+                aria-pressed="true"
+              ></button>
+              <button
+                class="swatch"
+                type="button"
+                style="--swatch: rgba(245, 250, 255, 0.86)"
+                data-value="rgba(245, 250, 255, 0.86)"
+                aria-label="Snow white"
+              ></button>
+              <button
+                class="swatch"
+                type="button"
+                style="--swatch: rgba(244, 195, 93, 0.72)"
+                data-value="rgba(244, 195, 93, 0.72)"
+                aria-label="Amber"
+              ></button>
+              <button
+                class="swatch"
+                type="button"
+                style="--swatch: rgba(140, 205, 209, 0.76)"
+                data-value="rgba(140, 205, 209, 0.76)"
+                aria-label="Cyan"
+              ></button>
+              <button
+                class="swatch"
+                type="button"
+                style="--swatch: rgba(145, 182, 110, 0.74)"
+                data-value="rgba(145, 182, 110, 0.74)"
+                aria-label="Green"
+              ></button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="toggle-row">
+              <span>Collision card</span>
+              <input id="collision-toggle" type="checkbox" checked />
+            </label>
+            <label class="toggle-row">
+              <span>Reduced motion respect</span>
+              <input id="reduced-motion-toggle" type="checkbox" checked />
+            </label>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="api" hidden>
+          <div class="doc-section">
+            <h2>Usage</h2>
+            <pre id="code-sample"></pre>
+          </div>
+
+          <div class="doc-section">
+            <h2>Options</h2>
+            <table class="api-table">
+              <thead>
+                <tr>
+                  <th>Option</th>
+                  <th>Values</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>preset</code></td>
+                  <td><code>rain</code>, <code>storm</code>, <code>snow</code></td>
+                </tr>
+                <tr>
+                  <td><code>density</code></td>
+                  <td><code>0</code> to <code>1</code>; maps into quality-capped budgets</td>
+                </tr>
+                <tr>
+                  <td><code>speed</code></td>
+                  <td>Scalar for fall velocity; <code>0</code> freezes motion</td>
+                </tr>
+                <tr>
+                  <td><code>wind</code></td>
+                  <td><code>-1</code> to <code>1</code>; affects rain streaks and snow drift</td>
+                </tr>
+                <tr>
+                  <td><code>quality</code></td>
+                  <td><code>auto</code>, <code>low</code>, <code>medium</code>, <code>high</code></td>
+                </tr>
+                <tr>
+                  <td><code>transparency</code></td>
+                  <td><code>glass</code>, <code>opacity</code>, <code>none</code></td>
+                </tr>
+                <tr>
+                  <td><code>collisionSelector</code></td>
+                  <td>Defaults to <code>[data-atoms-collision]</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="perf" hidden>
+          <div class="doc-section">
+            <h2>Performance</h2>
+            <ul>
+              <li>Use <code>quality: 'auto'</code> for responsive particle budgets.</li>
+              <li>Keep collision surfaces intentional; rects refresh outside the animation loop.</li>
+              <li>Import <code>atoms-fx/styles.css</code> once to enable glass and opacity controls.</li>
+              <li>Leave <code>respectReducedMotion</code> enabled for production UI.</li>
+            </ul>
+          </div>
+
+          <div class="doc-section">
+            <h2>DOM controls</h2>
+            <ul>
+              <li><code>data-atoms-collision</code> makes a rain landing edge.</li>
+              <li><code>data-atoms-opaque</code> keeps controls solid.</li>
+              <li><code>data-atoms-opacity="0.68"</code> sets per-element opacity.</li>
+              <li><code>data-atoms-glass</code> opts nested surfaces into glass styling.</li>
+            </ul>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <script type="module">
+      import { createAtmosphere } from '../dist/index.js'
+
+      const root = document.querySelector('#weather-stage')
+      const collisionCard = document.querySelector('#collision-card')
+      const title = document.querySelector('#forecast-title')
+      const summary = document.querySelector('#forecast-summary')
+      const temp = document.querySelector('#forecast-temp')
+      const meta = document.querySelector('#forecast-meta')
+      const densityChip = document.querySelector('#density-chip')
+      const statusPreset = document.querySelector('#status-preset')
+      const statusQuality = document.querySelector('#status-quality')
+      const statusTransparency = document.querySelector('#status-transparency')
+      const codeSample = document.querySelector('#code-sample')
+
+      const state = {
+        preset: 'storm',
+        density: 0.9,
+        speed: 1.25,
+        wind: -0.28,
+        quality: 'high',
+        transparency: 'glass',
+        color: 'rgba(210, 228, 255, 0.82)',
+        respectReducedMotion: true,
+      }
+
+      const presetCopy = {
+        rain: {
+          title: 'Rain line',
+          summary:
+            'Layered rainfall tests glass readability, top-edge collision, and medium-density motion.',
+          temp: '54',
+        },
+        storm: {
+          title: 'Hard rain',
+          summary:
+            'Heavy bands are moving across the interface with enough density to test glass, collision, and contrast.',
+          temp: '48',
+        },
+        snow: {
+          title: 'Snow drift',
+          summary:
+            'Slow flakes use depth and sway to stay quiet while preserving the same DOM integration.',
+          temp: '27',
+        },
+      }
+
+      const atmosphere = createAtmosphere(root, {
+        ...state,
+        pauseWhenHidden: false,
+      })
+
+      function formatNumber(value) {
+        return Number(value).toFixed(2)
+      }
+
+      function currentOptions() {
+        return {
+          preset: state.preset,
+          density: state.density,
+          speed: state.speed,
+          wind: state.wind,
+          quality: state.quality,
+          transparency: state.transparency,
+          color: state.color,
+          respectReducedMotion: state.respectReducedMotion,
+          pauseWhenHidden: false,
+        }
+      }
+
+      function updatePressed(group, value) {
+        for (const button of document.querySelectorAll(`[data-control="${group}"] [data-value]`)) {
+          button.setAttribute('aria-pressed', String(button.dataset.value === value))
+        }
+      }
+
+      function syncRange(name) {
+        const value = formatNumber(state[name])
+        document.querySelector(`#${name}`).value = String(state[name])
+        document.querySelector(`#${name}-number`).value = String(state[name])
+        document.querySelector(`#${name}-value`).textContent = value
+      }
+
+      function syncCodeSample() {
+        codeSample.textContent = `import { createAtmosphere } from 'atoms-fx'
+import 'atoms-fx/styles.css'
+
+const controller = createAtmosphere(root, ${JSON.stringify(currentOptions(), null, 2)})
+
+controller.start()`
+      }
+
+      function applyState() {
+        const copy = presetCopy[state.preset]
+        root.dataset.playgroundPreset = state.preset
+        title.textContent = copy.title
+        summary.textContent = copy.summary
+        temp.textContent = copy.temp
+        meta.textContent = `wind ${formatNumber(state.wind)}`
+        densityChip.textContent = `Density ${formatNumber(state.density)}`
+        statusPreset.textContent = state.preset
+        statusQuality.textContent = `quality ${state.quality}`
+        statusTransparency.textContent = state.transparency
+
+        syncRange('density')
+        syncRange('speed')
+        syncRange('wind')
+        updatePressed('preset', state.preset)
+        updatePressed('quality', state.quality)
+        updatePressed('transparency', state.transparency)
+        updatePressed('color', state.color)
+        syncCodeSample()
+        atmosphere.update(currentOptions())
+      }
+
+      function setNumeric(name, value) {
+        const input = document.querySelector(`#${name}`)
+        const min = Number(input.min)
+        const max = Number(input.max)
+        const parsed = Number(value)
+        state[name] = Math.min(max, Math.max(min, Number.isNaN(parsed) ? state[name] : parsed))
+        applyState()
+      }
+
+      for (const name of ['density', 'speed', 'wind']) {
+        document.querySelector(`#${name}`).addEventListener('input', (event) => {
+          setNumeric(name, event.target.value)
+        })
+        document.querySelector(`#${name}-number`).addEventListener('input', (event) => {
+          setNumeric(name, event.target.value)
+        })
+      }
+
+      for (const group of ['preset', 'quality', 'transparency', 'color']) {
+        for (const button of document.querySelectorAll(`[data-control="${group}"] [data-value]`)) {
+          button.addEventListener('click', () => {
+            state[group] = button.dataset.value
+            applyState()
+          })
+        }
+      }
+
+      document.querySelector('#collision-toggle').addEventListener('change', (event) => {
+        if (event.target.checked) {
+          collisionCard.dataset.atomsCollision = ''
+        } else {
+          delete collisionCard.dataset.atomsCollision
+        }
+      })
+
+      document.querySelector('#reduced-motion-toggle').addEventListener('change', (event) => {
+        state.respectReducedMotion = event.target.checked
+        applyState()
+      })
+
+      for (const tab of document.querySelectorAll('[role="tab"]')) {
+        tab.addEventListener('click', () => {
+          for (const button of document.querySelectorAll('[role="tab"]')) {
+            button.setAttribute('aria-selected', String(button === tab))
+          }
+
+          for (const panel of document.querySelectorAll('[data-panel]')) {
+            panel.hidden = panel.dataset.panel !== tab.dataset.tab
+          }
+        })
+      }
+
+      atmosphere.start()
+      applyState()
+      window.atomsFxPlayground = {
+        atmosphere,
+        state,
+        setPreset(preset) {
+          state.preset = preset
+          applyState()
+        },
+      }
+    </script>
+  </body>
+</html>
