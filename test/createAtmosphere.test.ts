@@ -81,11 +81,14 @@ function createCanvasContext() {
     beginPath: vi.fn(),
     moveTo: vi.fn(),
     lineTo: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
     stroke: vi.fn(),
     lineCap: 'butt',
     lineWidth: 1,
     globalAlpha: 1,
     strokeStyle: '',
+    fillStyle: '',
   } as unknown as CanvasRenderingContext2D
 }
 
@@ -177,6 +180,38 @@ describe('createAtmosphere', () => {
 
     expect(context.clearRect).toHaveBeenCalledWith(0, 0, 320, 180)
     expect(root.dataset.atomsFx).toBe('stopped')
+  })
+
+  it('starts with the snow preset and switches renderer state through updates', () => {
+    const root = createRoot()
+    const controller = createAtmosphere(root, { preset: 'snow' })
+
+    controller.start()
+
+    expect(root.dataset.atomsFxPreset).toBe('snow')
+    expect(root.dataset.atomsParticle).toBe('snow')
+
+    controller.update({ preset: 'rain' })
+
+    expect(root.dataset.atomsFxPreset).toBe('rain')
+    expect(root.dataset.atomsParticle).toBe('rain')
+
+    controller.destroy()
+  })
+
+  it('keeps controller options isolated from caller object mutations', () => {
+    const root = createRoot()
+    const options = { preset: 'snow' as 'rain' | 'snow' }
+    const controller = createAtmosphere(root, options)
+
+    controller.start()
+    options.preset = 'rain'
+    controller.update({ density: 0.8 })
+
+    expect(root.dataset.atomsFxPreset).toBe('snow')
+    expect(root.dataset.atomsParticle).toBe('snow')
+
+    controller.destroy()
   })
 
   it('supports manual pause and resume', () => {

@@ -1,6 +1,6 @@
 import type { AtmosphereQuality } from '../../core/types'
 
-export type RainBudgetInput = {
+export type ParticleBudgetInput = {
   width: number
   height: number
   density: number
@@ -15,10 +15,22 @@ const QUALITY_BASE = {
   high: 950,
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
+const SNOW_QUALITY_BASE = {
+  low: 180,
+  medium: 460,
+  high: 820,
+} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
+
 const QUALITY_LIMITS = {
   low: { min: 40, max: 300 },
   medium: { min: 80, max: 800 },
   high: { min: 120, max: 1200 },
+} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
+
+const SNOW_QUALITY_LIMITS = {
+  low: { min: 32, max: 260 },
+  medium: { min: 72, max: 680 },
+  high: { min: 110, max: 980 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 function clamp(value: number, min: number, max: number): number {
@@ -44,7 +56,7 @@ export function calculateRainParticleBudget({
   height,
   density,
   quality,
-}: RainBudgetInput): number {
+}: ParticleBudgetInput): number {
   if (width <= 0 || height <= 0 || density <= 0) {
     return 0
   }
@@ -54,6 +66,25 @@ export function calculateRainParticleBudget({
   const densityScale = 0.25 + clamp(density, 0, 1) * 0.75
   const limits = QUALITY_LIMITS[resolvedQuality]
   const budget = Math.round(QUALITY_BASE[resolvedQuality] * areaScale * densityScale)
+
+  return clamp(budget, limits.min, limits.max)
+}
+
+export function calculateSnowParticleBudget({
+  width,
+  height,
+  density,
+  quality,
+}: ParticleBudgetInput): number {
+  if (width <= 0 || height <= 0 || density <= 0) {
+    return 0
+  }
+
+  const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
+  const areaScale = Math.sqrt((width * height) / REFERENCE_AREA)
+  const densityScale = 0.2 + clamp(density, 0, 1) * 0.8
+  const limits = SNOW_QUALITY_LIMITS[resolvedQuality]
+  const budget = Math.round(SNOW_QUALITY_BASE[resolvedQuality] * areaScale * densityScale)
 
   return clamp(budget, limits.min, limits.max)
 }

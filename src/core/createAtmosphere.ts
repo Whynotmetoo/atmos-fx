@@ -2,10 +2,12 @@ import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
 import { createRainRenderer } from '../renderers/canvas2d/rain'
+import { createSnowRenderer } from '../renderers/canvas2d/snow'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
 import type {
   AtmosphereController,
+  AtmosphereParticle,
   AtmosphereOptions,
   NormalizedAtmosphereOptions,
 } from './types'
@@ -51,10 +53,12 @@ export function createAtmosphere(
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   const glassController = createGlassController(element)
-  let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(options)
+  let currentOptions: AtmosphereOptions = { ...options }
+  let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(currentOptions)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
+  let rendererParticle: AtmosphereParticle | undefined
   let visibilityPaused = false
   let reducedMotionPaused = false
   let manuallyPaused = false
@@ -122,14 +126,25 @@ export function createAtmosphere(
       return
     }
 
-    if (normalizedOptions.particle !== 'rain') {
+    if (normalizedOptions.particle !== 'rain' && normalizedOptions.particle !== 'snow') {
       renderer?.destroy()
       renderer = undefined
+      rendererParticle = undefined
       return
     }
 
+    if (renderer && rendererParticle !== normalizedOptions.particle) {
+      renderer.destroy()
+      renderer = undefined
+      rendererParticle = undefined
+    }
+
     if (!renderer) {
-      renderer = createRainRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      renderer =
+        normalizedOptions.particle === 'snow'
+          ? createSnowRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+          : createRainRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      rendererParticle = normalizedOptions.particle
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
       return
     }
@@ -273,10 +288,11 @@ export function createAtmosphere(
     },
     update(nextOptions) {
       assertActive()
-      normalizedOptions = normalizeAtmosphereOptions({
-        ...normalizedOptions,
+      currentOptions = {
+        ...currentOptions,
         ...nextOptions,
-      })
+      }
+      normalizedOptions = normalizeAtmosphereOptions(currentOptions)
       syncDataset()
       syncCollisionTargets()
       ensureRenderer()
@@ -291,6 +307,7 @@ export function createAtmosphere(
       collisionTargetManager.destroy()
       renderer?.destroy()
       renderer = undefined
+      rendererParticle = undefined
       glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined
