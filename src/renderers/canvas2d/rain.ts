@@ -115,12 +115,15 @@ export class RainRenderer implements Canvas2DRenderer {
     context.globalAlpha = 1
   }
 
-  destroy() {
+  clear() {
     if (this.context) {
       this.context.setTransform(this.size.pixelRatio, 0, 0, this.size.pixelRatio, 0, 0)
       this.context.clearRect(0, 0, this.size.width, this.size.height)
     }
+  }
 
+  destroy() {
+    this.clear()
     this.particles = []
     this.lastTime = undefined
   }

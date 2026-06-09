@@ -46,6 +46,7 @@ export function createAtmosphere(
   }
 
   const ownerDocument = element.ownerDocument
+  const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(options)
   let state: ControllerState = 'idle'
@@ -88,6 +89,16 @@ export function createAtmosphere(
     }
 
     return canvasLayer.resize()
+  }
+
+  const resizeLayerAndRenderer = () => {
+    const size = canvasLayer?.resize()
+
+    if (size) {
+      renderer?.resize(size)
+    }
+
+    return size
   }
 
   const ensureRenderer = () => {
@@ -182,7 +193,16 @@ export function createAtmosphere(
     }
   }
 
+  const handleContainerResize = () => {
+    resizeLayerAndRenderer()
+  }
+
   ownerDocument.addEventListener('visibilitychange', handleVisibilityChange)
+  ownerWindow?.addEventListener('resize', handleContainerResize)
+  const ResizeObserverCtor = ownerWindow?.ResizeObserver
+  const resizeObserver =
+    ResizeObserverCtor === undefined ? undefined : new ResizeObserverCtor(handleContainerResize)
+  resizeObserver?.observe(element)
   const removeReducedMotionListener = addReducedMotionListener(
     reducedMotionQuery,
     handleReducedMotionChange,
@@ -205,6 +225,7 @@ export function createAtmosphere(
       reducedMotionPaused = false
       manuallyPaused = false
       scheduler.stop()
+      renderer?.clear()
       setState('stopped')
     },
     pause() {
@@ -229,10 +250,7 @@ export function createAtmosphere(
     },
     resize() {
       assertActive()
-      const size = canvasLayer?.resize()
-      if (size) {
-        renderer?.resize(size)
-      }
+      resizeLayerAndRenderer()
     },
     update(nextOptions) {
       assertActive()
@@ -246,6 +264,8 @@ export function createAtmosphere(
     },
     destroy() {
       ownerDocument.removeEventListener('visibilitychange', handleVisibilityChange)
+      ownerWindow?.removeEventListener('resize', handleContainerResize)
+      resizeObserver?.disconnect()
       removeReducedMotionListener()
       scheduler.stop()
       renderer?.destroy()

@@ -92,4 +92,15 @@ describe('RainRenderer', () => {
     expect(context.clearRect).toHaveBeenCalledWith(0, 0, 800, 600)
     expect(renderer.getParticleCount()).toBe(0)
   })
+
+  it('clears the canvas without releasing particles', () => {
+    const context = createContext()
+    const renderer = createRainRenderer(createCanvas(context), size, options)
+    const count = renderer.getParticleCount()
+
+    renderer.clear()
+
+    expect(context.clearRect).toHaveBeenCalledWith(0, 0, 800, 600)
+    expect(renderer.getParticleCount()).toBe(count)
+  })
 })

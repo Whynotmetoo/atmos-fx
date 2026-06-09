@@ -5,5 +5,6 @@ export type Canvas2DRenderer = {
   resize(size: CanvasLayerSize): void
   updateOptions(options: NormalizedAtmosphereOptions): void
   render(time: number): void
+  clear(): void
   destroy(): void
 }

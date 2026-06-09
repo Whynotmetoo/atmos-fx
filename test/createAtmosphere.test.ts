@@ -74,11 +74,30 @@ function setLegacyReducedMotion(matches: boolean) {
   return mediaQuery
 }
 
+function createCanvasContext() {
+  return {
+    setTransform: vi.fn(),
+    clearRect: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    lineCap: 'butt',
+    lineWidth: 1,
+    globalAlpha: 1,
+    strokeStyle: '',
+  } as unknown as CanvasRenderingContext2D
+}
+
 describe('createAtmosphere', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     setDocumentHidden(false)
     setReducedMotion(false)
+    Object.defineProperty(window, 'ResizeObserver', {
+      configurable: true,
+      value: undefined,
+    })
 
     Object.defineProperty(window, 'devicePixelRatio', {
       configurable: true,
@@ -118,6 +137,20 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBeUndefined()
     expect(root.dataset.atomsFxPreset).toBeUndefined()
     expect(root.dataset.atomsParticle).toBeUndefined()
+  })
+
+  it('clears rendered rain when stopped', () => {
+    const context = createCanvasContext()
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(context)
+
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+    controller.stop()
+
+    expect(context.clearRect).toHaveBeenCalledWith(0, 0, 320, 180)
+    expect(root.dataset.atomsFx).toBe('stopped')
   })
 
   it('supports manual pause and resume', () => {
@@ -265,6 +298,74 @@ describe('createAtmosphere', () => {
 
     expect(canvas?.width).toBe(400)
     expect(canvas?.height).toBe(200)
+  })
+
+  it('resizes the canvas layer when the window changes size', () => {
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+
+    root.getBoundingClientRect = vi.fn(() => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 180,
+      bottom: 90,
+      width: 180,
+      height: 90,
+      toJSON: () => ({}),
+    }))
+
+    window.dispatchEvent(new Event('resize'))
+
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-atoms-layer="weather"]')
+
+    expect(canvas?.width).toBe(360)
+    expect(canvas?.height).toBe(180)
+  })
+
+  it('resizes the canvas layer when the root size changes', () => {
+    let resizeCallback: ResizeObserverCallback | undefined
+
+    class MockResizeObserver {
+      observe = vi.fn()
+      disconnect = vi.fn()
+
+      constructor(callback: ResizeObserverCallback) {
+        resizeCallback = callback
+      }
+    }
+
+    Object.defineProperty(window, 'ResizeObserver', {
+      configurable: true,
+      value: MockResizeObserver,
+    })
+
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+
+    root.getBoundingClientRect = vi.fn(() => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 240,
+      bottom: 160,
+      width: 240,
+      height: 160,
+      toJSON: () => ({}),
+    }))
+
+    resizeCallback?.([], {} as ResizeObserver)
+
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-atoms-layer="weather"]')
+
+    expect(canvas?.width).toBe(480)
+    expect(canvas?.height).toBe(320)
   })
 
   it('overrides inline static positioning while the canvas layer exists', () => {
