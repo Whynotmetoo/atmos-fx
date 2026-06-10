@@ -37,6 +37,13 @@ export const PRESET_OPTIONS = {
     wind: 0.16,
     color: 'rgba(245, 250, 255, 0.86)',
   },
+  hail: {
+    particle: 'hail',
+    density: 0.46,
+    speed: 0.92,
+    wind: -0.08,
+    color: 'rgba(218, 235, 247, 0.84)',
+  },
 } satisfies Record<AtmospherePreset, Partial<AtmosphereOptions>>
 
 export function resolvePresetOptions(preset: AtmospherePreset): Partial<AtmosphereOptions> {

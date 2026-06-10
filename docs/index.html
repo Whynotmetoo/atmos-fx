@@ -142,6 +142,11 @@
         border-color: rgb(140 205 209 / 0.26);
       }
 
+      #weather-stage[data-playground-preset='hail'] {
+        --root-bg: linear-gradient(145deg, #24313a, #111827 58%, #18202a);
+        border-color: rgb(190 225 238 / 0.26);
+      }
+
       #weather-stage[data-playground-preset='rain'] {
         --root-bg: linear-gradient(145deg, #17251f, #151818 48%, #243329);
       }
@@ -582,10 +587,11 @@
         <section class="tab-panel" data-panel="tune">
           <div class="control-group">
             <div class="control-label">Preset</div>
-            <div class="segmented" style="--count: 3" data-control="preset">
+            <div class="segmented" style="--count: 4" data-control="preset">
               <button type="button" data-value="rain">Rain</button>
               <button type="button" data-value="storm" aria-pressed="true">Storm</button>
               <button type="button" data-value="snow">Snow</button>
+              <button type="button" data-value="hail">Hail</button>
             </div>
           </div>
 
@@ -713,7 +719,10 @@
               <tbody>
                 <tr>
                   <td><code>preset</code></td>
-                  <td><code>rain</code>, <code>storm</code>, <code>snow</code></td>
+                  <td>
+                    <code>rain</code>, <code>storm</code>, <code>snow</code>,
+                    <code>hail</code>
+                  </td>
                 </tr>
                 <tr>
                   <td><code>density</code></td>
@@ -725,7 +734,7 @@
                 </tr>
                 <tr>
                   <td><code>wind</code></td>
-                  <td><code>-1</code> to <code>1</code>; affects rain streaks and snow drift</td>
+                  <td><code>-1</code> to <code>1</code>; affects fall angle and drift</td>
                 </tr>
                 <tr>
                   <td><code>quality</code></td>
@@ -758,7 +767,7 @@
           <div class="doc-section">
             <h2>DOM controls</h2>
             <ul>
-              <li><code>data-atoms-collision</code> makes a rain landing edge.</li>
+              <li><code>data-atoms-collision</code> makes a precipitation landing edge.</li>
               <li><code>data-atoms-opaque</code> keeps controls solid.</li>
               <li><code>data-atoms-opacity="0.68"</code> sets per-element opacity.</li>
               <li><code>data-atoms-glass</code> opts nested surfaces into glass styling.</li>
@@ -812,6 +821,12 @@
           summary:
             'Slow flakes use depth and sway to stay quiet while preserving the same DOM integration.',
           temp: '27',
+        },
+        hail: {
+          title: 'Hail line',
+          summary:
+            'Heavier pellets bounce lightly from the collision card and leave a bounded accumulation trace.',
+          temp: '36',
         },
       }
 

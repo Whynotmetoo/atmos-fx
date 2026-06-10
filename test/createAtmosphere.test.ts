@@ -199,6 +199,18 @@ describe('createAtmosphere', () => {
     controller.destroy()
   })
 
+  it('starts with the hail preset and exposes hail dataset state', () => {
+    const root = createRoot()
+    const controller = createAtmosphere(root, { preset: 'hail' })
+
+    controller.start()
+
+    expect(root.dataset.atomsFxPreset).toBe('hail')
+    expect(root.dataset.atomsParticle).toBe('hail')
+
+    controller.destroy()
+  })
+
   it('keeps controller options isolated from caller object mutations', () => {
     const root = createRoot()
     const options = { preset: 'snow' as 'rain' | 'snow' }

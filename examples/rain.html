@@ -40,6 +40,11 @@
         background: linear-gradient(145deg, #1f3340, #111827 62%, #16202b);
       }
 
+      #weather[data-demo-preset='hail'] {
+        border-color: rgb(190 225 238 / 0.26);
+        background: linear-gradient(145deg, #23323b, #111827 62%, #171e27);
+      }
+
       .panel {
         max-width: 420px;
         padding: 22px;
@@ -109,6 +114,7 @@
         <button type="button" data-preset="rain">Rain</button>
         <button type="button" data-preset="storm" aria-pressed="true">Storm</button>
         <button type="button" data-preset="snow">Snow</button>
+        <button type="button" data-preset="hail">Hail</button>
       </div>
       <section class="panel" data-atoms-collision>
         <h1 id="preset-title">Storm layer</h1>
@@ -161,6 +167,17 @@
           },
           title: 'Snow layer',
           summary: 'Snow switches to drifting flakes while preserving the glass and opaque controls.',
+        },
+        hail: {
+          options: {
+            preset: 'hail',
+            density: 0.5,
+            speed: 0.95,
+            wind: -0.08,
+            color: 'rgba(218, 235, 247, 0.84)',
+          },
+          title: 'Hail layer',
+          summary: 'Hail adds heavier pellets, light card-edge bounce, and bounded accumulation.',
         },
       }
       const atmosphere = createAtmosphere(root, {

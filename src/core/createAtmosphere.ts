@@ -1,6 +1,7 @@
 import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
+import { createHailRenderer } from '../renderers/canvas2d/hail'
 import { createRainRenderer } from '../renderers/canvas2d/rain'
 import { createSnowRenderer } from '../renderers/canvas2d/snow'
 import { normalizeAtmosphereOptions } from './options'
@@ -126,7 +127,11 @@ export function createAtmosphere(
       return
     }
 
-    if (normalizedOptions.particle !== 'rain' && normalizedOptions.particle !== 'snow') {
+    if (
+      normalizedOptions.particle !== 'rain' &&
+      normalizedOptions.particle !== 'snow' &&
+      normalizedOptions.particle !== 'hail'
+    ) {
       renderer?.destroy()
       renderer = undefined
       rendererParticle = undefined
@@ -140,10 +145,14 @@ export function createAtmosphere(
     }
 
     if (!renderer) {
-      renderer =
-        normalizedOptions.particle === 'snow'
-          ? createSnowRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
-          : createRainRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      if (normalizedOptions.particle === 'snow') {
+        renderer = createSnowRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      } else if (normalizedOptions.particle === 'hail') {
+        renderer = createHailRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      } else {
+        renderer = createRainRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+      }
+
       rendererParticle = normalizedOptions.particle
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
       return
