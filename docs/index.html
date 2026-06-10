@@ -3,865 +3,844 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>atoms-fx playground</title>
+    <title>atoms-fx — DOM-Aware Atmosphere Engine</title>
     <link rel="stylesheet" href="../dist/atoms-fx.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
         color-scheme: dark;
-        --ink: #f6f4ea;
-        --muted: rgb(246 244 234 / 0.68);
-        --line: rgb(246 244 234 / 0.16);
-        --panel: rgb(18 24 24 / 0.78);
-        --panel-strong: rgb(11 16 16 / 0.88);
-        --accent: #f4c35d;
-        --cyan: #8ccdd1;
-        --green: #91b66e;
-        --root-bg: linear-gradient(145deg, #17251f, #151818 48%, #2a2831);
-        font-family:
-          "Avenir Next", "SF Pro Display", ui-sans-serif, system-ui, -apple-system,
-          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --bg-root: #0b0f12;
+        --bg-panel: rgba(20, 28, 35, 0.72);
+        --bg-panel-solid: #141c23;
+        --line: rgba(255, 255, 255, 0.08);
+        --line-active: rgba(255, 255, 255, 0.16);
+        --ink: #f8fafc;
+        --muted: #94a3b8;
+        --accent: #f59e0b;
+        --accent-hover: #d97706;
+        --accent-glow: rgba(245, 158, 11, 0.15);
+        --success: #10b981;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
       }
 
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
       body {
-        margin: 0;
-        min-height: 100vh;
-        background:
-          linear-gradient(90deg, rgb(244 195 93 / 0.06) 1px, transparent 1px),
-          linear-gradient(rgb(246 244 234 / 0.035) 1px, transparent 1px),
-          #111514;
-        background-size:
-          72px 72px,
-          72px 72px,
-          auto;
+        background: radial-gradient(circle at 50% 0%, #1a2530 0%, var(--bg-root) 70%);
         color: var(--ink);
+        line-height: 1.6;
+        overflow-x: hidden;
       }
 
-      button,
-      input,
-      select {
-        font: inherit;
+      /* Container Layout */
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 40px 24px;
       }
 
-      button {
-        cursor: pointer;
+      /* Header */
+      header {
+        text-align: center;
+        margin-bottom: 48px;
       }
 
-      .app {
-        min-height: 100vh;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(300px, 390px);
+      .logo-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+        display: inline-block;
+        animation: float 4s ease-in-out infinite;
       }
 
-      .preview-column {
-        min-width: 0;
-        display: grid;
-        grid-template-rows: auto minmax(520px, 1fr);
-        border-right: 1px solid var(--line);
-      }
-
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        min-height: 76px;
-        padding: 18px clamp(18px, 3vw, 34px);
-        border-bottom: 1px solid var(--line);
-        background: rgb(17 21 20 / 0.82);
-      }
-
-      .brand {
-        display: flex;
-        align-items: baseline;
-        gap: 12px;
-        min-width: 0;
-      }
-
-      .brand strong {
-        font-size: 1.28rem;
-        letter-spacing: 0;
-      }
-
-      .brand span {
-        color: var(--muted);
-        font-size: 0.9rem;
-        white-space: nowrap;
-      }
-
-      .status-strip {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-
-      .status-pill {
-        min-height: 30px;
-        display: inline-flex;
-        align-items: center;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 0 10px;
-        color: rgb(246 244 234 / 0.76);
-        background: rgb(246 244 234 / 0.04);
-        font-size: 0.78rem;
-        font-weight: 800;
-      }
-
-      .stage-wrap {
-        min-width: 0;
-        padding: clamp(18px, 4vw, 48px);
-        display: grid;
-      }
-
-      #weather-stage {
-        min-height: min(700px, calc(100vh - 140px));
-        position: relative;
-        overflow: hidden;
-        display: grid;
-        align-content: end;
-        gap: 22px;
-        padding: clamp(18px, 4vw, 44px);
-        border: 1px solid rgb(246 244 234 / 0.2);
-        border-radius: 8px;
-        background: var(--root-bg);
-        box-shadow:
-          0 32px 100px rgb(0 0 0 / 0.42),
-          inset 0 1px 0 rgb(255 255 255 / 0.08);
-        transition:
-          background 180ms ease,
-          border-color 180ms ease;
-      }
-
-      #weather-stage[data-playground-preset='snow'] {
-        --root-bg: linear-gradient(145deg, #1a3030, #172022 48%, #27343a);
-        border-color: rgb(140 205 209 / 0.26);
-      }
-
-      #weather-stage[data-playground-preset='hail'] {
-        --root-bg: linear-gradient(145deg, #24313a, #111827 58%, #18202a);
-        border-color: rgb(190 225 238 / 0.26);
-      }
-
-      #weather-stage[data-playground-preset='rain'] {
-        --root-bg: linear-gradient(145deg, #17251f, #151818 48%, #243329);
-      }
-
-      #weather-stage[data-playground-preset='storm'] {
-        --root-bg: linear-gradient(145deg, #1d241d, #161818 44%, #302a22);
-        border-color: rgb(244 195 93 / 0.22);
-      }
-
-      .forecast-card {
-        width: min(720px, 100%);
-        border: 1px solid rgb(246 244 234 / 0.2);
-        border-radius: 8px;
-        padding: clamp(20px, 4vw, 34px);
-      }
-
-      .station {
-        margin: 0 0 12px;
-        color: var(--accent);
-        font-size: 0.78rem;
-        font-weight: 900;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      .forecast-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: clamp(18px, 4vw, 42px);
-        align-items: end;
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
       }
 
       h1 {
-        margin: 0;
-        font-size: clamp(3rem, 10vw, 7rem);
-        line-height: 0.86;
-        letter-spacing: 0;
+        font-size: 2.8rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin-bottom: 8px;
+        background: linear-gradient(to right, #ffffff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
 
-      .summary {
-        max-width: 34rem;
-        margin: 16px 0 0;
-        color: rgb(246 244 234 / 0.78);
-        font-size: clamp(1rem, 1.5vw, 1.15rem);
-        line-height: 1.55;
-      }
-
-      .temp {
-        display: grid;
-        justify-items: end;
-        gap: 8px;
-      }
-
-      .temp strong {
-        font-size: clamp(3.1rem, 7vw, 6rem);
-        line-height: 0.9;
-      }
-
-      .temp span {
+      .description {
+        font-size: 1.15rem;
         color: var(--muted);
-        font-weight: 800;
+        max-width: 600px;
+        margin: 0 auto;
       }
 
-      .card-actions {
-        margin-top: 26px;
+      /* Interactive Playground Split */
+      .playground {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 32px;
+        margin-bottom: 64px;
+      }
+
+      @media (max-width: 968px) {
+        .playground {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Stage Preview Card */
+      .preview-column {
+        position: relative;
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        background: rgba(10, 15, 20, 0.45);
+        min-height: 600px;
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .solid-button,
-      .ghost-chip {
-        min-height: 42px;
-        display: inline-flex;
         align-items: center;
-        border-radius: 999px;
-        padding: 0 15px;
-        font-weight: 850;
+        justify-content: center;
+        overflow: hidden;
       }
 
-      .solid-button {
-        border: 0;
-        background: var(--ink);
-        color: #151818;
+      /* Target element in stage to test collisions and transparency */
+      #weather-stage {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
       }
 
-      .ghost-chip {
-        border: 1px solid rgb(246 244 234 / 0.18);
-        color: rgb(246 244 234 / 0.78);
+      #collision-card {
+        width: 320px;
+        padding: 32px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 10;
+        position: relative;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .control-column {
-        min-height: 100vh;
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        background: var(--panel-strong);
+      /* Weather Card Content */
+      .weather-card-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
 
-      .tabs {
-        min-height: 76px;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1px;
-        border-bottom: 1px solid var(--line);
-        background: var(--line);
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
       }
 
-      .tab-button {
-        border: 0;
-        background: #111514;
-        color: var(--muted);
-        font-size: 0.82rem;
-        font-weight: 900;
-        letter-spacing: 0.04em;
+      .card-temp {
+        font-size: 3.5rem;
+        font-weight: 300;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .card-temp::after {
+        content: '°';
+        font-size: 2rem;
+        vertical-align: super;
+      }
+
+      .card-preset-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
         text-transform: uppercase;
-      }
-
-      .tab-button[aria-selected='true'] {
-        background: rgb(31 39 35 / 0.94);
+        letter-spacing: 0.1em;
+        background: rgba(255,255,255,0.1);
+        padding: 4px 10px;
+        border-radius: 99px;
         color: var(--ink);
       }
 
-      .tab-panel {
-        min-height: 0;
-        overflow: auto;
-        padding: 22px;
+      .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
       }
 
-      .tab-panel[hidden] {
-        display: none;
+      .card-summary {
+        font-size: 0.9rem;
+        color: var(--muted);
+        min-height: 54px;
+      }
+
+      .card-meta {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding-top: 12px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* Playground Controls Panel */
+      .controls-panel {
+        background: var(--bg-panel);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        max-height: 720px;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       }
 
       .control-group {
-        padding: 18px 0;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .control-group:first-child {
-        padding-top: 0;
-      }
-
-      .control-label {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 10px;
-        color: rgb(246 244 234 / 0.82);
-        font-size: 0.82rem;
-        font-weight: 900;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-
-      .control-value {
-        color: var(--accent);
-        font-variant-numeric: tabular-nums;
-      }
-
-      .segmented {
-        display: grid;
-        grid-template-columns: repeat(var(--count), minmax(0, 1fr));
-        gap: 4px;
-        padding: 4px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: rgb(246 244 234 / 0.04);
-      }
-
-      .segmented button {
-        min-height: 36px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: var(--muted);
-        font-size: 0.82rem;
-        font-weight: 900;
-      }
-
-      .segmented button[aria-pressed='true'] {
-        background: var(--ink);
-        color: #111514;
-      }
-
-      .range-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 74px;
-        gap: 12px;
-        align-items: center;
-      }
-
-      input[type='range'] {
-        width: 100%;
-        accent-color: var(--accent);
-      }
-
-      input[type='number'] {
-        width: 74px;
-        min-height: 36px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 0 8px;
-        background: rgb(246 244 234 / 0.05);
-        color: var(--ink);
-      }
-
-      .swatches {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        flex-direction: column;
         gap: 8px;
       }
 
-      .swatch {
-        height: 36px;
-        border: 1px solid rgb(246 244 234 / 0.24);
-        border-radius: 999px;
-        background: var(--swatch);
+      .control-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
       }
 
-      .swatch[aria-pressed='true'] {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
+      .control-label span.val {
+        color: var(--accent);
+        font-family: monospace;
       }
 
-      .toggle-row {
+      /* Radio Buttons / Preset Selector Group */
+      .preset-buttons {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 4px;
+        border-radius: 10px;
+      }
+
+      .preset-buttons button {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        padding: 8px 0;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .preset-buttons button[aria-pressed="true"] {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--ink);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      }
+
+      /* Slider Styling */
+      input[type="range"] {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 99px;
+        outline: none;
+        -webkit-appearance: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink);
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        background: var(--accent);
+      }
+
+      /* Checkbox Switch Styling */
+      .switch-container {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        min-height: 42px;
-      }
-
-      .toggle-row span {
-        color: rgb(246 244 234 / 0.78);
-        font-weight: 800;
-      }
-
-      .toggle-row input {
-        width: 22px;
-        height: 22px;
-        accent-color: var(--accent);
-      }
-
-      pre,
-      code {
-        font-family: "SF Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
-      }
-
-      pre {
-        margin: 0;
-        overflow: auto;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 14px;
-        background: rgb(0 0 0 / 0.28);
-        color: rgb(246 244 234 / 0.82);
-        font-size: 0.8rem;
-        line-height: 1.55;
-      }
-
-      .doc-section {
-        padding: 0 0 22px;
+        padding: 10px 0;
         border-bottom: 1px solid var(--line);
-        margin-bottom: 22px;
       }
 
-      .doc-section:last-child {
-        border-bottom: 0;
-        margin-bottom: 0;
+      .switch-label {
+        font-weight: 500;
+        font-size: 0.95rem;
       }
 
-      .doc-section h2 {
-        margin: 0 0 12px;
-        font-size: 1.05rem;
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
       }
 
-      .doc-section p,
-      .doc-section li {
-        color: rgb(246 244 234 / 0.74);
-        line-height: 1.55;
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
       }
 
-      .doc-section ul {
-        padding-left: 18px;
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background-color: rgba(255,255,255,0.15);
+        transition: .3s;
+        border-radius: 24px;
       }
 
-      .api-table {
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: var(--accent);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(20px);
+      }
+
+      /* Transparency & Color selectors */
+      .option-select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line);
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .color-presets {
+        display: flex;
+        gap: 8px;
+      }
+
+      .color-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+
+      .color-btn:hover {
+        transform: scale(1.15);
+      }
+
+      .color-btn[aria-pressed="true"] {
+        border-color: var(--ink);
+        transform: scale(1.1);
+      }
+
+      /* Copy Config Button */
+      .copy-config-btn {
+        margin-top: 12px;
+        background: var(--ink);
+        color: #000;
+        border: none;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+      }
+
+      .copy-config-btn:hover {
+        background: var(--accent);
+      }
+
+      /* Sections below */
+      section.docs-section {
+        border-top: 1px solid var(--line);
+        padding: 64px 0;
+      }
+
+      h2.section-title {
+        font-size: 1.8rem;
+        margin-bottom: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      /* Code Block Styles */
+      pre {
+        background: #090d10;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+        overflow-x: auto;
+        color: #e2e8f0;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        font-size: 0.9rem;
+        position: relative;
+      }
+
+      code {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        background: rgba(255,255,255,0.06);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #e2e8f0;
+      }
+
+      pre code {
+        background: none;
+        padding: 0;
+        border-radius: 0;
+        color: inherit;
+      }
+
+      /* Installation Grid */
+      .install-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      @media (max-width: 768px) {
+        .install-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* API Reference Table */
+      .table-wrapper {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--bg-panel);
+      }
+
+      table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.86rem;
-      }
-
-      .api-table th,
-      .api-table td {
-        border-bottom: 1px solid var(--line);
-        padding: 10px 6px;
         text-align: left;
-        vertical-align: top;
+        font-size: 0.9rem;
       }
 
-      .api-table th {
+      th, td {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      th {
+        background: rgba(255,255,255,0.02);
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .api-badge {
+        font-size: 0.75rem;
+        background: rgba(255,255,255,0.08);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--muted);
+      }
+
+      /* Footer */
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 32px 0;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      footer a {
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      footer a:hover {
         color: var(--accent);
-        font-size: 0.76rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-
-      .api-table td {
-        color: rgb(246 244 234 / 0.74);
-      }
-
-      @media (max-width: 980px) {
-        .app {
-          grid-template-columns: 1fr;
-        }
-
-        .preview-column {
-          border-right: 0;
-        }
-
-        .control-column {
-          min-height: auto;
-          border-top: 1px solid var(--line);
-        }
-
-        .tab-panel {
-          max-height: none;
-        }
-      }
-
-      @media (max-width: 680px) {
-        .topbar,
-        .brand {
-          align-items: flex-start;
-        }
-
-        .topbar {
-          display: grid;
-        }
-
-        .status-strip {
-          justify-content: flex-start;
-        }
-
-        .brand {
-          display: grid;
-        }
-
-        .brand span {
-          white-space: normal;
-        }
-
-        .stage-wrap {
-          padding: 14px;
-        }
-
-        #weather-stage {
-          min-height: 620px;
-          padding: 18px;
-        }
-
-        .forecast-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .temp {
-          justify-items: start;
-        }
-
-        .control-column {
-          min-height: 0;
-        }
       }
     </style>
   </head>
   <body>
-    <div class="app">
-      <section class="preview-column" aria-label="Playground preview">
-        <header class="topbar">
-          <div class="brand">
-            <strong>atoms-fx</strong>
-            <span>DOM-aware weather engine</span>
-          </div>
-          <div class="status-strip">
-            <span class="status-pill" id="status-preset">storm</span>
-            <span class="status-pill" id="status-quality">quality high</span>
-            <span class="status-pill" id="status-transparency">glass</span>
-          </div>
-        </header>
+    <div class="container">
+      <header>
+        <span class="logo-icon">⛈️</span>
+        <h1>atoms-fx</h1>
+        <p class="description">A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.</p>
+      </header>
 
-        <div class="stage-wrap">
-          <main id="weather-stage" data-playground-preset="storm">
-            <section class="forecast-card" id="collision-card" data-atoms-collision>
-              <p class="station">North pier console</p>
-              <div class="forecast-grid">
-                <div>
-                  <h1 id="forecast-title">Hard rain</h1>
-                  <p class="summary" id="forecast-summary">
-                    Heavy bands are moving across the interface with enough density to test glass,
-                    collision, and contrast.
-                  </p>
+      <!-- Playground Section -->
+      <div class="playground">
+        <!-- Preview Visual Canvas -->
+        <div class="preview-column">
+          <main id="weather-stage" data-playground-preset="rain">
+            <!-- Simulated Interface Card to interact with collision and glass transparency -->
+            <div id="collision-card" data-atoms-collision data-atoms-glass>
+              <div class="weather-card-content">
+                <div class="card-header">
+                  <div class="card-temp" id="forecast-temp">54</div>
+                  <div class="card-preset-badge" id="forecast-preset">Rain</div>
                 </div>
-                <div class="temp">
-                  <strong id="forecast-temp">48</strong>
-                  <span id="forecast-meta">wind -0.28</span>
+                <div class="card-title" id="forecast-title">Rain Showers</div>
+                <div class="card-summary" id="forecast-summary">
+                  Layered rainfall tests glass readability, top-edge collision, and medium-density motion.
+                </div>
+                <div class="card-meta">
+                  <span id="forecast-wind">wind -0.12</span>
+                  <span id="forecast-density">Density 0.65</span>
                 </div>
               </div>
-              <div class="card-actions">
-                <button class="solid-button" data-atoms-opaque type="button">Radar</button>
-                <span class="ghost-chip" data-atoms-opacity="0.68" id="density-chip"
-                  >Density 0.90</span
-                >
-              </div>
-            </section>
+            </div>
           </main>
         </div>
-      </section>
 
-      <aside class="control-column">
-        <div class="tabs" role="tablist" aria-label="Documentation panels">
-          <button class="tab-button" type="button" role="tab" aria-selected="true" data-tab="tune">
-            Tune
-          </button>
-          <button class="tab-button" type="button" role="tab" aria-selected="false" data-tab="api">
-            API
-          </button>
-          <button
-            class="tab-button"
-            type="button"
-            role="tab"
-            aria-selected="false"
-            data-tab="perf"
-          >
-            Perf
-          </button>
-        </div>
-
-        <section class="tab-panel" data-panel="tune">
+        <!-- Right Side Panel Control Panel -->
+        <div class="controls-panel">
+          <!-- Preset selector -->
           <div class="control-group">
-            <div class="control-label">Preset</div>
-            <div class="segmented" style="--count: 4" data-control="preset">
-              <button type="button" data-value="rain">Rain</button>
-              <button type="button" data-value="storm" aria-pressed="true">Storm</button>
+            <div class="control-label">Weather Preset</div>
+            <div class="preset-buttons" data-control="preset">
+              <button type="button" data-value="rain" aria-pressed="true">Rain</button>
               <button type="button" data-value="snow">Snow</button>
               <button type="button" data-value="hail">Hail</button>
             </div>
           </div>
 
+          <!-- Slider Density -->
           <div class="control-group">
-            <label class="control-label" for="density">
-              <span>Density</span>
-              <span class="control-value" id="density-value">0.90</span>
-            </label>
-            <div class="range-row">
-              <input id="density" type="range" min="0" max="1" step="0.01" value="0.9" />
-              <input id="density-number" type="number" min="0" max="1" step="0.01" value="0.9" />
-            </div>
+            <div class="control-label">Density <span class="val" id="density-val">0.65</span></div>
+            <input type="range" id="density" min="0.1" max="1.0" step="0.05" value="0.65" />
           </div>
 
+          <!-- Slider Speed -->
           <div class="control-group">
-            <label class="control-label" for="speed">
-              <span>Speed</span>
-              <span class="control-value" id="speed-value">1.25</span>
-            </label>
-            <div class="range-row">
-              <input id="speed" type="range" min="0" max="1.8" step="0.01" value="1.25" />
-              <input id="speed-number" type="number" min="0" max="1.8" step="0.01" value="1.25" />
-            </div>
+            <div class="control-label">Speed <span class="val" id="speed-val">1.00</span></div>
+            <input type="range" id="speed" min="0" max="3" step="0.05" value="1.00" />
           </div>
 
+          <!-- Slider Wind -->
           <div class="control-group">
-            <label class="control-label" for="wind">
-              <span>Wind</span>
-              <span class="control-value" id="wind-value">-0.28</span>
-            </label>
-            <div class="range-row">
-              <input id="wind" type="range" min="-1" max="1" step="0.01" value="-0.28" />
-              <input id="wind-number" type="number" min="-1" max="1" step="0.01" value="-0.28" />
-            </div>
+            <div class="control-label">Wind <span class="val" id="wind-val">-0.12</span></div>
+            <input type="range" id="wind" min="-1.5" max="1.5" step="0.05" value="-0.12" />
           </div>
 
+          <!-- Slider Snow Accumulation -->
+          <div class="control-group" id="snow-accum-control" style="display: none;">
+            <div class="control-label">Snow Accumulation <span class="val" id="snowAccumulation-val">0.55</span></div>
+            <input type="range" id="snowAccumulation" min="0" max="1.0" step="0.05" value="0.55" />
+          </div>
+
+          <!-- Slider Drip Level -->
+          <div class="control-group" id="rain-drip-control">
+            <div class="control-label">Rain Dripping <span class="val" id="rainDripping-val">0.50</span></div>
+            <input type="range" id="rainDripping" min="0" max="1.0" step="0.05" value="0.50" />
+          </div>
+
+          <!-- Slider Hail Bounce -->
+          <div class="control-group" id="hail-bounce-control" style="display: none;">
+            <div class="control-label">Hail Bounce <span class="val" id="hailBounce-val">0.50</span></div>
+            <input type="range" id="hailBounce" min="0" max="1.0" step="0.05" value="0.50" />
+          </div>
+
+          <!-- Switch Bottom Collision -->
+          <div class="switch-container">
+            <div class="switch-label">Bottom Collision</div>
+            <label class="switch">
+              <input type="checkbox" id="bottomCollision" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Dropdown Quality -->
           <div class="control-group">
             <div class="control-label">Quality</div>
-            <div class="segmented" style="--count: 4" data-control="quality">
-              <button type="button" data-value="auto">Auto</button>
-              <button type="button" data-value="low">Low</button>
-              <button type="button" data-value="medium">Medium</button>
-              <button type="button" data-value="high" aria-pressed="true">High</button>
+            <select class="option-select" id="quality">
+              <option value="auto">Auto (Responsive)</option>
+              <option value="high">High</option>
+              <option value="medium" selected>Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <!-- Dropdown Transparency -->
+          <div class="control-group">
+            <div class="control-label">Transparency Mode</div>
+            <select class="option-select" id="transparency">
+              <option value="glass" selected>Glass (Standard Blurs)</option>
+              <option value="opacity">Opacity (Translucent)</option>
+              <option value="none">None (Solid Cards)</option>
+            </select>
+          </div>
+
+          <!-- Opacity Sliders (Conditional display) -->
+          <div class="control-group" id="surface-opacity-control">
+            <div class="control-label">Surface Opacity <span class="val" id="surfaceOpacity-val">0.14</span></div>
+            <input type="range" id="surfaceOpacity" min="0" max="1" step="0.02" value="0.14" />
+          </div>
+
+          <div class="control-group" id="content-opacity-control" style="display: none;">
+            <div class="control-label">Content Opacity <span class="val" id="contentOpacity-val">0.72</span></div>
+            <input type="range" id="contentOpacity" min="0" max="1" step="0.02" value="0.72" />
+          </div>
+
+          <!-- Color presets selector -->
+          <div class="control-group">
+            <div class="control-label">Precipitation Color</div>
+            <div class="color-presets" id="color-selector">
+              <button class="color-btn" style="background: rgba(220, 235, 255, 0.72);" data-value="rgba(220, 235, 255, 0.72)" aria-pressed="true" title="Default Ice Blue"></button>
+              <button class="color-btn" style="background: rgba(255, 255, 255, 0.72);" data-value="rgba(255, 255, 255, 0.72)" title="Pure Snow White"></button>
+              <button class="color-btn" style="background: rgba(255, 230, 200, 0.68);" data-value="rgba(255, 230, 200, 0.68)" title="Warm Sunlight Gold"></button>
+              <button class="color-btn" style="background: rgba(200, 255, 220, 0.65);" data-value="rgba(200, 255, 220, 0.65)" title="Toxic Green Flare"></button>
             </div>
           </div>
 
-          <div class="control-group">
-            <div class="control-label">Renderer</div>
-            <div class="segmented" style="--count: 3" data-control="renderer">
-              <button type="button" data-value="canvas2d" aria-pressed="true">Canvas</button>
-              <button type="button" data-value="webgl">WebGL</button>
-              <button type="button" data-value="auto">Auto</button>
-            </div>
-          </div>
+          <!-- Copy Config Button -->
+          <button class="copy-config-btn" id="copy-config-btn">
+            <span>📋</span> Copy Configuration
+          </button>
+        </div>
+      </div>
 
-          <div class="control-group">
-            <div class="control-label">Transparency</div>
-            <div class="segmented" style="--count: 3" data-control="transparency">
-              <button type="button" data-value="glass" aria-pressed="true">Glass</button>
-              <button type="button" data-value="opacity">Opacity</button>
-              <button type="button" data-value="none">None</button>
-            </div>
+      <!-- Installation Section -->
+      <section class="docs-section">
+        <h2 class="section-title">Quick Start</h2>
+        <div class="install-grid">
+          <div>
+            <p style="margin-bottom: 12px; color: var(--muted);">1. Install package via npm:</p>
+            <pre><code>npm install atoms-fx</code></pre>
           </div>
+          <div>
+            <p style="margin-bottom: 12px; color: var(--muted);">2. Import module and stylesheet:</p>
+            <pre><code id="code-sample">// Playground active config will sync here</code></pre>
+          </div>
+        </div>
+      </section>
 
-          <div class="control-group">
-            <label class="control-label" for="surfaceOpacity">
-              <span>Surface opacity</span>
-              <span class="control-value" id="surfaceOpacity-value">0.14</span>
-            </label>
-            <div class="range-row">
-              <input id="surfaceOpacity" type="range" min="0" max="1" step="0.01" value="0.14" />
-              <input
-                id="surfaceOpacity-number"
-                type="number"
-                min="0"
-                max="1"
-                step="0.01"
-                value="0.14"
-              />
-            </div>
-          </div>
+      <!-- API Reference Section -->
+      <section class="docs-section">
+        <h2 class="section-title">API Reference</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Type / Values</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>preset</code></td>
+                <td><code>'rain' | 'snow' | 'hail'</code></td>
+                <td>Applies preset default physical and visual values.</td>
+              </tr>
+              <tr>
+                <td><code>particle</code></td>
+                <td><code>'rain' | 'snow' | 'hail'</code></td>
+                <td>Overrides preset particle rendering without overwriting speed/wind presets.</td>
+              </tr>
+              <tr>
+                <td><code>density</code></td>
+                <td><code>0</code> to <code>1</code> <span class="api-badge">0.65</span></td>
+                <td>Scales preallocated particle budget and spawn count.</td>
+              </tr>
+              <tr>
+                <td><code>speed</code></td>
+                <td><code>0</code> to <code>10</code> <span class="api-badge">1</span></td>
+                <td>Scalar multiplier for gravity and vertical fall speed.</td>
+              </tr>
+              <tr>
+                <td><code>wind</code></td>
+                <td><code>-1.5</code> to <code>1.5</code> <span class="api-badge">-0.12</span></td>
+                <td>Affects horizontal sway and particle drift.</td>
+              </tr>
+              <tr>
+                <td><code>color</code></td>
+                <td><code>string</code> <span class="api-badge">Ice Blue</span></td>
+                <td>CSS color representation for precipitation particles.</td>
+              </tr>
+              <tr>
+                <td><code>quality</code></td>
+                <td><code>'auto' | 'low' | 'medium' | 'high'</code></td>
+                <td>Limits particle count and device pixel ratio density. Defaults to <code>auto</code>.</td>
+              </tr>
+              <tr>
+                <td><code>bottomCollision</code></td>
+                <td><code>boolean</code> <span class="api-badge">false</span></td>
+                <td>Determines whether particles collide with the bottom edge of the container.</td>
+              </tr>
+              <tr>
+                <td><code>transparency</code></td>
+                <td><code>'glass' | 'opacity' | 'none'</code></td>
+                <td>Integrates elements with the weather background via CSS blur or opacity filter.</td>
+              </tr>
+              <tr>
+                <td><code>surfaceOpacity</code></td>
+                <td><code>0</code> to <code>1</code> <span class="api-badge">0.14</span></td>
+                <td>Backdrop opacity multiplier used in <code>glass</code> transparency mode.</td>
+              </tr>
+              <tr>
+                <td><code>contentOpacity</code></td>
+                <td><code>0</code> to <code>1</code> <span class="api-badge">0.72</span></td>
+                <td>Foreground text readability fading used in <code>opacity</code> transparency mode.</td>
+              </tr>
+              <tr>
+                <td><code>snowAccumulation</code></td>
+                <td><code>0</code> to <code>1</code> <span class="api-badge">0.55</span></td>
+                <td>BUildup intensity of snow piles on top of collision targets.</td>
+              </tr>
+              <tr>
+                <td><code>rainDripping</code></td>
+                <td><code>0</code> to <code>1</code> <span class="api-badge">0.5</span></td>
+                <td>Likelihood of dripping drops gathering along card bottom edges.</td>
+              </tr>
+              <tr>
+                <td><code>hailBounce</code></td>
+                <td><code>0</code> to <code>1</code> <span class="api-badge">0.5</span></td>
+                <td>Coefficient of restitution for bouncing hail pellets.</td>
+              </tr>
+              <tr>
+                <td><code>collisionSelector</code></td>
+                <td><code>string</code></td>
+                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atoms-collision]</code>.</td>
+              </tr>
+              <tr>
+                <td><code>opaqueSelector</code></td>
+                <td><code>string</code></td>
+                <td>Query selector for elements that skip transparency blurs. Defaults to <code>[data-atoms-opaque]</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-          <div class="control-group">
-            <label class="control-label" for="contentOpacity">
-              <span>Content opacity</span>
-              <span class="control-value" id="contentOpacity-value">0.72</span>
-            </label>
-            <div class="range-row">
-              <input id="contentOpacity" type="range" min="0" max="1" step="0.01" value="0.72" />
-              <input
-                id="contentOpacity-number"
-                type="number"
-                min="0"
-                max="1"
-                step="0.01"
-                value="0.72"
-              />
-            </div>
-          </div>
+      <!-- Controller Methods -->
+      <section class="docs-section">
+        <h2 class="section-title">Controller Methods</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>start()</code></td>
+                <td>Initializes canvas layers, starts the requestAnimationFrame loop and rendering.</td>
+              </tr>
+              <tr>
+                <td><code>stop()</code></td>
+                <td>Stops the animation loop and clears canvases. Does not remove layers.</td>
+              </tr>
+              <tr>
+                <td><code>pause()</code></td>
+                <td>Pauses the animation execution while keeping the active frame buffer.</td>
+              </tr>
+              <tr>
+                <td><code>resume()</code></td>
+                <td>Resumes execution from a paused state.</td>
+              </tr>
+              <tr>
+                <td><code>resize()</code></td>
+                <td>Manually triggers context bounds measurement and canvas resizing.</td>
+              </tr>
+              <tr>
+                <td><code>update(options)</code></td>
+                <td>Dynamically updates atmosphere parameters on the fly without resetting state.</td>
+              </tr>
+              <tr>
+                <td><code>destroy()</code></td>
+                <td>Cleans up DOM nodes, listeners, context properties, and cancels loops.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-          <div class="control-group">
-            <label class="control-label" for="snowAccumulation">
-              <span>Snow accumulation</span>
-              <span class="control-value" id="snowAccumulation-value">0.55</span>
-            </label>
-            <div class="range-row">
-              <input id="snowAccumulation" type="range" min="0" max="1" step="0.01" value="0.55" />
-              <input
-                id="snowAccumulation-number"
-                type="number"
-                min="0"
-                max="1"
-                step="0.01"
-                value="0.55"
-              />
-            </div>
-          </div>
-
-          <div class="control-group">
-            <div class="control-label">Color</div>
-            <div class="swatches" data-control="color">
-              <button
-                class="swatch"
-                type="button"
-                style="--swatch: rgba(210, 228, 255, 0.82)"
-                data-value="rgba(210, 228, 255, 0.82)"
-                aria-label="Cold blue"
-                aria-pressed="true"
-              ></button>
-              <button
-                class="swatch"
-                type="button"
-                style="--swatch: rgba(245, 250, 255, 0.86)"
-                data-value="rgba(245, 250, 255, 0.86)"
-                aria-label="Snow white"
-              ></button>
-              <button
-                class="swatch"
-                type="button"
-                style="--swatch: rgba(244, 195, 93, 0.72)"
-                data-value="rgba(244, 195, 93, 0.72)"
-                aria-label="Amber"
-              ></button>
-              <button
-                class="swatch"
-                type="button"
-                style="--swatch: rgba(140, 205, 209, 0.76)"
-                data-value="rgba(140, 205, 209, 0.76)"
-                aria-label="Cyan"
-              ></button>
-              <button
-                class="swatch"
-                type="button"
-                style="--swatch: rgba(145, 182, 110, 0.74)"
-                data-value="rgba(145, 182, 110, 0.74)"
-                aria-label="Green"
-              ></button>
-            </div>
-          </div>
-
-          <div class="control-group">
-            <label class="toggle-row">
-              <span>Collision card</span>
-              <input id="collision-toggle" type="checkbox" checked />
-            </label>
-            <label class="toggle-row">
-              <span>Reduced motion respect</span>
-              <input id="reduced-motion-toggle" type="checkbox" checked />
-            </label>
-          </div>
-        </section>
-
-        <section class="tab-panel" data-panel="api" hidden>
-          <div class="doc-section">
-            <h2>Usage</h2>
-            <pre id="code-sample"></pre>
-          </div>
-
-          <div class="doc-section">
-            <h2>Options</h2>
-            <table class="api-table">
-              <thead>
-                <tr>
-                  <th>Option</th>
-                  <th>Values</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>preset</code></td>
-                  <td>
-                    <code>rain</code>, <code>storm</code>, <code>snow</code>,
-                    <code>hail</code>
-                  </td>
-                </tr>
-                <tr>
-                  <td><code>density</code></td>
-                  <td><code>0</code> to <code>1</code>; maps into quality-capped budgets</td>
-                </tr>
-                <tr>
-                  <td><code>speed</code></td>
-                  <td>Scalar for fall velocity; <code>0</code> freezes motion</td>
-                </tr>
-                <tr>
-                  <td><code>wind</code></td>
-                  <td><code>-1</code> to <code>1</code>; affects fall angle and drift</td>
-                </tr>
-                <tr>
-                  <td><code>quality</code></td>
-                  <td><code>auto</code>, <code>low</code>, <code>medium</code>, <code>high</code></td>
-                </tr>
-                <tr>
-                  <td><code>renderer</code></td>
-                  <td>
-                    <code>canvas2d</code>, <code>webgl</code>, <code>auto</code>; WebGL currently
-                    covers rain and falls back to Canvas 2D when unsupported
-                  </td>
-                </tr>
-                <tr>
-                  <td><code>transparency</code></td>
-                  <td><code>glass</code>, <code>opacity</code>, <code>none</code></td>
-                </tr>
-                <tr>
-                  <td><code>surfaceOpacity</code></td>
-                  <td><code>0</code> to <code>1</code>; controls glass surface opacity</td>
-                </tr>
-                <tr>
-                  <td><code>contentOpacity</code></td>
-                  <td><code>0</code> to <code>1</code>; controls opacity-mode content fade</td>
-                </tr>
-                <tr>
-                  <td><code>snowAccumulation</code></td>
-                  <td><code>0</code> to <code>1</code>; controls snow buildup intensity</td>
-                </tr>
-                <tr>
-                  <td><code>collisionSelector</code></td>
-                  <td>Defaults to <code>[data-atoms-collision]</code></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="tab-panel" data-panel="perf" hidden>
-          <div class="doc-section">
-            <h2>Performance</h2>
-            <ul>
-              <li>Use <code>quality: 'auto'</code> for responsive particle budgets.</li>
-              <li>Keep collision surfaces intentional; rects refresh outside the animation loop.</li>
-              <li>Import <code>atoms-fx/styles.css</code> once to enable glass and opacity controls.</li>
-              <li>Leave <code>respectReducedMotion</code> enabled for production UI.</li>
-              <li>Rain uses background and foreground layers so translucent surfaces can reveal rain behind them.</li>
-              <li>Snow accumulation uses a bounded foreground pool and scales with quality and density.</li>
-              <li>WebGL rendering is available for rain and falls back to Canvas 2D if the context is unavailable.</li>
-            </ul>
-          </div>
-
-          <div class="doc-section">
-            <h2>DOM controls</h2>
-            <ul>
-              <li><code>data-atoms-collision</code> makes a precipitation landing edge.</li>
-              <li><code>data-atoms-opaque</code> keeps controls solid.</li>
-              <li><code>data-atoms-opacity="0.68"</code> sets per-element opacity.</li>
-              <li><code>data-atoms-glass</code> opts nested surfaces into glass styling.</li>
-            </ul>
-          </div>
-        </section>
-      </aside>
+      <!-- DOM Attributes Section -->
+      <section class="docs-section">
+        <h2 class="section-title">DOM Attributes</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Attribute</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>data-atoms-collision</code></td>
+                <td>Marks the element as a top-edge landing surface for snow, rain splashes, and hail.</td>
+              </tr>
+              <tr>
+                <td><code>data-atoms-opaque</code></td>
+                <td>Instructs the glass controller to keep this element solid without translucent styling.</td>
+              </tr>
+              <tr>
+                <td><code>data-atoms-glass</code></td>
+                <td>Explicitly opts nested panels/containers into receiving the default weather-blur visual filter.</td>
+              </tr>
+              <tr>
+                <td><code>data-atoms-opacity="0.65"</code></td>
+                <td>Specifies an element-specific glass background opacity level.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      
+      <footer>
+        <p>Released under the MIT License. Built with WebGL for maximum performance. <a href="https://github.com/Whynotmetoo/atoms-fx" target="_blank">View GitHub</a></p>
+      </footer>
     </div>
 
+    <!-- Playground Setup Script -->
     <script type="module">
       import { createAtmosphere } from '../dist/index.js'
 
@@ -870,200 +849,244 @@
       const title = document.querySelector('#forecast-title')
       const summary = document.querySelector('#forecast-summary')
       const temp = document.querySelector('#forecast-temp')
-      const meta = document.querySelector('#forecast-meta')
-      const densityChip = document.querySelector('#density-chip')
-      const statusPreset = document.querySelector('#status-preset')
-      const statusQuality = document.querySelector('#status-quality')
-      const statusTransparency = document.querySelector('#status-transparency')
+      const forecastPresetBadge = document.querySelector('#forecast-preset')
+      const forecastWindText = document.querySelector('#forecast-wind')
+      const forecastDensityText = document.querySelector('#forecast-density')
       const codeSample = document.querySelector('#code-sample')
 
+      // Playground state (WebGL by default)
       const state = {
-        preset: 'storm',
-        density: 0.9,
-        speed: 1.25,
-        wind: -0.28,
-        quality: 'high',
-        renderer: 'canvas2d',
+        preset: 'rain',
+        density: 0.65,
+        speed: 1.00,
+        wind: -0.12,
+        quality: 'medium',
         transparency: 'glass',
         surfaceOpacity: 0.14,
         contentOpacity: 0.72,
         snowAccumulation: 0.55,
-        color: 'rgba(210, 228, 255, 0.82)',
-        respectReducedMotion: true,
+        rainDripping: 0.50,
+        hailBounce: 0.50,
+        bottomCollision: false,
+        color: 'rgba(220, 235, 255, 0.72)'
       }
 
-      const presetCopy = {
+      const presetDescriptions = {
         rain: {
-          title: 'Rain line',
-          summary:
-            'Layered rainfall tests glass readability, top-edge collision, and medium-density motion.',
+          title: 'Rain Showers',
+          summary: 'Layered rainfall tests glass readability, top-edge collision, and medium-density motion.',
           temp: '54',
-        },
-        storm: {
-          title: 'Hard rain',
-          summary:
-            'Heavy bands are moving across the interface with enough density to test glass, collision, and contrast.',
-          temp: '48',
+          badge: 'Rain'
         },
         snow: {
-          title: 'Snow drift',
-          summary:
-            'Slow flakes use depth, sway, and soft buildup on collision surfaces while preserving the same DOM integration.',
-          temp: '27',
+          title: 'Gentle Snow',
+          summary: 'Slow drifting flakes accumulate on top of card edges and fall off naturally.',
+          temp: '28',
+          badge: 'Snow'
         },
         hail: {
-          title: 'Hail line',
-          summary:
-            'Heavier pellets bounce lightly from the collision card and leave a bounded accumulation trace.',
-          temp: '36',
-        },
+          title: 'Hail Storm',
+          summary: 'Fast, heavy pellets bounce from surface edges and settle in mounds.',
+          temp: '34',
+          badge: 'Hail'
+        }
       }
 
+      // Initialize engine
       const atmosphere = createAtmosphere(root, {
         ...state,
-        pauseWhenHidden: false,
+        pauseWhenHidden: false
       })
+      atmosphere.start()
 
-      function formatNumber(value) {
-        return Number(value).toFixed(2)
+      // Format to 2 decimal places
+      function formatNum(v) {
+        return Number(v).toFixed(2)
       }
 
-      function currentOptions() {
-        return {
+      // Sync active parameters with UI sliders
+      function syncSliderValue(id) {
+        const valueElement = document.querySelector(`#${id}-val`)
+        if (valueElement) {
+          valueElement.textContent = formatNum(state[id])
+        }
+        const slider = document.querySelector(`#${id}`)
+        if (slider) {
+          slider.value = String(state[id])
+        }
+      }
+
+      // Sync selected pressed state for groups of buttons
+      function syncButtonGroup(controlName, activeVal) {
+        const buttons = document.querySelectorAll(`[data-control="${controlName}"] button`)
+        buttons.forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.value === activeVal))
+        })
+      }
+
+      // Copy configuration function
+      function updateCodeBlock() {
+        const optionsCopy = {
           preset: state.preset,
           density: state.density,
           speed: state.speed,
           wind: state.wind,
           quality: state.quality,
-          renderer: state.renderer,
           transparency: state.transparency,
           surfaceOpacity: state.surfaceOpacity,
           contentOpacity: state.contentOpacity,
-          snowAccumulation: state.snowAccumulation,
-          color: state.color,
-          respectReducedMotion: state.respectReducedMotion,
-          pauseWhenHidden: false,
+          bottomCollision: state.bottomCollision,
+          color: state.color
         }
-      }
 
-      function updatePressed(group, value) {
-        for (const button of document.querySelectorAll(`[data-control="${group}"] [data-value]`)) {
-          button.setAttribute('aria-pressed', String(button.dataset.value === value))
+        if (state.preset === 'snow') {
+          optionsCopy.snowAccumulation = state.snowAccumulation
+        } else if (state.preset === 'rain') {
+          optionsCopy.rainDripping = state.rainDripping
+        } else if (state.preset === 'hail') {
+          optionsCopy.hailBounce = state.hailBounce
         }
-      }
 
-      function syncRange(name) {
-        const value = formatNumber(state[name])
-        document.querySelector(`#${name}`).value = String(state[name])
-        document.querySelector(`#${name}-number`).value = String(state[name])
-        document.querySelector(`#${name}-value`).textContent = value
-      }
-
-      function syncCodeSample() {
         codeSample.textContent = `import { createAtmosphere } from 'atoms-fx'
 import 'atoms-fx/styles.css'
 
-const controller = createAtmosphere(root, ${JSON.stringify(currentOptions(), null, 2)})
+const controller = createAtmosphere(
+  document.querySelector('#container'),
+  ${JSON.stringify(optionsCopy, null, 2)}
+)
 
 controller.start()`
       }
 
-      function applyState() {
-        const copy = presetCopy[state.preset]
-        root.dataset.playgroundPreset = state.preset
-        title.textContent = copy.title
-        summary.textContent = copy.summary
-        temp.textContent = copy.temp
-        meta.textContent = `wind ${formatNumber(state.wind)}`
-        densityChip.textContent = `Density ${formatNumber(state.density)}`
-        statusPreset.textContent = state.preset
-        statusQuality.textContent = `quality ${state.quality}`
-        statusTransparency.textContent = state.transparency
+      // Apply changes to scene and labels
+      function apply() {
+        // Update labels on card
+        const cardInfo = presetDescriptions[state.preset]
+        title.textContent = cardInfo.title
+        summary.textContent = cardInfo.summary
+        temp.textContent = cardInfo.temp
+        forecastPresetBadge.textContent = cardInfo.badge
+        forecastWindText.textContent = `wind ${formatNum(state.wind)}`
+        forecastDensityText.textContent = `Density ${formatNum(state.density)}`
 
-        syncRange('density')
-        syncRange('speed')
-        syncRange('wind')
-        syncRange('surfaceOpacity')
-        syncRange('contentOpacity')
-        syncRange('snowAccumulation')
-        updatePressed('preset', state.preset)
-        updatePressed('quality', state.quality)
-        updatePressed('renderer', state.renderer)
-        updatePressed('transparency', state.transparency)
-        updatePressed('color', state.color)
-        syncCodeSample()
-        atmosphere.update(currentOptions())
-      }
+        // Display correct controls depending on preset
+        document.querySelector('#snow-accum-control').style.display = state.preset === 'snow' ? 'flex' : 'none'
+        document.querySelector('#rain-drip-control').style.display = state.preset === 'rain' ? 'flex' : 'none'
+        document.querySelector('#hail-bounce-control').style.display = state.preset === 'hail' ? 'flex' : 'none'
 
-      function setNumeric(name, value) {
-        const input = document.querySelector(`#${name}`)
-        const min = Number(input.min)
-        const max = Number(input.max)
-        const parsed = Number(value)
-        state[name] = Math.min(max, Math.max(min, Number.isNaN(parsed) ? state[name] : parsed))
-        applyState()
-      }
+        // Display correct opacity sliders
+        document.querySelector('#surface-opacity-control').style.display = state.transparency === 'glass' ? 'flex' : 'none'
+        document.querySelector('#content-opacity-control').style.display = state.transparency === 'opacity' ? 'flex' : 'none'
 
-      for (const name of [
-        'density',
-        'speed',
-        'wind',
-        'surfaceOpacity',
-        'contentOpacity',
-        'snowAccumulation',
-      ]) {
-        document.querySelector(`#${name}`).addEventListener('input', (event) => {
-          setNumeric(name, event.target.value)
+        // Sync inputs
+        syncSliderValue('density')
+        syncSliderValue('speed')
+        syncSliderValue('wind')
+        syncSliderValue('snowAccumulation')
+        syncSliderValue('rainDripping')
+        syncSliderValue('hailBounce')
+        syncSliderValue('surfaceOpacity')
+        syncSliderValue('contentOpacity')
+
+        // Bottom collision toggle
+        document.querySelector('#bottomCollision').checked = state.bottomCollision
+
+        // Color and preset active buttons
+        syncButtonGroup('preset', state.preset)
+        document.querySelectorAll('#color-selector button').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.value === state.color))
         })
-        document.querySelector(`#${name}-number`).addEventListener('input', (event) => {
-          setNumeric(name, event.target.value)
+
+        // Dropdown options
+        document.querySelector('#quality').value = state.quality
+        document.querySelector('#transparency').value = state.transparency
+
+        // Update code sample
+        updateCodeBlock()
+
+        // Push state directly to atmosphere
+        atmosphere.update({
+          preset: state.preset,
+          particle: state.preset,
+          density: state.density,
+          speed: state.speed,
+          wind: state.wind,
+          quality: state.quality,
+          transparency: state.transparency,
+          surfaceOpacity: state.surfaceOpacity,
+          contentOpacity: state.contentOpacity,
+          snowAccumulation: state.snowAccumulation,
+          rainDripping: state.rainDripping,
+          hailBounce: state.hailBounce,
+          bottomCollision: state.bottomCollision,
+          color: state.color
         })
       }
 
-      for (const group of ['preset', 'quality', 'renderer', 'transparency', 'color']) {
-        for (const button of document.querySelectorAll(`[data-control="${group}"] [data-value]`)) {
-          button.addEventListener('click', () => {
-            state[group] = button.dataset.value
-            applyState()
+      // Event Listeners for UI sliders
+      const sliders = ['density', 'speed', 'wind', 'snowAccumulation', 'rainDripping', 'hailBounce', 'surfaceOpacity', 'contentOpacity']
+      sliders.forEach(id => {
+        const input = document.querySelector(`#${id}`)
+        if (input) {
+          input.addEventListener('input', (e) => {
+            state[id] = Number(e.target.value)
+            apply()
           })
         }
-      }
+      })
 
-      document.querySelector('#collision-toggle').addEventListener('change', (event) => {
-        if (event.target.checked) {
-          collisionCard.dataset.atomsCollision = ''
-        } else {
-          delete collisionCard.dataset.atomsCollision
+      // Bottom collision switch listener
+      document.querySelector('#bottomCollision').addEventListener('change', (e) => {
+        state.bottomCollision = e.target.checked
+        apply()
+      })
+
+      // Dropdown selector listeners
+      document.querySelector('#quality').addEventListener('change', (e) => {
+        state.quality = e.target.value
+        apply()
+      })
+
+      document.querySelector('#transparency').addEventListener('change', (e) => {
+        state.transparency = e.target.value
+        apply()
+      })
+
+      // Preset button listener
+      document.querySelector('[data-control="preset"]').addEventListener('click', (e) => {
+        const btn = e.target.closest('button')
+        if (btn) {
+          state.preset = btn.dataset.value
+          apply()
         }
       })
 
-      document.querySelector('#reduced-motion-toggle').addEventListener('change', (event) => {
-        state.respectReducedMotion = event.target.checked
-        applyState()
+      // Color preset button listener
+      document.querySelector('#color-selector').addEventListener('click', (e) => {
+        const btn = e.target.closest('button')
+        if (btn) {
+          state.color = btn.dataset.value
+          apply()
+        }
       })
 
-      for (const tab of document.querySelectorAll('[role="tab"]')) {
-        tab.addEventListener('click', () => {
-          for (const button of document.querySelectorAll('[role="tab"]')) {
-            button.setAttribute('aria-selected', String(button === tab))
-          }
-
-          for (const panel of document.querySelectorAll('[data-panel]')) {
-            panel.hidden = panel.dataset.panel !== tab.dataset.tab
-          }
+      // Copy configuration button listener
+      const copyBtn = document.querySelector('#copy-config-btn')
+      copyBtn.addEventListener('click', () => {
+        const codeText = codeSample.textContent
+        navigator.clipboard.writeText(codeText).then(() => {
+          const originalText = copyBtn.innerHTML
+          copyBtn.innerHTML = '<span>✅</span> Copied!'
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText
+          }, 2000)
+        }).catch(err => {
+          console.error('Failed to copy config: ', err)
         })
-      }
+      })
 
-      atmosphere.start()
-      applyState()
-      window.atomsFxPlayground = {
-        atmosphere,
-        state,
-        setPreset(preset) {
-          state.preset = preset
-          applyState()
-        },
-      }
+      // Initial apply call
+      apply()
     </script>
   </body>
 </html>

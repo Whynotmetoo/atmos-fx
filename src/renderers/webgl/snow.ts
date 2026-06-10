@@ -483,7 +483,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
       return collision
     }
 
-    if (previousY <= this.size.height && nextY >= this.size.height) {
+    if (this.options.bottomCollision && previousY <= this.size.height && nextY >= this.size.height) {
       const progress = (this.size.height - previousY) / (nextY - previousY)
       return {
         x: previousX + (nextX - previousX) * progress,

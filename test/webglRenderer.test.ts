@@ -73,7 +73,6 @@ const size: CanvasLayerSize = {
 const options: NormalizedAtmosphereOptions = {
   preset: 'rain',
   particle: 'rain',
-  renderer: 'webgl',
   density: 0.7,
   speed: 1,
   wind: -0.12,
@@ -85,6 +84,7 @@ const options: NormalizedAtmosphereOptions = {
   snowAccumulation: 0.55,
   rainDripping: 0.5,
   hailBounce: 0.5,
+  bottomCollision: false,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -131,11 +131,11 @@ describe('WebGL renderer foundation', () => {
     renderer?.destroy()
   })
 
-  it('falls back to Canvas 2D when WebGL is unavailable', () => {
+  it('falls back to Canvas 2D dummy when WebGL is unavailable', () => {
     const renderer = createRenderer(createCanvases(null), size, options)
 
     expect(renderer.backend).toBe('canvas2d')
-    expect(renderer.getStats().particleCount).toBeGreaterThan(0)
+    expect(renderer.getStats().particleCount).toBe(0)
   })
 
   it('creates and renders the WebGL snow path', () => {
@@ -144,7 +144,6 @@ describe('WebGL renderer foundation', () => {
       ...options,
       preset: 'snow',
       particle: 'snow',
-      renderer: 'webgl',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -166,7 +165,6 @@ describe('WebGL renderer foundation', () => {
       ...options,
       preset: 'hail',
       particle: 'hail',
-      renderer: 'webgl',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -188,7 +186,6 @@ describe('WebGL renderer foundation', () => {
       ...options,
       preset: 'rain',
       particle: 'rain',
-      renderer: 'webgl',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -219,7 +216,7 @@ describe('WebGL renderer foundation', () => {
 
     renderer.render(16)
     expect(webglRenderer.getActiveSplashCount()).toBeGreaterThan(0)
-    
+
     renderer.destroy()
   })
 
@@ -229,7 +226,6 @@ describe('WebGL renderer foundation', () => {
       ...options,
       preset: 'snow',
       particle: 'snow',
-      renderer: 'webgl',
       snowAccumulation: 0.5,
     })
 
@@ -260,7 +256,7 @@ describe('WebGL renderer foundation', () => {
 
     renderer.render(16)
     expect(webglRenderer.getActiveAccumulationCount()).toBeGreaterThan(0)
-    
+
     renderer.destroy()
   })
 
@@ -270,7 +266,6 @@ describe('WebGL renderer foundation', () => {
       ...options,
       preset: 'hail',
       particle: 'hail',
-      renderer: 'webgl',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -313,7 +308,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         color: '#9ccfff',
-        renderer: 'webgl',
       })
       expect(renderer.backend).toBe('webgl')
       renderer.render(16)
@@ -331,7 +325,6 @@ describe('WebGL renderer foundation', () => {
         preset: 'snow',
         particle: 'snow',
         color: '#9ccfff',
-        renderer: 'webgl',
       })
       expect(renderer.backend).toBe('webgl')
       renderer.render(16)
@@ -349,7 +342,6 @@ describe('WebGL renderer foundation', () => {
         preset: 'hail',
         particle: 'hail',
         color: '#9ccfff',
-        renderer: 'webgl',
       })
       expect(renderer.backend).toBe('webgl')
       renderer.render(16)
@@ -358,5 +350,106 @@ describe('WebGL renderer foundation', () => {
       expect(match).toBeDefined()
       renderer.destroy()
     }
+  })
+
+  it('handles bottomCollision options correctly for rain, snow, and hail', () => {
+    // Test Rain bottom collision
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        bottomCollision: true,
+      })
+      const webglRenderer = renderer as any
+      const particle = webglRenderer.particles.find(
+        (candidate: any) => candidate.layer === 'foreground',
+      )
+      expect(particle).toBeDefined()
+      particle.x = 120
+      particle.y = 590
+      particle.vx = 0
+      particle.vy = 1200
+      particle.length = 18
+
+      renderer.render(16)
+      expect(webglRenderer.getActiveSplashCount()).toBeGreaterThan(0)
+      renderer.destroy()
+    }
+
+    // Test Snow bottom collision
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'snow',
+        particle: 'snow',
+        bottomCollision: true,
+        snowAccumulation: 0.5,
+      })
+      const webglRenderer = renderer as any
+      const particle = webglRenderer.particles[0]
+      particle.x = 120
+      particle.y = 590
+      particle.vx = 0
+      particle.vy = 900
+      particle.radius = 2
+      particle.drift = 0
+
+      renderer.render(16)
+      expect(webglRenderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+      renderer.destroy()
+    }
+
+    // Test Hail bottom collision
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'hail',
+        particle: 'hail',
+        bottomCollision: true,
+      })
+      const webglRenderer = renderer as any
+      const particle = webglRenderer.particles[0]
+      particle.x = 120
+      particle.y = 590
+      particle.vx = 0
+      particle.vy = 800
+      particle.radius = 3
+
+      renderer.render(16)
+      expect(webglRenderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+      renderer.destroy()
+    }
+  })
+
+  it('recycles background rain silently on card top edge crossings', () => {
+    const context = createWebGLContext()
+    const renderer = createRenderer(createCanvases(context), size, options)
+    const webglRenderer = renderer as any
+    const particle = webglRenderer.particles[0] // background count is index 0
+    expect(particle).toBeDefined()
+
+    particle.x = 120
+    particle.y = 90
+    particle.vx = 0
+    particle.vy = 1200
+    particle.length = 18
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    renderer.render(16)
+    // Background rain should recycle silently (no splash created)
+    expect(webglRenderer.getActiveSplashCount()).toBe(0)
+    renderer.destroy()
   })
 })

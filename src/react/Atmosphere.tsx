@@ -24,7 +24,6 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
   {
     preset,
     particle,
-    renderer,
     density,
     speed,
     wind,
@@ -36,6 +35,7 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
     snowAccumulation,
     rainDripping,
     hailBounce,
+    bottomCollision,
     collisionSelector,
     opaqueSelector,
     pauseWhenHidden,
@@ -56,10 +56,6 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
 
       if (particle !== undefined) {
         nextOptions.particle = particle
-      }
-
-      if (renderer !== undefined) {
-        nextOptions.renderer = renderer
       }
 
       if (density !== undefined) {
@@ -106,6 +102,10 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
         nextOptions.hailBounce = hailBounce
       }
 
+      if (bottomCollision !== undefined) {
+        nextOptions.bottomCollision = bottomCollision
+      }
+
       if (collisionSelector !== undefined) {
         nextOptions.collisionSelector = collisionSelector
       }
@@ -127,7 +127,6 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
     [
       preset,
       particle,
-      renderer,
       density,
       speed,
       wind,
@@ -139,6 +138,7 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
       snowAccumulation,
       rainDripping,
       hailBounce,
+      bottomCollision,
       collisionSelector,
       opaqueSelector,
       pauseWhenHidden,

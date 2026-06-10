@@ -1,4 +1,4 @@
-export type AtmospherePreset = 'rain' | 'storm' | 'snow' | 'hail'
+export type AtmospherePreset = 'rain' | 'snow' | 'hail'
 
 export type AtmosphereParticle = 'rain' | 'snow' | 'hail'
 
@@ -6,12 +6,9 @@ export type AtmosphereQuality = 'auto' | 'low' | 'medium' | 'high'
 
 export type TransparencyMode = 'glass' | 'opacity' | 'none'
 
-export type AtmosphereRendererBackend = 'canvas2d' | 'webgl' | 'auto'
-
 export type AtmosphereOptions = {
   preset?: AtmospherePreset
   particle?: AtmosphereParticle
-  renderer?: AtmosphereRendererBackend
   density?: number
   speed?: number
   wind?: number
@@ -23,6 +20,7 @@ export type AtmosphereOptions = {
   snowAccumulation?: number
   rainDripping?: number
   hailBounce?: number
+  bottomCollision?: boolean
   collisionSelector?: string
   opaqueSelector?: string
   pauseWhenHidden?: boolean
