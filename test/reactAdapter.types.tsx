@@ -17,6 +17,7 @@ export const reactAtmosphereProps: AtmosphereProps = {
   quality: 'high',
   contentOpacity: 0.66,
   surfaceOpacity: 0.18,
+  snowAccumulation: 0.6,
   className: 'weather',
   role: 'region',
   'aria-label': 'Weather atmosphere',

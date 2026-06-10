@@ -65,6 +65,7 @@ Core options:
 - `transparency`: `'glass' | 'opacity' | 'none'`
 - `surfaceOpacity`: `0` to `1`, controls glass surface opacity
 - `contentOpacity`: `0` to `1`, controls opacity-mode content fade
+- `snowAccumulation`: `0` to `1`, controls snow buildup intensity
 - `collisionSelector`: selector for precipitation landing surfaces
 - `opaqueSelector`: selector for solid child controls
 - `pauseWhenHidden` and `respectReducedMotion`: production performance/accessibility toggles
@@ -82,6 +83,7 @@ React is an optional peer dependency. Install it only when using the React adapt
 - Prefer `quality: 'auto'` for responsive pages.
 - Transparent surfaces can reveal background-layer precipitation while foreground precipitation still collides with selected DOM surfaces.
 - Keep collision surfaces intentional; target rects refresh outside the animation frame loop.
+- Snow accumulation is bounded by quality, density, and the configured buildup intensity.
 - Leave `respectReducedMotion` enabled in production.
 - Use `controller.destroy()` when removing an atmosphere root outside React.
 
@@ -94,7 +96,7 @@ npm run build
 npm test
 ```
 
-The current implementation includes the project foundation, the core lifecycle shell, Canvas 2D rain, snow, and hail renderers with particle budgeting, glass orchestration, top-edge collision splashes for rain, light bounce and bounded accumulation for hail, and a static docs playground.
+The current implementation includes the project foundation, the core lifecycle shell, Canvas 2D rain, snow, and hail renderers with particle budgeting, glass orchestration, top-edge collision splashes for rain, bounded snow accumulation, light bounce and bounded accumulation for hail, and a static docs playground.
 
 ## Local Smoke Test
 

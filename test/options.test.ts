@@ -11,6 +11,7 @@ describe('normalizeAtmosphereOptions', () => {
       transparency: 'glass',
       contentOpacity: 0.72,
       surfaceOpacity: 0.14,
+      snowAccumulation: 0.55,
     })
   })
 
@@ -42,12 +43,32 @@ describe('normalizeAtmosphereOptions', () => {
         speed: -1,
         contentOpacity: 2,
         surfaceOpacity: -1,
+        snowAccumulation: 2,
       }),
     ).toMatchObject({
       density: 1,
       contentOpacity: 1,
       surfaceOpacity: 0,
+      snowAccumulation: 1,
       speed: 0,
+    })
+  })
+
+  it('falls back when optional numeric options are explicitly undefined', () => {
+    expect(
+      normalizeAtmosphereOptions({
+        density: undefined,
+        speed: undefined,
+        contentOpacity: undefined,
+        surfaceOpacity: undefined,
+        snowAccumulation: undefined,
+      }),
+    ).toMatchObject({
+      density: 0.65,
+      contentOpacity: 0.72,
+      surfaceOpacity: 0.14,
+      snowAccumulation: 0.55,
+      speed: 1,
     })
   })
 })

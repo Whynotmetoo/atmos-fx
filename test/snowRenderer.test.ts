@@ -4,8 +4,16 @@ import type { CanvasLayerSize } from '../src/dom/canvasLayer'
 import { createSnowRenderer } from '../src/renderers/canvas2d/snow'
 
 type MutableSnowParticle = {
+  x: number
+  y: number
   vx: number
   vy: number
+  radius: number
+  alpha: number
+  depth: number
+  phase: number
+  phaseSpeed: number
+  drift: number
 }
 
 function createContext() {
@@ -26,10 +34,13 @@ function createCanvas(context: CanvasRenderingContext2D) {
   return canvas
 }
 
-function createCanvases(context: CanvasRenderingContext2D) {
+function createCanvases(
+  backgroundContext: CanvasRenderingContext2D,
+  foregroundContext: CanvasRenderingContext2D = createContext(),
+) {
   return {
-    background: createCanvas(context),
-    foreground: createCanvas(createContext()),
+    background: createCanvas(backgroundContext),
+    foreground: createCanvas(foregroundContext),
   }
 }
 
@@ -52,6 +63,7 @@ const options: NormalizedAtmosphereOptions = {
   transparency: 'glass',
   contentOpacity: 0.72,
   surfaceOpacity: 0.14,
+  snowAccumulation: 0.55,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -63,6 +75,7 @@ describe('SnowRenderer', () => {
     const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
 
     expect(renderer.getParticleCount()).toBeGreaterThan(0)
+    expect(renderer.getAccumulationCapacity()).toBeGreaterThan(0)
   })
 
   it('resizes the particle pool when density changes', () => {
@@ -82,7 +95,8 @@ describe('SnowRenderer', () => {
 
   it('draws drifting flakes without creating a new particle pool', () => {
     const context = createContext()
-    const renderer = createSnowRenderer(createCanvases(context), size, options)
+    const foregroundContext = createContext()
+    const renderer = createSnowRenderer(createCanvases(context, foregroundContext), size, options)
     const count = renderer.getParticleCount()
 
     renderer.render(16)
@@ -90,6 +104,7 @@ describe('SnowRenderer', () => {
 
     expect(context.setTransform).toHaveBeenCalledWith(2, 0, 0, 2, 0, 0)
     expect(context.clearRect).toHaveBeenCalledWith(0, 0, 800, 600)
+    expect(foregroundContext.clearRect).toHaveBeenCalledWith(0, 0, 800, 600)
     expect(context.arc).toHaveBeenCalled()
     expect(context.fill).toHaveBeenCalled()
     expect(renderer.getParticleCount()).toBe(count)
@@ -122,5 +137,137 @@ describe('SnowRenderer', () => {
 
     expect(context.clearRect).toHaveBeenCalledWith(0, 0, 800, 600)
     expect(renderer.getParticleCount()).toBe(0)
+    expect(renderer.getActiveAccumulationCount()).toBe(0)
+  })
+
+  it('spawns accumulation when snow crosses a collision top edge', () => {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
+    const particle = (renderer as unknown as { particles: MutableSnowParticle[] }).particles[0]
+
+    particle.x = 120
+    particle.y = 90
+    particle.vx = 0
+    particle.vy = 900
+    particle.radius = 2
+    particle.alpha = 0.8
+    particle.depth = 1
+    particle.phase = 0
+    particle.phaseSpeed = 0
+    particle.drift = 0
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    renderer.render(16)
+
+    expect(renderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+  })
+
+  it('spawns accumulation on the root bottom edge', () => {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
+    const particle = (renderer as unknown as { particles: MutableSnowParticle[] }).particles[0]
+
+    particle.x = 120
+    particle.y = 592
+    particle.vx = 0
+    particle.vy = 900
+    particle.radius = 2
+    particle.alpha = 0.8
+    particle.depth = 1
+    particle.phase = 0
+    particle.phaseSpeed = 0
+    particle.drift = 0
+
+    renderer.render(16)
+
+    expect(renderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+  })
+
+  it('clears bottom-edge accumulation when the root size changes', () => {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
+    const particle = (renderer as unknown as { particles: MutableSnowParticle[] }).particles[0]
+
+    particle.x = 120
+    particle.y = 592
+    particle.vx = 0
+    particle.vy = 900
+    particle.radius = 2
+    particle.alpha = 0.8
+    particle.depth = 1
+    particle.phase = 0
+    particle.phaseSpeed = 0
+    particle.drift = 0
+
+    renderer.render(16)
+
+    expect(renderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+
+    renderer.resize({
+      ...size,
+      height: 720,
+      canvasHeight: 1440,
+    })
+
+    expect(renderer.getActiveAccumulationCount()).toBe(0)
+  })
+
+  it('disables snow accumulation when configured to zero', () => {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, {
+      ...options,
+      snowAccumulation: 0,
+    })
+
+    expect(renderer.getAccumulationCapacity()).toBe(0)
+  })
+
+  it('clears accumulation when collision targets change', () => {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
+    const particle = (renderer as unknown as { particles: MutableSnowParticle[] }).particles[0]
+
+    particle.x = 120
+    particle.y = 90
+    particle.vx = 0
+    particle.vy = 900
+    particle.radius = 2
+    particle.alpha = 0.8
+    particle.depth = 1
+    particle.phase = 0
+    particle.phaseSpeed = 0
+    particle.drift = 0
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+    renderer.render(16)
+
+    expect(renderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+
+    renderer.setCollisionTargets([
+      {
+        x: 120,
+        y: 180,
+        width: 120,
+        height: 40,
+        right: 240,
+        bottom: 220,
+      },
+    ])
+
+    expect(renderer.getActiveAccumulationCount()).toBe(0)
   })
 })

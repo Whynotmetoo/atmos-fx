@@ -684,6 +684,24 @@
           </div>
 
           <div class="control-group">
+            <label class="control-label" for="snowAccumulation">
+              <span>Snow accumulation</span>
+              <span class="control-value" id="snowAccumulation-value">0.55</span>
+            </label>
+            <div class="range-row">
+              <input id="snowAccumulation" type="range" min="0" max="1" step="0.01" value="0.55" />
+              <input
+                id="snowAccumulation-number"
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.55"
+              />
+            </div>
+          </div>
+
+          <div class="control-group">
             <div class="control-label">Color</div>
             <div class="swatches" data-control="color">
               <button
@@ -789,6 +807,10 @@
                   <td><code>0</code> to <code>1</code>; controls opacity-mode content fade</td>
                 </tr>
                 <tr>
+                  <td><code>snowAccumulation</code></td>
+                  <td><code>0</code> to <code>1</code>; controls snow buildup intensity</td>
+                </tr>
+                <tr>
                   <td><code>collisionSelector</code></td>
                   <td>Defaults to <code>[data-atoms-collision]</code></td>
                 </tr>
@@ -806,6 +828,7 @@
               <li>Import <code>atoms-fx/styles.css</code> once to enable glass and opacity controls.</li>
               <li>Leave <code>respectReducedMotion</code> enabled for production UI.</li>
               <li>Rain uses background and foreground layers so translucent surfaces can reveal rain behind them.</li>
+              <li>Snow accumulation uses a bounded foreground pool and scales with quality and density.</li>
             </ul>
           </div>
 
@@ -846,6 +869,7 @@
         transparency: 'glass',
         surfaceOpacity: 0.14,
         contentOpacity: 0.72,
+        snowAccumulation: 0.55,
         color: 'rgba(210, 228, 255, 0.82)',
         respectReducedMotion: true,
       }
@@ -866,7 +890,7 @@
         snow: {
           title: 'Snow drift',
           summary:
-            'Slow flakes use depth and sway to stay quiet while preserving the same DOM integration.',
+            'Slow flakes use depth, sway, and soft buildup on collision surfaces while preserving the same DOM integration.',
           temp: '27',
         },
         hail: {
@@ -896,6 +920,7 @@
           transparency: state.transparency,
           surfaceOpacity: state.surfaceOpacity,
           contentOpacity: state.contentOpacity,
+          snowAccumulation: state.snowAccumulation,
           color: state.color,
           respectReducedMotion: state.respectReducedMotion,
           pauseWhenHidden: false,
@@ -941,6 +966,7 @@ controller.start()`
         syncRange('wind')
         syncRange('surfaceOpacity')
         syncRange('contentOpacity')
+        syncRange('snowAccumulation')
         updatePressed('preset', state.preset)
         updatePressed('quality', state.quality)
         updatePressed('transparency', state.transparency)
@@ -958,7 +984,14 @@ controller.start()`
         applyState()
       }
 
-      for (const name of ['density', 'speed', 'wind', 'surfaceOpacity', 'contentOpacity']) {
+      for (const name of [
+        'density',
+        'speed',
+        'wind',
+        'surfaceOpacity',
+        'contentOpacity',
+        'snowAccumulation',
+      ]) {
         document.querySelector(`#${name}`).addEventListener('input', (event) => {
           setNumeric(name, event.target.value)
         })

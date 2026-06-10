@@ -11,6 +11,7 @@ export const DEFAULT_OPTIONS = {
   transparency: 'glass',
   contentOpacity: 0.72,
   surfaceOpacity: 0.14,
+  snowAccumulation: 0.55,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
