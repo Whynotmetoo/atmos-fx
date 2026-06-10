@@ -10,7 +10,7 @@ type AccumulationParticle = {
 }
 
 export class AccumulationPool {
-  private particles: AccumulationParticle[] = []
+  particles: AccumulationParticle[] = []
   private cursor = 0
 
   constructor(private maxSize = 0) {

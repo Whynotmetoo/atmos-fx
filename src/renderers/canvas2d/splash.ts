@@ -21,7 +21,7 @@ function randomRange(min: number, max: number): number {
 }
 
 export class SplashPool {
-  private readonly particles: SplashParticle[]
+  readonly particles: SplashParticle[]
   private cursor = 0
 
   constructor(maxParticles = MAX_SPLASH_PARTICLES) {
