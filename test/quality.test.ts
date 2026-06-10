@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  calculateAccumulationBudget,
+  calculateHailParticleBudget,
   calculateRainParticleBudget,
   calculateSnowParticleBudget,
   resolveAutoQuality,
@@ -71,5 +73,34 @@ describe('canvas rain quality budgets', () => {
     expect(lowDensityBudget).toBeGreaterThan(0)
     expect(highDensityBudget).toBeGreaterThan(lowDensityBudget)
     expect(highDensityBudget).toBeLessThanOrEqual(680)
+  })
+
+  it('keeps hail budgets lower than rain for heavier particles', () => {
+    const rainBudget = calculateRainParticleBudget({
+      width: 800,
+      height: 600,
+      density: 0.8,
+      quality: 'medium',
+    })
+    const hailBudget = calculateHailParticleBudget({
+      width: 800,
+      height: 600,
+      density: 0.8,
+      quality: 'medium',
+    })
+
+    expect(hailBudget).toBeGreaterThan(0)
+    expect(hailBudget).toBeLessThan(rainBudget)
+  })
+
+  it('caps accumulation separately from moving particle budgets', () => {
+    expect(
+      calculateAccumulationBudget({
+        width: 2560,
+        height: 1440,
+        density: 1,
+        quality: 'high',
+      }),
+    ).toBe(220)
   })
 })

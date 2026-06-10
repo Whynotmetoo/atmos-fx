@@ -1,4 +1,4 @@
-export type AtmospherePreset = 'rain' | 'storm' | 'snow'
+export type AtmospherePreset = 'rain' | 'storm' | 'snow' | 'hail'
 
 export type AtmosphereParticle = 'rain' | 'snow' | 'hail'
 

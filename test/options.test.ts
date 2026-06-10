@@ -25,6 +25,14 @@ describe('normalizeAtmosphereOptions', () => {
     })
   })
 
+  it('applies hail preset defaults', () => {
+    expect(normalizeAtmosphereOptions({ preset: 'hail' })).toMatchObject({
+      preset: 'hail',
+      particle: 'hail',
+      density: 0.46,
+    })
+  })
+
   it('clamps density and speed to safe ranges', () => {
     expect(
       normalizeAtmosphereOptions({
