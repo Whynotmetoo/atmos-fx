@@ -52,11 +52,11 @@ export class DripPool {
 
     // Check if we already have a drip gathering very close to this x on the same target bottom
     const existing = this.particles.find(
-      (p) => p.active && p.target === target && Math.abs(p.x - x) < 8 && p.state === 'gathering',
+      (p) => p.active && p.target === target && Math.abs(p.x - x) < 24 && p.state === 'gathering',
     )
     if (existing) {
-      // Grow the existing drip slightly
-      existing.size = Math.min(existing.maxSize, existing.size + 0.3)
+      // Grow the existing drip slightly from the gathered rain hit
+      existing.size = Math.min(existing.maxSize, existing.size + 0.2)
       return
     }
 
@@ -65,9 +65,9 @@ export class DripPool {
     particle.x = x
     particle.y = y
     particle.vy = 0
-    particle.size = 0.5
-    // Larger maxSize for a big drop feel (2.4 to 4.6)
-    particle.maxSize = 2.4 + Math.random() * 2.2
+    particle.size = 0.3
+    // Larger maxSize for a big drop feel (3.6 to 5.8)
+    particle.maxSize = 3.6 + Math.random() * 2.2
     particle.target = target
     particle.state = 'gathering'
     // Slide towards right-quarter of the card bottom
@@ -83,6 +83,29 @@ export class DripPool {
     containerHeight: number,
     collisionTargets: readonly CollisionTargetRect[],
   ) {
+    // Merge gathering drips that slide close to each other on the same card bottom
+    for (let i = 0; i < this.particles.length; i++) {
+      const p1 = this.particles[i]
+      if (!p1.active || p1.state !== 'gathering') {
+        continue
+      }
+      for (let j = i + 1; j < this.particles.length; j++) {
+        const p2 = this.particles[j]
+        if (!p2.active || p2.state !== 'gathering' || p1.target !== p2.target) {
+          continue
+        }
+        const dist = Math.abs(p1.x - p2.x)
+        if (dist < 14) {
+          // Merge p2 into p1
+          p1.size = Math.min(p1.maxSize, p1.size + p2.size * 0.85)
+          if (p2.size > p1.size) {
+            p1.x = p2.x
+          }
+          p2.active = false
+        }
+      }
+    }
+
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i]
       if (!p.active) {
@@ -90,7 +113,8 @@ export class DripPool {
       }
 
       if (p.state === 'gathering') {
-        p.size += (0.6 + Math.random() * 0.6) * deltaSeconds
+        // Very slow idle growth, mainly driven by actual rain hits and merges
+        p.size += (0.04 + Math.random() * 0.04) * deltaSeconds
 
         if (p.target) {
           // Find target in current collision targets to keep coordinate sync
