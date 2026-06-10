@@ -483,7 +483,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private initializeLayers() {
     const capacity = Math.max(1, this.particles.length)
     this.backgroundLayer = createLayer(this.canvases.background, capacity)
-    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 480)
+    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 4000)
   }
 
   private syncParticleBudget(initial: boolean) {
@@ -497,7 +497,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     if (budget !== this.particles.length) {
       this.particles = []
       this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, budget))
-      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 480))
+      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 4000))
     }
 
     while (this.particles.length < budget) {
@@ -547,36 +547,107 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     return VERTICES_PER_PARTICLE
   }
 
-  private writeDrip(layer: WebGLLayer, vertexOffset: number, drip: any) {
+  private writeSegment(
+    layer: WebGLLayer,
+    vertexOffset: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    alpha: number,
+  ) {
     const start = vertexOffset * VALUES_PER_VERTEX
-    let topY = drip.y
-    let bottomY = drip.y
-    let alpha = 0.85
-
-    if (drip.state === 'gathering') {
-      topY = drip.y
-      bottomY = drip.y + drip.size * 1.8 // stretch downwards
-      alpha = 0.76
-    } else if (drip.detachProgress !== undefined && drip.detachProgress < 1) {
-      // Snapping/stretching phase
-      topY = drip.target ? drip.target.bottom : drip.y
-      bottomY = drip.y
-      alpha = 0.85
-    } else {
-      // Normal free fall
-      topY = drip.y - Math.min(12, drip.vy * 0.04)
-      bottomY = drip.y
-      alpha = 0.85
+    if (start + 5 >= layer.vertices.length) {
+      return 0
     }
-
-    layer.vertices[start] = drip.x
-    layer.vertices[start + 1] = topY
+    layer.vertices[start] = x1
+    layer.vertices[start + 1] = y1
     layer.vertices[start + 2] = alpha
-    layer.vertices[start + 3] = drip.x
-    layer.vertices[start + 4] = bottomY
+    layer.vertices[start + 3] = x2
+    layer.vertices[start + 4] = y2
     layer.vertices[start + 5] = alpha
 
     return VERTICES_PER_PARTICLE
+  }
+
+  private writeDrip(layer: WebGLLayer, vertexOffset: number, drip: any) {
+    let count = 0
+    const alpha = drip.state === 'gathering' ? 0.76 : 0.85
+    const S = drip.size
+
+    if (drip.state === 'gathering') {
+      const height = S * 3.0
+      const step = 0.5
+      for (let dy = 0; dy <= height; dy += step) {
+        const t = dy / (height || 1)
+        let w = 0
+        if (t < 0.3) {
+          const nt = t / 0.3
+          w = S * (0.75 * (1 - nt) + 0.35 * nt)
+        } else {
+          const bt = (t - 0.65) / 0.35
+          w = S * (0.35 * (1.0 - (t - 0.3) / 0.7) + 1.15 * Math.sqrt(Math.max(0, 1 - bt * bt)))
+        }
+        count += this.writeSegment(
+          layer,
+          vertexOffset + count,
+          drip.x - w,
+          drip.y + dy,
+          drip.x + w,
+          drip.y + dy,
+          alpha,
+        )
+      }
+    } else if (drip.detachProgress !== undefined && drip.detachProgress < 1) {
+      // Snapping/stretching phase: single line neck + bulbous body at drip.y
+      const anchorY = drip.target ? drip.target.bottom : drip.y
+      
+      // Neck (stretched connection line)
+      count += this.writeSegment(layer, vertexOffset + count, drip.x, anchorY, drip.x, drip.y, alpha * 0.5)
+
+      // Bulbous body
+      const height = S * 3.0
+      const step = 0.5
+      for (let dy = 0; dy <= height; dy += step) {
+        const t = dy / (height || 1)
+        let w = 0
+        if (t < 0.3) {
+          const nt = t / 0.3
+          w = S * (0.75 * (1 - nt) + 0.35 * nt)
+        } else {
+          const bt = (t - 0.65) / 0.35
+          w = S * (0.35 * (1.0 - (t - 0.3) / 0.7) + 1.15 * Math.sqrt(Math.max(0, 1 - bt * bt)))
+        }
+        count += this.writeSegment(
+          layer,
+          vertexOffset + count,
+          drip.x - w,
+          drip.y + dy,
+          drip.x + w,
+          drip.y + dy,
+          alpha,
+        )
+      }
+    } else {
+      // Normal free fall (slightly thicker falling raindrop streak)
+      const tailY = drip.y - Math.min(12, drip.vy * 0.04)
+      const w = S * 0.6
+      for (let dx = -w; dx <= w; dx += 0.5) {
+        const edgeFactor = 1 - Math.abs(dx) / (w || 1)
+        const startY = drip.y - (drip.y - tailY) * edgeFactor
+        count += this.writeSegment(
+          layer,
+          vertexOffset + count,
+          drip.x + dx,
+          startY,
+          drip.x + dx,
+          drip.y,
+          alpha,
+        )
+      }
+    }
+
+    return count
   }
 
   private drawLayer(layer: WebGLLayer, vertexCount: number) {

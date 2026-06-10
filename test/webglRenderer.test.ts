@@ -195,6 +195,14 @@ describe('WebGL renderer foundation', () => {
     )
     expect(particle).toBeDefined()
 
+    // Move other particles away to prevent random noise
+    for (const p of webglRenderer.particles) {
+      if (p !== particle) {
+        p.y = -500
+        p.vy = 0
+      }
+    }
+
     particle.x = 120
     particle.y = 90
     particle.vx = 0
@@ -360,11 +368,21 @@ describe('WebGL renderer foundation', () => {
         ...options,
         bottomCollision: true,
       })
+      expect(renderer.backend).toBe('webgl')
       const webglRenderer = renderer as any
       const particle = webglRenderer.particles.find(
         (candidate: any) => candidate.layer === 'foreground',
       )
       expect(particle).toBeDefined()
+
+      // Move other particles away to prevent random noise
+      for (const p of webglRenderer.particles) {
+        if (p !== particle) {
+          p.y = -500
+          p.vy = 0
+        }
+      }
+
       particle.x = 120
       particle.y = 590
       particle.vx = 0
@@ -386,8 +404,19 @@ describe('WebGL renderer foundation', () => {
         bottomCollision: true,
         snowAccumulation: 0.5,
       })
+      expect(renderer.backend).toBe('webgl')
       const webglRenderer = renderer as any
       const particle = webglRenderer.particles[0]
+      expect(particle).toBeDefined()
+
+      // Move other particles away to prevent random noise
+      for (const p of webglRenderer.particles) {
+        if (p !== particle) {
+          p.y = -500
+          p.vy = 0
+        }
+      }
+
       particle.x = 120
       particle.y = 590
       particle.vx = 0
@@ -409,8 +438,19 @@ describe('WebGL renderer foundation', () => {
         particle: 'hail',
         bottomCollision: true,
       })
+      expect(renderer.backend).toBe('webgl')
       const webglRenderer = renderer as any
       const particle = webglRenderer.particles[0]
+      expect(particle).toBeDefined()
+
+      // Move other particles away to prevent random noise
+      for (const p of webglRenderer.particles) {
+        if (p !== particle) {
+          p.y = -500
+          p.vy = 0
+        }
+      }
+
       particle.x = 120
       particle.y = 590
       particle.vx = 0
@@ -427,6 +467,13 @@ describe('WebGL renderer foundation', () => {
     const context = createWebGLContext()
     const renderer = createRenderer(createCanvases(context), size, options)
     const webglRenderer = renderer as any
+
+    // Move all other particles away to prevent random noise
+    for (const p of webglRenderer.particles) {
+      p.y = -500
+      p.vy = 0
+    }
+
     const particle = webglRenderer.particles[0] // background count is index 0
     expect(particle).toBeDefined()
 
