@@ -15,4 +15,5 @@ The project follows semantic versioning once published.
 - Added the React `<Atmosphere />` adapter.
 - Added static examples and an interactive docs playground.
 - Added release, accessibility, and contribution documentation.
+- Added bounded snow accumulation on collision surfaces and the root bottom edge.
 - Added light collision bounce and bounded accumulation for hail.

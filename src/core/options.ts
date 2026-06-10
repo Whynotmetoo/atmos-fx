@@ -26,6 +26,7 @@ export function normalizeAtmosphereOptions(
     density: clamp01(merged.density, DEFAULT_OPTIONS.density),
     contentOpacity: clamp01(merged.contentOpacity, DEFAULT_OPTIONS.contentOpacity),
     surfaceOpacity: clamp01(merged.surfaceOpacity, DEFAULT_OPTIONS.surfaceOpacity),
+    snowAccumulation: clamp01(merged.snowAccumulation, DEFAULT_OPTIONS.snowAccumulation),
     speed: Math.max(0, merged.speed),
   }
 }

@@ -17,6 +17,7 @@ export type AtmosphereOptions = {
   transparency?: TransparencyMode
   contentOpacity?: number
   surfaceOpacity?: number
+  snowAccumulation?: number
   collisionSelector?: string
   opaqueSelector?: string
   pauseWhenHidden?: boolean

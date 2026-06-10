@@ -1,7 +1,9 @@
 import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
-import { calculateSnowParticleBudget } from './quality'
+import { AccumulationPool } from './accumulation'
+import { findTopEdgeCollision } from './collision'
+import { calculateAccumulationBudget, calculateSnowParticleBudget } from './quality'
 import type { Canvas2DRenderer, RendererCanvases } from './types'
 
 type SnowParticle = {
@@ -47,8 +49,12 @@ function recycleParticle(
 }
 
 export class SnowRenderer implements Canvas2DRenderer {
-  private readonly context: CanvasRenderingContext2D | null
+  private readonly backgroundContext: CanvasRenderingContext2D | null
+  private readonly foregroundContext: CanvasRenderingContext2D | null
+  private readonly accumulation = new AccumulationPool()
   private particles: SnowParticle[] = []
+  private collisionTargets: readonly CollisionTargetRect[] = []
+  private collisionTargetSignature = ''
   private lastTime: number | undefined
   private size: CanvasLayerSize
   private options: NormalizedAtmosphereOptions
@@ -58,22 +64,23 @@ export class SnowRenderer implements Canvas2DRenderer {
     size: CanvasLayerSize,
     options: NormalizedAtmosphereOptions,
   ) {
-    this.context = canvases.background.getContext('2d')
+    this.backgroundContext = canvases.background.getContext('2d')
+    this.foregroundContext = canvases.foreground.getContext('2d')
     this.size = size
     this.options = options
-    this.syncParticleBudget(true)
+    this.syncBudgets(true)
   }
 
   resize(size: CanvasLayerSize) {
     this.size = size
-    this.syncParticleBudget(true)
+    this.syncBudgets(true)
   }
 
   updateOptions(options: NormalizedAtmosphereOptions) {
     const shouldReseedMotion =
       options.speed !== this.options.speed || options.wind !== this.options.wind
     this.options = options
-    this.syncParticleBudget(false)
+    this.syncBudgets(false)
 
     if (shouldReseedMotion) {
       for (const particle of this.particles) {
@@ -82,12 +89,25 @@ export class SnowRenderer implements Canvas2DRenderer {
     }
   }
 
-  setCollisionTargets(_targets: readonly CollisionTargetRect[]) {
-    // Snow does not use collision targets in the first snow preset.
+  setCollisionTargets(targets: readonly CollisionTargetRect[]) {
+    const nextSignature = targets
+      .map((target) => `${target.x},${target.y},${target.width},${target.height}`)
+      .join('|')
+
+    if (nextSignature !== this.collisionTargetSignature) {
+      this.accumulation.clear()
+      this.collisionTargetSignature = nextSignature
+    }
+
+    this.collisionTargets = targets
   }
 
   render(time: number) {
-    if (!this.context || this.size.width <= 0 || this.size.height <= 0) {
+    if (
+      (!this.backgroundContext && !this.foregroundContext) ||
+      this.size.width <= 0 ||
+      this.size.height <= 0
+    ) {
       return
     }
 
@@ -98,20 +118,45 @@ export class SnowRenderer implements Canvas2DRenderer {
 
     this.lastTime = time
 
-    const context = this.context
+    const context = this.backgroundContext
     const pixelRatio = this.size.pixelRatio
 
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
-    context.clearRect(0, 0, this.size.width, this.size.height)
-    context.fillStyle = this.options.color
+    if (context) {
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+      context.clearRect(0, 0, this.size.width, this.size.height)
+      context.fillStyle = this.options.color
+    }
+
+    if (this.foregroundContext) {
+      this.foregroundContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+      this.foregroundContext.clearRect(0, 0, this.size.width, this.size.height)
+    }
 
     for (let index = 0; index < this.particles.length; index += 1) {
       const particle = this.particles[index]
+      const previousDrawX = particle.x + Math.sin(particle.phase) * particle.drift
+      const previousY = particle.y
       particle.phase += particle.phaseSpeed * deltaSeconds
       particle.x += particle.vx * deltaSeconds
       particle.y += particle.vy * deltaSeconds
 
       const drawX = particle.x + Math.sin(particle.phase) * particle.drift
+      const collision =
+        this.options.snowAccumulation > 0 && particle.vy > 0
+          ? this.findSnowLanding(previousDrawX, previousY, drawX, particle.y)
+          : undefined
+
+      if (collision) {
+        this.accumulation.spawn(
+          collision.x,
+          collision.y,
+          particle.radius * randomRange(0.65, 1.2),
+          Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
+          particle.depth,
+        )
+        recycleParticle(particle, this.size, this.options)
+        continue
+      }
 
       if (
         particle.y - particle.radius > this.size.height ||
@@ -123,24 +168,38 @@ export class SnowRenderer implements Canvas2DRenderer {
 
       const flakeX = particle.x + Math.sin(particle.phase) * particle.drift
 
-      context.globalAlpha = particle.alpha
-      context.beginPath()
-      context.arc(flakeX, particle.y, particle.radius, 0, FULL_TURN)
-      context.fill()
+      if (context) {
+        context.globalAlpha = particle.alpha
+        context.beginPath()
+        context.arc(flakeX, particle.y, particle.radius, 0, FULL_TURN)
+        context.fill()
+      }
     }
 
-    context.globalAlpha = 1
+    if (this.foregroundContext) {
+      this.accumulation.render(this.foregroundContext, this.size, this.options.color)
+      this.foregroundContext.globalAlpha = 1
+    }
+
+    if (context) {
+      context.globalAlpha = 1
+    }
   }
 
   clear() {
-    if (this.context) {
-      this.context.setTransform(this.size.pixelRatio, 0, 0, this.size.pixelRatio, 0, 0)
-      this.context.clearRect(0, 0, this.size.width, this.size.height)
+    this.accumulation.clear()
+
+    for (const context of [this.backgroundContext, this.foregroundContext]) {
+      if (context) {
+        context.setTransform(this.size.pixelRatio, 0, 0, this.size.pixelRatio, 0, 0)
+        context.clearRect(0, 0, this.size.width, this.size.height)
+      }
     }
   }
 
   destroy() {
     this.clear()
+    this.accumulation.destroy()
     this.particles = []
     this.lastTime = undefined
   }
@@ -149,20 +208,68 @@ export class SnowRenderer implements Canvas2DRenderer {
     return this.particles.length
   }
 
-  private syncParticleBudget(initial: boolean) {
-    const budget = calculateSnowParticleBudget({
+  getActiveAccumulationCount() {
+    return this.accumulation.getActiveCount()
+  }
+
+  getAccumulationCapacity() {
+    return this.accumulation.getCapacity()
+  }
+
+  private findSnowLanding(
+    previousX: number,
+    previousY: number,
+    nextX: number,
+    nextY: number,
+  ): { x: number; y: number } | undefined {
+    const collision = findTopEdgeCollision(
+      previousX,
+      previousY,
+      nextX,
+      nextY,
+      this.collisionTargets,
+    )
+
+    if (collision) {
+      return collision
+    }
+
+    if (previousY <= this.size.height && nextY >= this.size.height) {
+      const progress = (this.size.height - previousY) / (nextY - previousY)
+      return {
+        x: previousX + (nextX - previousX) * progress,
+        y: this.size.height,
+      }
+    }
+
+    return undefined
+  }
+
+  private syncBudgets(initial: boolean) {
+    const particleBudget = calculateSnowParticleBudget({
       width: this.size.width,
       height: this.size.height,
       density: this.options.density,
       quality: this.options.quality,
     })
+    const accumulationBudget =
+      this.options.snowAccumulation <= 0
+        ? 0
+        : calculateAccumulationBudget({
+            width: this.size.width,
+            height: this.size.height,
+            density: this.options.density * this.options.snowAccumulation,
+            quality: this.options.quality,
+          })
 
-    if (budget < this.particles.length) {
-      this.particles.length = budget
+    this.accumulation.syncBudget(accumulationBudget)
+
+    if (particleBudget < this.particles.length) {
+      this.particles.length = particleBudget
       return
     }
 
-    while (this.particles.length < budget) {
+    while (this.particles.length < particleBudget) {
       const particle: SnowParticle = {
         x: 0,
         y: 0,
