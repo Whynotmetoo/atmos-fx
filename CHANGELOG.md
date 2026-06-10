@@ -17,3 +17,4 @@ The project follows semantic versioning once published.
 - Added release, accessibility, and contribution documentation.
 - Added bounded snow accumulation on collision surfaces and the root bottom edge.
 - Added light collision bounce and bounded accumulation for hail.
+- Added an initial WebGL rain renderer foundation with Canvas 2D fallback.

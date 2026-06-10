@@ -55,6 +55,7 @@ const size: CanvasLayerSize = {
 const options: NormalizedAtmosphereOptions = {
   preset: 'snow',
   particle: 'snow',
+  renderer: 'canvas2d',
   density: 0.5,
   speed: 0.42,
   wind: 0.16,

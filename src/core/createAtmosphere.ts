@@ -1,9 +1,7 @@
 import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
-import { createHailRenderer } from '../renderers/canvas2d/hail'
-import { createRainRenderer } from '../renderers/canvas2d/rain'
-import { createSnowRenderer } from '../renderers/canvas2d/snow'
+import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
 import type {
@@ -60,6 +58,7 @@ export function createAtmosphere(
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
   let rendererParticle: AtmosphereParticle | undefined
+  let rendererRequest: NormalizedAtmosphereOptions['renderer'] | undefined
   let visibilityPaused = false
   let reducedMotionPaused = false
   let manuallyPaused = false
@@ -85,6 +84,12 @@ export function createAtmosphere(
   const syncDataset = () => {
     element.dataset.atomsFxPreset = normalizedOptions.preset
     element.dataset.atomsParticle = normalizedOptions.particle
+    element.dataset.atomsRendererRequested = normalizedOptions.renderer
+
+    if (renderer) {
+      element.dataset.atomsRenderer = renderer.backend
+    }
+
     glassController.sync(normalizedOptions)
   }
 
@@ -127,59 +132,54 @@ export function createAtmosphere(
       return
     }
 
-    if (
-      normalizedOptions.particle !== 'rain' &&
-      normalizedOptions.particle !== 'snow' &&
-      normalizedOptions.particle !== 'hail'
-    ) {
+    const shouldRecreateRenderer =
+      renderer !== undefined &&
+      (rendererParticle !== normalizedOptions.particle ||
+        rendererRequest !== normalizedOptions.renderer)
+    const shouldRecreateCanvasLayer =
+      renderer !== undefined &&
+      shouldRecreateRenderer &&
+      (renderer.backend === 'webgl' ||
+        rendererRequest !== normalizedOptions.renderer ||
+        (normalizedOptions.renderer !== 'canvas2d' && normalizedOptions.particle === 'rain'))
+
+    if (shouldRecreateRenderer) {
       renderer?.destroy()
       renderer = undefined
       rendererParticle = undefined
+      rendererRequest = undefined
+
+      if (shouldRecreateCanvasLayer) {
+        canvasLayer?.destroy()
+        canvasLayer = undefined
+        ensureCanvasLayer()
+      }
+    }
+
+    const activeCanvasLayer = canvasLayer
+
+    if (!activeCanvasLayer) {
       return
     }
 
-    if (renderer && rendererParticle !== normalizedOptions.particle) {
-      renderer.destroy()
-      renderer = undefined
-      rendererParticle = undefined
-    }
-
     if (!renderer) {
-      if (normalizedOptions.particle === 'snow') {
-        renderer = createSnowRenderer(
-          {
-            background: canvasLayer.backgroundCanvas,
-            foreground: canvasLayer.foregroundCanvas,
-          },
-          canvasLayer.getSize(),
-          normalizedOptions,
-        )
-      } else if (normalizedOptions.particle === 'hail') {
-        renderer = createHailRenderer(
-          {
-            background: canvasLayer.backgroundCanvas,
-            foreground: canvasLayer.foregroundCanvas,
-          },
-          canvasLayer.getSize(),
-          normalizedOptions,
-        )
-      } else {
-        renderer = createRainRenderer(
-          {
-            background: canvasLayer.backgroundCanvas,
-            foreground: canvasLayer.foregroundCanvas,
-          },
-          canvasLayer.getSize(),
-          normalizedOptions,
-        )
-      }
-
+      renderer = createRenderer(
+        {
+          background: activeCanvasLayer.backgroundCanvas,
+          foreground: activeCanvasLayer.foregroundCanvas,
+        },
+        activeCanvasLayer.getSize(),
+        normalizedOptions,
+      )
       rendererParticle = normalizedOptions.particle
+      rendererRequest = normalizedOptions.renderer
+      element.dataset.atomsRenderer = renderer.backend
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
       return
     }
 
     renderer.updateOptions(normalizedOptions)
+    element.dataset.atomsRenderer = renderer.backend
     renderer.setCollisionTargets(collisionTargetManager.getTargets())
   }
 
@@ -338,12 +338,15 @@ export function createAtmosphere(
       renderer?.destroy()
       renderer = undefined
       rendererParticle = undefined
+      rendererRequest = undefined
       glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined
       setState('destroyed')
       delete element.dataset.atomsFxPreset
       delete element.dataset.atomsParticle
+      delete element.dataset.atomsRenderer
+      delete element.dataset.atomsRendererRequested
     },
   }
 

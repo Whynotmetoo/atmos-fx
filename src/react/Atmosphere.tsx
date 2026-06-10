@@ -24,6 +24,7 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
   {
     preset,
     particle,
+    renderer,
     density,
     speed,
     wind,
@@ -53,6 +54,10 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
 
       if (particle !== undefined) {
         nextOptions.particle = particle
+      }
+
+      if (renderer !== undefined) {
+        nextOptions.renderer = renderer
       }
 
       if (density !== undefined) {
@@ -112,6 +117,7 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
     [
       preset,
       particle,
+      renderer,
       density,
       speed,
       wind,

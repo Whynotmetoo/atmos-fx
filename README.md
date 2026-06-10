@@ -62,6 +62,7 @@ Core options:
 - `wind`: horizontal motion scalar, usually `-1` to `1`
 - `color`: Canvas color string
 - `quality`: `'auto' | 'low' | 'medium' | 'high'`
+- `renderer`: `'canvas2d' | 'webgl' | 'auto'`; WebGL currently supports rain and falls back to Canvas 2D when unavailable
 - `transparency`: `'glass' | 'opacity' | 'none'`
 - `surfaceOpacity`: `0` to `1`, controls glass surface opacity
 - `contentOpacity`: `0` to `1`, controls opacity-mode content fade
@@ -81,6 +82,7 @@ React is an optional peer dependency. Install it only when using the React adapt
 ## Performance Notes
 
 - Prefer `quality: 'auto'` for responsive pages.
+- Keep `renderer: 'canvas2d'` for full feature parity; `renderer: 'webgl'` is the initial rain foundation with Canvas 2D fallback.
 - Transparent surfaces can reveal background-layer precipitation while foreground precipitation still collides with selected DOM surfaces.
 - Keep collision surfaces intentional; target rects refresh outside the animation frame loop.
 - Snow accumulation is bounded by quality, density, and the configured buildup intensity.
@@ -96,7 +98,7 @@ npm run build
 npm test
 ```
 
-The current implementation includes the project foundation, the core lifecycle shell, Canvas 2D rain, snow, and hail renderers with particle budgeting, glass orchestration, top-edge collision splashes for rain, bounded snow accumulation, light bounce and bounded accumulation for hail, and a static docs playground.
+The current implementation includes the project foundation, the core lifecycle shell, Canvas 2D rain, snow, and hail renderers with particle budgeting, an initial WebGL rain renderer foundation with Canvas fallback, glass orchestration, top-edge collision splashes for rain, bounded snow accumulation, light bounce and bounded accumulation for hail, and a static docs playground.
 
 ## Local Smoke Test
 

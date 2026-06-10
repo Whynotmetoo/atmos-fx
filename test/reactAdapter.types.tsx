@@ -12,6 +12,7 @@ const cleanupRef = (node: HTMLDivElement | null) => {
 
 export const reactAtmosphereProps: AtmosphereProps = {
   preset: 'storm',
+  renderer: 'webgl',
   density: 0.7,
   wind: -0.2,
   quality: 'high',

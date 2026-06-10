@@ -57,6 +57,7 @@ const size: CanvasLayerSize = {
 const options: NormalizedAtmosphereOptions = {
   preset: 'rain',
   particle: 'rain',
+  renderer: 'canvas2d',
   density: 0.7,
   speed: 1,
   wind: -0.12,

@@ -47,6 +47,7 @@ function recycleParticle(
 }
 
 export class RainRenderer implements Canvas2DRenderer {
+  readonly backend = 'canvas2d' as const
   private readonly backgroundContext: CanvasRenderingContext2D | null
   private readonly foregroundContext: CanvasRenderingContext2D | null
   private particles: RainParticle[] = []
@@ -186,6 +187,13 @@ export class RainRenderer implements Canvas2DRenderer {
 
   getForegroundParticleCount() {
     return this.particles.length - this.getBackgroundParticleCount()
+  }
+
+  getStats() {
+    return {
+      backend: this.backend,
+      particleCount: this.particles.length,
+    }
   }
 
   private prepareContext(context: CanvasRenderingContext2D | null, pixelRatio: number) {
