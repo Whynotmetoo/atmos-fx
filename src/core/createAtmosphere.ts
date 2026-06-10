@@ -58,7 +58,6 @@ export function createAtmosphere(
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
   let rendererParticle: AtmosphereParticle | undefined
-  let rendererRequest: NormalizedAtmosphereOptions['renderer'] | undefined
   let visibilityPaused = false
   let reducedMotionPaused = false
   let manuallyPaused = false
@@ -84,7 +83,6 @@ export function createAtmosphere(
   const syncDataset = () => {
     element.dataset.atomsFxPreset = normalizedOptions.preset
     element.dataset.atomsParticle = normalizedOptions.particle
-    element.dataset.atomsRendererRequested = normalizedOptions.renderer
 
     if (renderer) {
       element.dataset.atomsRenderer = renderer.backend
@@ -134,26 +132,16 @@ export function createAtmosphere(
 
     const shouldRecreateRenderer =
       renderer !== undefined &&
-      (rendererParticle !== normalizedOptions.particle ||
-        rendererRequest !== normalizedOptions.renderer)
-    const shouldRecreateCanvasLayer =
-      renderer !== undefined &&
-      shouldRecreateRenderer &&
-      (renderer.backend === 'webgl' ||
-        rendererRequest !== normalizedOptions.renderer ||
-        (normalizedOptions.renderer !== 'canvas2d' && normalizedOptions.particle === 'rain'))
+      rendererParticle !== normalizedOptions.particle
 
     if (shouldRecreateRenderer) {
       renderer?.destroy()
       renderer = undefined
       rendererParticle = undefined
-      rendererRequest = undefined
 
-      if (shouldRecreateCanvasLayer) {
-        canvasLayer?.destroy()
-        canvasLayer = undefined
-        ensureCanvasLayer()
-      }
+      canvasLayer?.destroy()
+      canvasLayer = undefined
+      ensureCanvasLayer()
     }
 
     const activeCanvasLayer = canvasLayer
@@ -172,7 +160,6 @@ export function createAtmosphere(
         normalizedOptions,
       )
       rendererParticle = normalizedOptions.particle
-      rendererRequest = normalizedOptions.renderer
       element.dataset.atomsRenderer = renderer.backend
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
       return
@@ -338,7 +325,6 @@ export function createAtmosphere(
       renderer?.destroy()
       renderer = undefined
       rendererParticle = undefined
-      rendererRequest = undefined
       glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined
@@ -346,7 +332,6 @@ export function createAtmosphere(
       delete element.dataset.atomsFxPreset
       delete element.dataset.atomsParticle
       delete element.dataset.atomsRenderer
-      delete element.dataset.atomsRendererRequested
     },
   }
 

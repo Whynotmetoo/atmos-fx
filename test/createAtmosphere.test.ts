@@ -156,7 +156,7 @@ describe('createAtmosphere', () => {
 
   it('creates and cleans up a canvas layer through lifecycle', () => {
     const root = createRoot()
-    const controller = createAtmosphere(root, { preset: 'storm' })
+    const controller = createAtmosphere(root, { preset: 'rain' })
 
     controller.start()
 
@@ -174,9 +174,8 @@ describe('createAtmosphere', () => {
     expect(foregroundCanvas?.width).toBe(640)
     expect(foregroundCanvas?.height).toBe(360)
     expect(root.dataset.atomsFx).toBe('running')
-    expect(root.dataset.atomsFxPreset).toBe('storm')
+    expect(root.dataset.atomsFxPreset).toBe('rain')
     expect(root.dataset.atomsParticle).toBe('rain')
-    expect(root.dataset.atomsRendererRequested).toBe('canvas2d')
     expect(root.dataset.atomsRenderer).toBe('canvas2d')
     expect(root.dataset.atomsTransparency).toBe('glass')
 
@@ -189,55 +188,8 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBeUndefined()
     expect(root.dataset.atomsFxPreset).toBeUndefined()
     expect(root.dataset.atomsParticle).toBeUndefined()
-    expect(root.dataset.atomsRendererRequested).toBeUndefined()
     expect(root.dataset.atomsRenderer).toBeUndefined()
     expect(root.dataset.atomsTransparency).toBeUndefined()
-  })
-
-  it('falls back to Canvas 2D when WebGL is requested but unavailable', () => {
-    const root = createRoot()
-    const controller = createAtmosphere(root, { renderer: 'webgl' })
-
-    controller.start()
-
-    expect(root.dataset.atomsRendererRequested).toBe('webgl')
-    expect(root.dataset.atomsRenderer).toBe('canvas2d')
-
-    controller.destroy()
-  })
-
-  it('recreates canvases when switching from Canvas 2D to WebGL', () => {
-    const contextTypeByCanvas = new WeakMap<HTMLCanvasElement, '2d' | 'webgl'>()
-    vi.mocked(HTMLCanvasElement.prototype.getContext).mockImplementation(function getContext(
-      this: HTMLCanvasElement,
-      contextId: string,
-    ) {
-      const nextType = contextId === 'webgl' || contextId === 'experimental-webgl' ? 'webgl' : '2d'
-      const previousType = contextTypeByCanvas.get(this)
-
-      if (previousType && previousType !== nextType) {
-        return null
-      }
-
-      contextTypeByCanvas.set(this, nextType)
-      return nextType === 'webgl' ? createWebGLContext() : createCanvasContext()
-    })
-
-    const root = createRoot()
-    const controller = createAtmosphere(root)
-
-    controller.start()
-    const firstForegroundCanvas = root.querySelector('[data-atoms-layer="weather-foreground"]')
-
-    controller.update({ renderer: 'webgl' })
-
-    expect(root.dataset.atomsRendererRequested).toBe('webgl')
-    expect(root.dataset.atomsRenderer).toBe('webgl')
-    expect(root.querySelector('[data-atoms-layer="weather-foreground"]')).not.toBe(
-      firstForegroundCanvas,
-    )
-
-    controller.destroy()
   })
 
   it('syncs glass controls during lifecycle updates', () => {
@@ -275,7 +227,12 @@ describe('createAtmosphere', () => {
 
   it('clears rendered rain when stopped', () => {
     const context = createCanvasContext()
-    vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(context)
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockImplementation((contextId) => {
+      if (contextId === '2d') {
+        return context
+      }
+      return null
+    })
 
     const root = createRoot()
     const controller = createAtmosphere(root)

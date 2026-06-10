@@ -81,7 +81,7 @@ export class AccumulationPool {
 
   update(
     deltaSeconds: number,
-    options: { snowAccumulation?: number; wind?: number; speed?: number },
+    options: { snowAccumulation?: number; wind?: number; speed?: number; bottomCollision?: boolean },
     collisionTargets: readonly CollisionTargetRect[],
     size: CanvasLayerSize,
   ) {
@@ -164,11 +164,15 @@ export class AccumulationPool {
 
         if (!landed) {
           if (p.y >= size.height) {
-            p.y = size.height
-            p.vy = 0
-            p.vx = 0
-            p.onSurface = true
-            p.target = null
+            if (options.bottomCollision) {
+              p.y = size.height
+              p.vy = 0
+              p.vx = 0
+              p.onSurface = true
+              p.target = null
+            } else {
+              p.active = false
+            }
           }
         }
 

@@ -350,6 +350,15 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       const nextX = particle.x + particle.vx * deltaSeconds
       const nextY = particle.y + particle.vy * deltaSeconds
 
+      // Background rain top-edge collision: recycle silently without spawning splash/drips
+      if (index < backgroundCount) {
+        const bgCollision = findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
+        if (bgCollision) {
+          recycleParticle(particle, this.size, this.options)
+          continue
+        }
+      }
+
       const collision =
         index >= backgroundCount
           ? findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
@@ -362,6 +371,15 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
           const dripX = Math.max(target.x, Math.min(target.right, collision.x))
           this.drips.spawn(dripX, target.bottom, target)
         }
+        recycleParticle(particle, this.size, this.options)
+        continue
+      }
+
+      // Container bottom collision (foreground only) if bottomCollision is enabled
+      if (this.options.bottomCollision && index >= backgroundCount && nextY >= this.size.height) {
+        const t = (this.size.height - previousY) / (nextY - previousY || 1)
+        const collideX = previousX + (nextX - previousX) * t
+        this.splashes.spawn(collideX, this.size.height, particle.vx, particle.depth)
         recycleParticle(particle, this.size, this.options)
         continue
       }
@@ -531,14 +549,31 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
   private writeDrip(layer: WebGLLayer, vertexOffset: number, drip: any) {
     const start = vertexOffset * VALUES_PER_VERTEX
-    const tailY = drip.state === 'gathering' ? drip.y - drip.size * 0.4 : drip.y - Math.min(8, drip.vy * 0.04)
-    const alpha = drip.state === 'gathering' ? 0.76 : 0.85
+    let topY = drip.y
+    let bottomY = drip.y
+    let alpha = 0.85
+
+    if (drip.state === 'gathering') {
+      topY = drip.y
+      bottomY = drip.y + drip.size * 1.8 // stretch downwards
+      alpha = 0.76
+    } else if (drip.detachProgress !== undefined && drip.detachProgress < 1) {
+      // Snapping/stretching phase
+      topY = drip.target ? drip.target.bottom : drip.y
+      bottomY = drip.y
+      alpha = 0.85
+    } else {
+      // Normal free fall
+      topY = drip.y - Math.min(12, drip.vy * 0.04)
+      bottomY = drip.y
+      alpha = 0.85
+    }
 
     layer.vertices[start] = drip.x
-    layer.vertices[start + 1] = tailY
+    layer.vertices[start + 1] = topY
     layer.vertices[start + 2] = alpha
     layer.vertices[start + 3] = drip.x
-    layer.vertices[start + 4] = drip.y
+    layer.vertices[start + 4] = bottomY
     layer.vertices[start + 5] = alpha
 
     return VERTICES_PER_PARTICLE

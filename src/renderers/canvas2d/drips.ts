@@ -9,6 +9,8 @@ export type DripParticle = {
   maxSize: number
   target: CollisionTargetRect | null
   state: 'gathering' | 'dripping'
+  relativeTargetX?: number
+  detachProgress?: number
 }
 
 export class DripPool {
@@ -34,6 +36,8 @@ export class DripPool {
         maxSize: 0,
         target: null,
         state: 'gathering',
+        relativeTargetX: 0.75,
+        detachProgress: 0,
       })
     }
     if (this.cursor >= this.maxSize) {
@@ -52,7 +56,7 @@ export class DripPool {
     )
     if (existing) {
       // Grow the existing drip slightly
-      existing.size = Math.min(existing.maxSize, existing.size + 0.2)
+      existing.size = Math.min(existing.maxSize, existing.size + 0.3)
       return
     }
 
@@ -62,9 +66,13 @@ export class DripPool {
     particle.y = y
     particle.vy = 0
     particle.size = 0.5
-    particle.maxSize = 1.8 + Math.random() * 1.5
+    // Larger maxSize for a big drop feel (2.4 to 4.6)
+    particle.maxSize = 2.4 + Math.random() * 2.2
     particle.target = target
     particle.state = 'gathering'
+    // Slide towards right-quarter of the card bottom
+    particle.relativeTargetX = 0.7 + Math.random() * 0.15
+    particle.detachProgress = 0
 
     this.cursor = (this.cursor + 1) % this.maxSize
   }
@@ -82,7 +90,7 @@ export class DripPool {
       }
 
       if (p.state === 'gathering') {
-        p.size += (0.8 + Math.random() * 0.8) * deltaSeconds
+        p.size += (0.6 + Math.random() * 0.6) * deltaSeconds
 
         if (p.target) {
           // Find target in current collision targets to keep coordinate sync
@@ -95,20 +103,36 @@ export class DripPool {
           if (currentTarget) {
             p.target = currentTarget
             p.y = currentTarget.bottom
+
+            // Slide towards right-quarter
+            if (p.relativeTargetX !== undefined) {
+              const targetX = currentTarget.x + currentTarget.width * p.relativeTargetX
+              const dx = targetX - p.x
+              p.x += dx * 2.5 * deltaSeconds
+              p.x = Math.max(currentTarget.x + 2, Math.min(currentTarget.right - 2, p.x))
+            }
           } else {
             // Target disappeared, start dripping immediately
             p.state = 'dripping'
+            p.detachProgress = 1
           }
         }
 
         if (p.size >= p.maxSize) {
           p.state = 'dripping'
-          p.vy = 12 + Math.random() * 24 // initial detach downward speed
+          p.vy = 4 + Math.random() * 6 // low initial speed to feel sticky
+          p.detachProgress = 0
         }
       } else {
         // Dripping (falling)
-        p.vy += gravity * deltaSeconds
-        p.y += p.vy * deltaSeconds
+        if (p.detachProgress !== undefined && p.detachProgress < 1) {
+          p.detachProgress += 6 * deltaSeconds // snaps in ~0.16 seconds
+          p.vy += gravity * 0.2 * deltaSeconds // sticky slow drag-off acceleration
+          p.y += p.vy * deltaSeconds
+        } else {
+          p.vy += gravity * deltaSeconds
+          p.y += p.vy * deltaSeconds
+        }
 
         // Check top edge collision with other targets below it
         for (const target of collisionTargets) {

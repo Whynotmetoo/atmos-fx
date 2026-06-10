@@ -457,6 +457,9 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
             particle.rolling = false
             particle.vy = 10 + Math.random() * 20
           }
+        } else if (particle.y >= this.size.height - particle.radius - 2) {
+          // Rolling on container bottom
+          particle.y = this.size.height - particle.radius
         } else {
           particle.rolling = false
         }
@@ -472,10 +475,20 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
 
       const nextX = particle.rolling ? particle.x : particle.x + particle.vx * deltaSeconds
       const nextY = particle.rolling ? particle.y : particle.y + particle.vy * deltaSeconds
-      const collision =
+      
+      let collision =
         !particle.rolling && particle.vy > 0
           ? findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
           : undefined
+
+      if (!collision && this.options.bottomCollision && !particle.rolling && nextY >= this.size.height && particle.vy > 0) {
+        const t = (this.size.height - previousY) / (nextY - previousY || 1)
+        collision = {
+          x: previousX + (nextX - previousX) * t,
+          y: this.size.height,
+          target: null as any,
+        }
+      }
 
       if (collision) {
         const pileRadius = particle.radius * randomRange(0.42, 0.72)

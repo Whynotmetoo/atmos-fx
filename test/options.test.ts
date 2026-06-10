@@ -6,7 +6,6 @@ describe('normalizeAtmosphereOptions', () => {
     expect(normalizeAtmosphereOptions()).toMatchObject({
       preset: 'rain',
       particle: 'rain',
-      renderer: 'canvas2d',
       density: 0.65,
       quality: 'auto',
       transparency: 'glass',
@@ -15,6 +14,7 @@ describe('normalizeAtmosphereOptions', () => {
       snowAccumulation: 0.55,
       rainDripping: 0.5,
       hailBounce: 0.5,
+      bottomCollision: false,
     })
   })
 
@@ -22,13 +22,11 @@ describe('normalizeAtmosphereOptions', () => {
     expect(
       normalizeAtmosphereOptions({
         preset: 'snow',
-        renderer: 'webgl',
         density: 0.2,
       }),
     ).toMatchObject({
       preset: 'snow',
       particle: 'snow',
-      renderer: 'webgl',
       density: 0.2,
     })
   })

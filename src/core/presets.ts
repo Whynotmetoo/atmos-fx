@@ -3,7 +3,6 @@ import type { AtmosphereOptions, AtmospherePreset } from './types'
 export const DEFAULT_OPTIONS = {
   preset: 'rain',
   particle: 'rain',
-  renderer: 'canvas2d',
   density: 0.65,
   speed: 1,
   wind: -0.12,
@@ -15,6 +14,7 @@ export const DEFAULT_OPTIONS = {
   snowAccumulation: 0.55,
   rainDripping: 0.5,
   hailBounce: 0.5,
+  bottomCollision: false,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -29,14 +29,6 @@ export const PRESET_OPTIONS = {
     wind: -0.12,
     color: 'rgba(220, 235, 255, 0.72)',
     rainDripping: 0.5,
-  },
-  storm: {
-    particle: 'rain',
-    density: 0.9,
-    speed: 1.25,
-    wind: -0.28,
-    color: 'rgba(210, 228, 255, 0.8)',
-    rainDripping: 0.8,
   },
   snow: {
     particle: 'snow',
