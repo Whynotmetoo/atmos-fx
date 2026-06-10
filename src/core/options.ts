@@ -1,8 +1,8 @@
 import { DEFAULT_OPTIONS, resolvePresetOptions } from './presets'
 import type { AtmosphereOptions, NormalizedAtmosphereOptions } from './types'
 
-function clamp01(value: number, fallback: number): number {
-  if (Number.isNaN(value)) {
+function clamp01(value: number | undefined, fallback: number): number {
+  if (value === undefined || Number.isNaN(value)) {
     return fallback
   }
 
@@ -27,6 +27,6 @@ export function normalizeAtmosphereOptions(
     contentOpacity: clamp01(merged.contentOpacity, DEFAULT_OPTIONS.contentOpacity),
     surfaceOpacity: clamp01(merged.surfaceOpacity, DEFAULT_OPTIONS.surfaceOpacity),
     snowAccumulation: clamp01(merged.snowAccumulation, DEFAULT_OPTIONS.snowAccumulation),
-    speed: Math.max(0, merged.speed),
+    speed: Math.max(0, merged.speed ?? DEFAULT_OPTIONS.speed),
   }
 }

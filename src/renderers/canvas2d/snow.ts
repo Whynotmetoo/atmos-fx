@@ -72,6 +72,10 @@ export class SnowRenderer implements Canvas2DRenderer {
   }
 
   resize(size: CanvasLayerSize) {
+    if (size.width !== this.size.width || size.height !== this.size.height) {
+      this.accumulation.clear()
+    }
+
     this.size = size
     this.syncBudgets(true)
   }

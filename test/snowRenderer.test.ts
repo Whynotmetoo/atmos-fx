@@ -191,6 +191,34 @@ describe('SnowRenderer', () => {
     expect(renderer.getActiveAccumulationCount()).toBeGreaterThan(0)
   })
 
+  it('clears bottom-edge accumulation when the root size changes', () => {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
+    const particle = (renderer as unknown as { particles: MutableSnowParticle[] }).particles[0]
+
+    particle.x = 120
+    particle.y = 592
+    particle.vx = 0
+    particle.vy = 900
+    particle.radius = 2
+    particle.alpha = 0.8
+    particle.depth = 1
+    particle.phase = 0
+    particle.phaseSpeed = 0
+    particle.drift = 0
+
+    renderer.render(16)
+
+    expect(renderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+
+    renderer.resize({
+      ...size,
+      height: 720,
+      canvasHeight: 1440,
+    })
+
+    expect(renderer.getActiveAccumulationCount()).toBe(0)
+  })
+
   it('disables snow accumulation when configured to zero', () => {
     const renderer = createSnowRenderer(createCanvases(createContext()), size, {
       ...options,

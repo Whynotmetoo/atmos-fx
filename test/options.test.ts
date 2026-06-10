@@ -53,4 +53,22 @@ describe('normalizeAtmosphereOptions', () => {
       speed: 0,
     })
   })
+
+  it('falls back when optional numeric options are explicitly undefined', () => {
+    expect(
+      normalizeAtmosphereOptions({
+        density: undefined,
+        speed: undefined,
+        contentOpacity: undefined,
+        surfaceOpacity: undefined,
+        snowAccumulation: undefined,
+      }),
+    ).toMatchObject({
+      density: 0.65,
+      contentOpacity: 0.72,
+      surfaceOpacity: 0.14,
+      snowAccumulation: 0.55,
+      speed: 1,
+    })
+  })
 })
