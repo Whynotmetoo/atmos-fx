@@ -35,6 +35,13 @@ function createCanvas(context: CanvasRenderingContext2D) {
   return canvas
 }
 
+function createCanvases(context: CanvasRenderingContext2D) {
+  return {
+    background: createCanvas(createContext()),
+    foreground: createCanvas(context),
+  }
+}
+
 const size: CanvasLayerSize = {
   width: 800,
   height: 600,
@@ -52,6 +59,8 @@ const options: NormalizedAtmosphereOptions = {
   color: 'rgba(218, 235, 247, 0.84)',
   quality: 'medium',
   transparency: 'glass',
+  contentOpacity: 0.72,
+  surfaceOpacity: 0.14,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -60,14 +69,14 @@ const options: NormalizedAtmosphereOptions = {
 
 describe('HailRenderer', () => {
   it('creates a bounded particle pool from the hail quality budget', () => {
-    const renderer = createHailRenderer(createCanvas(createContext()), size, options)
+    const renderer = createHailRenderer(createCanvases(createContext()), size, options)
 
     expect(renderer.getParticleCount()).toBeGreaterThan(0)
     expect(renderer.getAccumulationCapacity()).toBeGreaterThan(0)
   })
 
   it('resizes particle and accumulation budgets when density changes', () => {
-    const renderer = createHailRenderer(createCanvas(createContext()), size, {
+    const renderer = createHailRenderer(createCanvases(createContext()), size, {
       ...options,
       density: 1,
     })
@@ -85,7 +94,7 @@ describe('HailRenderer', () => {
 
   it('draws hail pellets without creating a new particle pool', () => {
     const context = createContext()
-    const renderer = createHailRenderer(createCanvas(context), size, options)
+    const renderer = createHailRenderer(createCanvases(context), size, options)
     const count = renderer.getParticleCount()
 
     renderer.render(16)
@@ -99,7 +108,7 @@ describe('HailRenderer', () => {
   })
 
   it('bounces and accumulates when hail crosses a collision top edge', () => {
-    const renderer = createHailRenderer(createCanvas(createContext()), size, options)
+    const renderer = createHailRenderer(createCanvases(createContext()), size, options)
     const particle = (renderer as unknown as { particles: MutableHailParticle[] }).particles[0]
 
     particle.x = 120
@@ -130,7 +139,7 @@ describe('HailRenderer', () => {
   })
 
   it('re-seeds hail motion when speed changes from zero', () => {
-    const renderer = createHailRenderer(createCanvas(createContext()), size, {
+    const renderer = createHailRenderer(createCanvases(createContext()), size, {
       ...options,
       speed: 0,
       wind: 0,
@@ -150,7 +159,7 @@ describe('HailRenderer', () => {
 
   it('clears the canvas and releases particles on destroy', () => {
     const context = createContext()
-    const renderer = createHailRenderer(createCanvas(context), size, options)
+    const renderer = createHailRenderer(createCanvases(context), size, options)
 
     renderer.destroy()
 

@@ -1,5 +1,7 @@
 export type CanvasLayer = {
   canvas: HTMLCanvasElement
+  backgroundCanvas: HTMLCanvasElement
+  foregroundCanvas: HTMLCanvasElement
   getSize(): CanvasLayerSize
   resize(): CanvasLayerSize
   destroy(): void
@@ -33,7 +35,8 @@ function getRootSize(root: HTMLElement): { width: number; height: number } {
 }
 
 export function createCanvasLayer(root: HTMLElement): CanvasLayer {
-  const canvas = root.ownerDocument.createElement('canvas')
+  const backgroundCanvas = root.ownerDocument.createElement('canvas')
+  const foregroundCanvas = root.ownerDocument.createElement('canvas')
   const previousPosition = root.style.position
   const computedPosition =
     typeof window === 'undefined' ? '' : window.getComputedStyle(root).position
@@ -41,20 +44,26 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
     previousPosition === 'static' ||
     (!previousPosition && (!computedPosition || computedPosition === 'static'))
 
-  canvas.dataset.atomsLayer = 'weather'
-  canvas.setAttribute('aria-hidden', 'true')
-  canvas.style.position = 'absolute'
-  canvas.style.inset = '0'
-  canvas.style.width = '100%'
-  canvas.style.height = '100%'
-  canvas.style.pointerEvents = 'none'
-  canvas.style.zIndex = '0'
+  const setupCanvas = (canvas: HTMLCanvasElement, layer: string, zIndex: string) => {
+    canvas.dataset.atomsLayer = layer
+    canvas.setAttribute('aria-hidden', 'true')
+    canvas.style.position = 'absolute'
+    canvas.style.inset = '0'
+    canvas.style.width = '100%'
+    canvas.style.height = '100%'
+    canvas.style.pointerEvents = 'none'
+    canvas.style.zIndex = zIndex
+  }
+
+  setupCanvas(backgroundCanvas, 'weather-background', '0')
+  setupCanvas(foregroundCanvas, 'weather-foreground', '2')
 
   if (shouldSetPosition) {
     root.style.position = 'relative'
   }
 
-  root.prepend(canvas)
+  root.prepend(backgroundCanvas)
+  root.append(foregroundCanvas)
 
   let size: CanvasLayerSize = {
     width: 0,
@@ -70,12 +79,20 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
     const nextWidth = Math.round(width * pixelRatio)
     const nextHeight = Math.round(height * pixelRatio)
 
-    if (canvas.width !== nextWidth) {
-      canvas.width = nextWidth
+    if (backgroundCanvas.width !== nextWidth) {
+      backgroundCanvas.width = nextWidth
     }
 
-    if (canvas.height !== nextHeight) {
-      canvas.height = nextHeight
+    if (foregroundCanvas.width !== nextWidth) {
+      foregroundCanvas.width = nextWidth
+    }
+
+    if (backgroundCanvas.height !== nextHeight) {
+      backgroundCanvas.height = nextHeight
+    }
+
+    if (foregroundCanvas.height !== nextHeight) {
+      foregroundCanvas.height = nextHeight
     }
 
     size = {
@@ -92,13 +109,16 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
   resize()
 
   return {
-    canvas,
+    canvas: backgroundCanvas,
+    backgroundCanvas,
+    foregroundCanvas,
     getSize() {
       return size
     },
     resize,
     destroy() {
-      canvas.remove()
+      backgroundCanvas.remove()
+      foregroundCanvas.remove()
       root.style.position = previousPosition
     },
   }

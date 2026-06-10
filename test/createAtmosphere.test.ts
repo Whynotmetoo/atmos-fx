@@ -122,11 +122,19 @@ describe('createAtmosphere', () => {
 
     controller.start()
 
-    const canvas = root.querySelector<HTMLCanvasElement>('[data-atoms-layer="weather"]')
+    const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-background"]',
+    )
+    const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-foreground"]',
+    )
 
-    expect(canvas).not.toBeNull()
-    expect(canvas?.width).toBe(640)
-    expect(canvas?.height).toBe(360)
+    expect(backgroundCanvas).not.toBeNull()
+    expect(foregroundCanvas).not.toBeNull()
+    expect(backgroundCanvas?.width).toBe(640)
+    expect(backgroundCanvas?.height).toBe(360)
+    expect(foregroundCanvas?.width).toBe(640)
+    expect(foregroundCanvas?.height).toBe(360)
     expect(root.dataset.atomsFx).toBe('running')
     expect(root.dataset.atomsFxPreset).toBe('storm')
     expect(root.dataset.atomsParticle).toBe('rain')
@@ -136,7 +144,8 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBe('stopped')
 
     controller.destroy()
-    expect(root.querySelector('[data-atoms-layer="weather"]')).toBeNull()
+    expect(root.querySelector('[data-atoms-layer="weather-background"]')).toBeNull()
+    expect(root.querySelector('[data-atoms-layer="weather-foreground"]')).toBeNull()
     expect(root.dataset.atomsFx).toBeUndefined()
     expect(root.dataset.atomsFxPreset).toBeUndefined()
     expect(root.dataset.atomsParticle).toBeUndefined()
@@ -151,12 +160,18 @@ describe('createAtmosphere', () => {
     translucent.dataset.atomsOpacity = '0.35'
     root.append(solid, translucent)
 
-    const controller = createAtmosphere(root, { opaqueSelector: '.solid' })
+    const controller = createAtmosphere(root, {
+      opaqueSelector: '.solid',
+      contentOpacity: 0.55,
+      surfaceOpacity: 0.22,
+    })
 
     controller.start()
 
     expect(solid.dataset.atomsOpaque).toBe('managed')
     expect(translucent.style.getPropertyValue('--atoms-fx-opacity')).toBe('0.35')
+    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('0.55')
+    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('0.22')
 
     controller.update({ transparency: 'opacity' })
 
@@ -166,6 +181,8 @@ describe('createAtmosphere', () => {
 
     expect(solid.dataset.atomsOpaque).toBeUndefined()
     expect(translucent.style.getPropertyValue('--atoms-fx-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('')
   })
 
   it('clears rendered rain when stopped', () => {
@@ -367,10 +384,17 @@ describe('createAtmosphere', () => {
 
     controller.resize()
 
-    const canvas = root.querySelector<HTMLCanvasElement>('[data-atoms-layer="weather"]')
+    const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-background"]',
+    )
+    const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-foreground"]',
+    )
 
-    expect(canvas?.width).toBe(400)
-    expect(canvas?.height).toBe(200)
+    expect(backgroundCanvas?.width).toBe(400)
+    expect(backgroundCanvas?.height).toBe(200)
+    expect(foregroundCanvas?.width).toBe(400)
+    expect(foregroundCanvas?.height).toBe(200)
   })
 
   it('resizes the canvas layer when the window changes size', () => {
@@ -393,10 +417,17 @@ describe('createAtmosphere', () => {
 
     window.dispatchEvent(new Event('resize'))
 
-    const canvas = root.querySelector<HTMLCanvasElement>('[data-atoms-layer="weather"]')
+    const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-background"]',
+    )
+    const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-foreground"]',
+    )
 
-    expect(canvas?.width).toBe(360)
-    expect(canvas?.height).toBe(180)
+    expect(backgroundCanvas?.width).toBe(360)
+    expect(backgroundCanvas?.height).toBe(180)
+    expect(foregroundCanvas?.width).toBe(360)
+    expect(foregroundCanvas?.height).toBe(180)
   })
 
   it('resizes the canvas layer when the root size changes', () => {
@@ -435,10 +466,17 @@ describe('createAtmosphere', () => {
 
     resizeCallback?.([], {} as ResizeObserver)
 
-    const canvas = root.querySelector<HTMLCanvasElement>('[data-atoms-layer="weather"]')
+    const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-background"]',
+    )
+    const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
+      '[data-atoms-layer="weather-foreground"]',
+    )
 
-    expect(canvas?.width).toBe(480)
-    expect(canvas?.height).toBe(320)
+    expect(backgroundCanvas?.width).toBe(480)
+    expect(backgroundCanvas?.height).toBe(320)
+    expect(foregroundCanvas?.width).toBe(480)
+    expect(foregroundCanvas?.height).toBe(320)
   })
 
   it('overrides inline static positioning while the canvas layer exists', () => {

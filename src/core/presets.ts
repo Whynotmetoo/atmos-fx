@@ -9,6 +9,8 @@ export const DEFAULT_OPTIONS = {
   color: 'rgba(220, 235, 255, 0.72)',
   quality: 'auto',
   transparency: 'glass',
+  contentOpacity: 0.72,
+  surfaceOpacity: 0.14,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,

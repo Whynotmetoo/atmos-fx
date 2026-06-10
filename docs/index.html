@@ -648,6 +648,42 @@
           </div>
 
           <div class="control-group">
+            <label class="control-label" for="surfaceOpacity">
+              <span>Surface opacity</span>
+              <span class="control-value" id="surfaceOpacity-value">0.14</span>
+            </label>
+            <div class="range-row">
+              <input id="surfaceOpacity" type="range" min="0" max="1" step="0.01" value="0.14" />
+              <input
+                id="surfaceOpacity-number"
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.14"
+              />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="contentOpacity">
+              <span>Content opacity</span>
+              <span class="control-value" id="contentOpacity-value">0.72</span>
+            </label>
+            <div class="range-row">
+              <input id="contentOpacity" type="range" min="0" max="1" step="0.01" value="0.72" />
+              <input
+                id="contentOpacity-number"
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.72"
+              />
+            </div>
+          </div>
+
+          <div class="control-group">
             <div class="control-label">Color</div>
             <div class="swatches" data-control="color">
               <button
@@ -745,6 +781,14 @@
                   <td><code>glass</code>, <code>opacity</code>, <code>none</code></td>
                 </tr>
                 <tr>
+                  <td><code>surfaceOpacity</code></td>
+                  <td><code>0</code> to <code>1</code>; controls glass surface opacity</td>
+                </tr>
+                <tr>
+                  <td><code>contentOpacity</code></td>
+                  <td><code>0</code> to <code>1</code>; controls opacity-mode content fade</td>
+                </tr>
+                <tr>
                   <td><code>collisionSelector</code></td>
                   <td>Defaults to <code>[data-atoms-collision]</code></td>
                 </tr>
@@ -761,6 +805,7 @@
               <li>Keep collision surfaces intentional; rects refresh outside the animation loop.</li>
               <li>Import <code>atoms-fx/styles.css</code> once to enable glass and opacity controls.</li>
               <li>Leave <code>respectReducedMotion</code> enabled for production UI.</li>
+              <li>Rain uses background and foreground layers so translucent surfaces can reveal rain behind them.</li>
             </ul>
           </div>
 
@@ -799,6 +844,8 @@
         wind: -0.28,
         quality: 'high',
         transparency: 'glass',
+        surfaceOpacity: 0.14,
+        contentOpacity: 0.72,
         color: 'rgba(210, 228, 255, 0.82)',
         respectReducedMotion: true,
       }
@@ -847,6 +894,8 @@
           wind: state.wind,
           quality: state.quality,
           transparency: state.transparency,
+          surfaceOpacity: state.surfaceOpacity,
+          contentOpacity: state.contentOpacity,
           color: state.color,
           respectReducedMotion: state.respectReducedMotion,
           pauseWhenHidden: false,
@@ -890,6 +939,8 @@ controller.start()`
         syncRange('density')
         syncRange('speed')
         syncRange('wind')
+        syncRange('surfaceOpacity')
+        syncRange('contentOpacity')
         updatePressed('preset', state.preset)
         updatePressed('quality', state.quality)
         updatePressed('transparency', state.transparency)
@@ -907,7 +958,7 @@ controller.start()`
         applyState()
       }
 
-      for (const name of ['density', 'speed', 'wind']) {
+      for (const name of ['density', 'speed', 'wind', 'surfaceOpacity', 'contentOpacity']) {
         document.querySelector(`#${name}`).addEventListener('input', (event) => {
           setNumeric(name, event.target.value)
         })

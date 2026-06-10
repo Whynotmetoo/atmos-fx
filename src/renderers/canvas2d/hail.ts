@@ -4,7 +4,7 @@ import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { AccumulationPool } from './accumulation'
 import { findTopEdgeCollision } from './collision'
 import { calculateAccumulationBudget, calculateHailParticleBudget } from './quality'
-import type { Canvas2DRenderer } from './types'
+import type { Canvas2DRenderer, RendererCanvases } from './types'
 
 type HailParticle = {
   x: number
@@ -54,11 +54,11 @@ export class HailRenderer implements Canvas2DRenderer {
   private options: NormalizedAtmosphereOptions
 
   constructor(
-    canvas: HTMLCanvasElement,
+    canvases: RendererCanvases,
     size: CanvasLayerSize,
     options: NormalizedAtmosphereOptions,
   ) {
-    this.context = canvas.getContext('2d')
+    this.context = canvases.foreground.getContext('2d')
     this.size = size
     this.options = options
     this.syncBudgets(true)
@@ -248,9 +248,9 @@ export class HailRenderer implements Canvas2DRenderer {
 }
 
 export function createHailRenderer(
-  canvas: HTMLCanvasElement,
+  canvases: RendererCanvases,
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
 ): HailRenderer {
-  return new HailRenderer(canvas, size, options)
+  return new HailRenderer(canvases, size, options)
 }

@@ -146,11 +146,32 @@ export function createAtmosphere(
 
     if (!renderer) {
       if (normalizedOptions.particle === 'snow') {
-        renderer = createSnowRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+        renderer = createSnowRenderer(
+          {
+            background: canvasLayer.backgroundCanvas,
+            foreground: canvasLayer.foregroundCanvas,
+          },
+          canvasLayer.getSize(),
+          normalizedOptions,
+        )
       } else if (normalizedOptions.particle === 'hail') {
-        renderer = createHailRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+        renderer = createHailRenderer(
+          {
+            background: canvasLayer.backgroundCanvas,
+            foreground: canvasLayer.foregroundCanvas,
+          },
+          canvasLayer.getSize(),
+          normalizedOptions,
+        )
       } else {
-        renderer = createRainRenderer(canvasLayer.canvas, canvasLayer.getSize(), normalizedOptions)
+        renderer = createRainRenderer(
+          {
+            background: canvasLayer.backgroundCanvas,
+            foreground: canvasLayer.foregroundCanvas,
+          },
+          canvasLayer.getSize(),
+          normalizedOptions,
+        )
       }
 
       rendererParticle = normalizedOptions.particle

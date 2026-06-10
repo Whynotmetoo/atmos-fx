@@ -9,6 +9,8 @@ describe('normalizeAtmosphereOptions', () => {
       density: 0.65,
       quality: 'auto',
       transparency: 'glass',
+      contentOpacity: 0.72,
+      surfaceOpacity: 0.14,
     })
   })
 
@@ -38,9 +40,13 @@ describe('normalizeAtmosphereOptions', () => {
       normalizeAtmosphereOptions({
         density: 2,
         speed: -1,
+        contentOpacity: 2,
+        surfaceOpacity: -1,
       }),
     ).toMatchObject({
       density: 1,
+      contentOpacity: 1,
+      surfaceOpacity: 0,
       speed: 0,
     })
   })

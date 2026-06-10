@@ -2,7 +2,7 @@ import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { calculateSnowParticleBudget } from './quality'
-import type { Canvas2DRenderer } from './types'
+import type { Canvas2DRenderer, RendererCanvases } from './types'
 
 type SnowParticle = {
   x: number
@@ -54,11 +54,11 @@ export class SnowRenderer implements Canvas2DRenderer {
   private options: NormalizedAtmosphereOptions
 
   constructor(
-    canvas: HTMLCanvasElement,
+    canvases: RendererCanvases,
     size: CanvasLayerSize,
     options: NormalizedAtmosphereOptions,
   ) {
-    this.context = canvas.getContext('2d')
+    this.context = canvases.background.getContext('2d')
     this.size = size
     this.options = options
     this.syncParticleBudget(true)
@@ -183,9 +183,9 @@ export class SnowRenderer implements Canvas2DRenderer {
 }
 
 export function createSnowRenderer(
-  canvas: HTMLCanvasElement,
+  canvases: RendererCanvases,
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
 ): SnowRenderer {
-  return new SnowRenderer(canvas, size, options)
+  return new SnowRenderer(canvases, size, options)
 }

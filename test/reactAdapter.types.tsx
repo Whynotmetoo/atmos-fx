@@ -15,6 +15,8 @@ export const reactAtmosphereProps: AtmosphereProps = {
   density: 0.7,
   wind: -0.2,
   quality: 'high',
+  contentOpacity: 0.66,
+  surfaceOpacity: 0.18,
   className: 'weather',
   role: 'region',
   'aria-label': 'Weather atmosphere',

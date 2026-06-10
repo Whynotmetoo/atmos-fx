@@ -1,9 +1,9 @@
 import { DEFAULT_OPTIONS, resolvePresetOptions } from './presets'
 import type { AtmosphereOptions, NormalizedAtmosphereOptions } from './types'
 
-function clamp01(value: number): number {
+function clamp01(value: number, fallback: number): number {
   if (Number.isNaN(value)) {
-    return DEFAULT_OPTIONS.density
+    return fallback
   }
 
   return Math.min(1, Math.max(0, value))
@@ -23,7 +23,9 @@ export function normalizeAtmosphereOptions(
 
   return {
     ...merged,
-    density: clamp01(merged.density),
+    density: clamp01(merged.density, DEFAULT_OPTIONS.density),
+    contentOpacity: clamp01(merged.contentOpacity, DEFAULT_OPTIONS.contentOpacity),
+    surfaceOpacity: clamp01(merged.surfaceOpacity, DEFAULT_OPTIONS.surfaceOpacity),
     speed: Math.max(0, merged.speed),
   }
 }
