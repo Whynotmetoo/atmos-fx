@@ -21,6 +21,8 @@ export type AtmosphereOptions = {
   contentOpacity?: number
   surfaceOpacity?: number
   snowAccumulation?: number
+  rainDripping?: number
+  hailBounce?: number
   collisionSelector?: string
   opaqueSelector?: string
   pauseWhenHidden?: boolean

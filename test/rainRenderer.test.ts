@@ -23,10 +23,13 @@ function createContext() {
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     stroke: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
     lineCap: 'butt',
     lineWidth: 1,
     globalAlpha: 1,
     strokeStyle: '',
+    fillStyle: '',
   } as unknown as CanvasRenderingContext2D
 }
 
@@ -67,6 +70,8 @@ const options: NormalizedAtmosphereOptions = {
   contentOpacity: 0.72,
   surfaceOpacity: 0.14,
   snowAccumulation: 0.55,
+  rainDripping: 0.5,
+  hailBounce: 0.5,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -213,5 +218,43 @@ describe('RainRenderer', () => {
 
     expect(renderer.getActiveSplashCount()).toBe(0)
     expect(backgroundParticle!.y).toBeGreaterThan(100)
+  })
+
+  it('spawns and updates rainwater dripping along card bottom edges', () => {
+    const renderer = createRainRenderer(createCanvases(createContext()), size, {
+      ...options,
+      rainDripping: 1, // force dripping spawn probability to be high
+    })
+    const particles = (renderer as unknown as { particles: MutableRainParticle[] }).particles
+    const particle = particles.find((p) => p.layer === 'foreground')
+    expect(particle).toBeDefined()
+
+    particle!.x = 120
+    particle!.y = 90
+    particle!.vx = 0
+    particle!.vy = 1200
+    particle!.length = 18
+    particle!.width = 1
+    particle!.alpha = 0.7
+    particle!.depth = 1
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    // Render should trigger collision and spawn drip
+    renderer.render(16)
+    expect(renderer.getActiveDripCount()).toBeGreaterThan(0)
+
+    // Render again to update the drip pool
+    renderer.render(32)
+    expect(renderer.getActiveDripCount()).toBeGreaterThan(0)
   })
 })

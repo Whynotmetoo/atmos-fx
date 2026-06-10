@@ -65,6 +65,8 @@ const options: NormalizedAtmosphereOptions = {
   contentOpacity: 0.72,
   surfaceOpacity: 0.14,
   snowAccumulation: 0.55,
+  rainDripping: 0.5,
+  hailBounce: 0.5,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -270,5 +272,37 @@ describe('SnowRenderer', () => {
     ])
 
     expect(renderer.getActiveAccumulationCount()).toBe(0)
+  })
+
+  it('slides snow particles off card edges when they accumulate too close to the side', () => {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
+    const accumulationPool = (renderer as any).accumulation
+
+    renderer.setCollisionTargets([
+      {
+        x: 100,
+        y: 150,
+        width: 100,
+        height: 40,
+        right: 200,
+        bottom: 190,
+      },
+    ])
+
+    // Spawn snow particle near the right edge of target card: x = 199 (right is 200)
+    accumulationPool.spawn(199, 150, 4, 0.8, 1, (renderer as any).collisionTargets[0])
+
+    const particle = accumulationPool.particles[0]
+    expect(particle.active).toBe(true)
+    expect(particle.onSurface).toBe(true)
+
+    // Render multiple frames to trigger physics updates
+    // In accumulation.ts: since p.x (199) is within edgeThreshold (p.radius*1.5 = 6px) from right (200)
+    // it will slide off to the right (vx > 0), causing p.x > 200, setting p.onSurface = false.
+    renderer.render(16)
+    renderer.render(32)
+
+    expect(particle.onSurface).toBe(false)
+    expect(particle.vy).toBeGreaterThan(0) // falling now
   })
 })

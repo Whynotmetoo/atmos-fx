@@ -13,6 +13,8 @@ describe('normalizeAtmosphereOptions', () => {
       contentOpacity: 0.72,
       surfaceOpacity: 0.14,
       snowAccumulation: 0.55,
+      rainDripping: 0.5,
+      hailBounce: 0.5,
     })
   })
 
@@ -36,6 +38,7 @@ describe('normalizeAtmosphereOptions', () => {
       preset: 'hail',
       particle: 'hail',
       density: 0.46,
+      hailBounce: 0.5,
     })
   })
 
@@ -47,12 +50,16 @@ describe('normalizeAtmosphereOptions', () => {
         contentOpacity: 2,
         surfaceOpacity: -1,
         snowAccumulation: 2,
+        rainDripping: 2,
+        hailBounce: -1,
       }),
     ).toMatchObject({
       density: 1,
       contentOpacity: 1,
       surfaceOpacity: 0,
       snowAccumulation: 1,
+      rainDripping: 1,
+      hailBounce: 0,
       speed: 0,
     })
   })
@@ -65,12 +72,16 @@ describe('normalizeAtmosphereOptions', () => {
         contentOpacity: undefined,
         surfaceOpacity: undefined,
         snowAccumulation: undefined,
+        rainDripping: undefined,
+        hailBounce: undefined,
       }),
     ).toMatchObject({
       density: 0.65,
       contentOpacity: 0.72,
       surfaceOpacity: 0.14,
       snowAccumulation: 0.55,
+      rainDripping: 0.5,
+      hailBounce: 0.5,
       speed: 1,
     })
   })

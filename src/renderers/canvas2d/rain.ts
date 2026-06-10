@@ -2,6 +2,7 @@ import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { findTopEdgeCollision } from './collision'
+import { DripPool } from './drips'
 import { calculateRainParticleBudget } from './quality'
 import { SplashPool } from './splash'
 import type { Canvas2DRenderer, RendererCanvases } from './types'
@@ -53,6 +54,7 @@ export class RainRenderer implements Canvas2DRenderer {
   private particles: RainParticle[] = []
   private collisionTargets: readonly CollisionTargetRect[] = []
   private readonly splashes = new SplashPool()
+  private readonly drips = new DripPool()
   private lastTime: number | undefined
   private size: CanvasLayerSize
   private options: NormalizedAtmosphereOptions
@@ -117,6 +119,11 @@ export class RainRenderer implements Canvas2DRenderer {
 
       if (collision) {
         this.splashes.spawn(collision.x, collision.y, particle.vx, particle.depth)
+        if (this.options.rainDripping > 0 && Math.random() < this.options.rainDripping) {
+          const target = collision.target
+          const dripX = Math.max(target.x, Math.min(target.right, collision.x))
+          this.drips.spawn(dripX, target.bottom, target)
+        }
         recycleParticle(particle, this.size, this.options)
         continue
       }
@@ -147,8 +154,38 @@ export class RainRenderer implements Canvas2DRenderer {
       }
     }
 
+    if (this.options.rainDripping > 0) {
+      const gravity = 250 * this.options.speed
+      this.drips.update(deltaSeconds, gravity, this.size.height, this.collisionTargets)
+    }
+
     if (this.foregroundContext) {
       this.splashes.render(this.foregroundContext, deltaSeconds, this.size, this.options.color)
+
+      if (this.options.rainDripping > 0) {
+        this.foregroundContext.fillStyle = this.options.color
+        for (const drip of this.drips.particles) {
+          if (!drip.active) {
+            continue
+          }
+          this.foregroundContext.globalAlpha = 0.85
+
+          if (drip.state === 'gathering') {
+            this.foregroundContext.beginPath()
+            this.foregroundContext.arc(drip.x, drip.y - drip.size * 0.2, drip.size, 0, Math.PI * 2)
+            this.foregroundContext.fill()
+          } else {
+            const tailY = drip.y - Math.min(8, drip.vy * 0.04)
+            this.foregroundContext.strokeStyle = this.options.color
+            this.foregroundContext.lineWidth = drip.size * 0.8
+            this.foregroundContext.beginPath()
+            this.foregroundContext.moveTo(drip.x, tailY)
+            this.foregroundContext.lineTo(drip.x, drip.y)
+            this.foregroundContext.stroke()
+          }
+        }
+      }
+
       this.foregroundContext.globalAlpha = 1
     }
 
@@ -159,6 +196,7 @@ export class RainRenderer implements Canvas2DRenderer {
 
   clear() {
     this.splashes.clear()
+    this.drips.clear()
 
     this.clearContext(this.backgroundContext)
     this.clearContext(this.foregroundContext)
@@ -176,6 +214,10 @@ export class RainRenderer implements Canvas2DRenderer {
 
   getActiveSplashCount() {
     return this.splashes.getActiveCount()
+  }
+
+  getActiveDripCount() {
+    return this.drips.getActiveCount()
   }
 
   getBackgroundParticleCount() {

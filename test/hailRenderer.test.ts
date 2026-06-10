@@ -63,6 +63,8 @@ const options: NormalizedAtmosphereOptions = {
   contentOpacity: 0.72,
   surfaceOpacity: 0.14,
   snowAccumulation: 0.55,
+  rainDripping: 0.5,
+  hailBounce: 0.5,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -168,5 +170,66 @@ describe('HailRenderer', () => {
     expect(context.clearRect).toHaveBeenCalledWith(0, 0, 800, 600)
     expect(renderer.getParticleCount()).toBe(0)
     expect(renderer.getActiveAccumulationCount()).toBe(0)
+  })
+
+  it('triggers rolling state when hail hits a surface with horizontal velocity', () => {
+    const renderer = createHailRenderer(createCanvases(createContext()), size, options)
+    const particle = (renderer as any).particles[0]
+
+    particle.x = 120
+    particle.y = 98
+    particle.vx = 40 // high horizontal speed to trigger roll
+    particle.vy = 160
+    particle.radius = 3
+    particle.alpha = 0.8
+    particle.depth = 1
+    particle.bounces = 2 // forces no more bounces, goes to roll check
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    renderer.render(16)
+    expect(particle.rolling).toBe(true)
+    expect(particle.vy).toBe(0)
+  })
+
+  it('settles overlapping pile particles horizontally', () => {
+    const renderer = createHailRenderer(createCanvases(createContext()), size, options)
+    const accumulationPool = (renderer as any).accumulation
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    const target = (renderer as any).collisionTargets[0]
+    // Spawn two overlapping particles at the same x=120, y=100
+    accumulationPool.spawn(120, 100, 4, 0.8, 1, target)
+    accumulationPool.spawn(120, 100, 4, 0.8, 1, target)
+
+    const p1 = accumulationPool.particles[0]
+    const p2 = accumulationPool.particles[1]
+
+    expect(p1.x).toBe(120)
+    expect(p2.x).toBe(120)
+
+    // Render should trigger update() and settle/push them apart
+    renderer.render(16)
+
+    expect(Math.abs(p1.x - p2.x)).toBeGreaterThan(0)
   })
 })
