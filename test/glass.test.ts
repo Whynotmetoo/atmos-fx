@@ -27,6 +27,21 @@ describe('createGlassController', () => {
     expect(root.dataset.atomsTransparency).toBeUndefined()
   })
 
+  it('syncs configurable root opacity CSS variables', () => {
+    const root = document.createElement('section')
+    const controller = createGlassController(root)
+
+    controller.sync(createOptions({ contentOpacity: 0.48, surfaceOpacity: 0.2 }))
+
+    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('0.48')
+    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('0.2')
+
+    controller.destroy()
+
+    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('')
+  })
+
   it('maps data-atoms-opacity values into CSS variables', () => {
     const root = document.createElement('section')
     const child = document.createElement('div')

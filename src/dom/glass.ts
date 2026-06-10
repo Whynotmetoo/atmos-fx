@@ -1,6 +1,8 @@
 import type { NormalizedAtmosphereOptions } from '../core/types'
 
 const OPACITY_VARIABLE = '--atoms-fx-opacity'
+const CONTENT_OPACITY_VARIABLE = '--atoms-fx-content-opacity'
+const SURFACE_OPACITY_VARIABLE = '--atoms-fx-surface-opacity'
 const MANAGED_OPAQUE_VALUE = 'managed'
 const MANAGED_CONTAINS_OPAQUE_VALUE = 'managed'
 
@@ -190,6 +192,8 @@ export function createGlassController(root: HTMLElement): GlassController {
     sync(nextOptions) {
       options = nextOptions
       root.dataset.atomsTransparency = nextOptions.transparency
+      root.style.setProperty(CONTENT_OPACITY_VARIABLE, String(nextOptions.contentOpacity))
+      root.style.setProperty(SURFACE_OPACITY_VARIABLE, String(nextOptions.surfaceOpacity))
       syncDomState()
     },
     destroy() {
@@ -208,6 +212,8 @@ export function createGlassController(root: HTMLElement): GlassController {
 
       trackedOpacityElements.clear()
       managedOpaqueContainerElements.clear()
+      root.style.removeProperty(CONTENT_OPACITY_VARIABLE)
+      root.style.removeProperty(SURFACE_OPACITY_VARIABLE)
       delete root.dataset.atomsTransparency
     },
   }

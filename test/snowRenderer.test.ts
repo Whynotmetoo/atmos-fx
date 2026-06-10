@@ -26,6 +26,13 @@ function createCanvas(context: CanvasRenderingContext2D) {
   return canvas
 }
 
+function createCanvases(context: CanvasRenderingContext2D) {
+  return {
+    background: createCanvas(context),
+    foreground: createCanvas(createContext()),
+  }
+}
+
 const size: CanvasLayerSize = {
   width: 800,
   height: 600,
@@ -43,6 +50,8 @@ const options: NormalizedAtmosphereOptions = {
   color: 'rgba(245, 250, 255, 0.86)',
   quality: 'medium',
   transparency: 'glass',
+  contentOpacity: 0.72,
+  surfaceOpacity: 0.14,
   collisionSelector: '[data-atoms-collision]',
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
@@ -51,13 +60,13 @@ const options: NormalizedAtmosphereOptions = {
 
 describe('SnowRenderer', () => {
   it('creates a particle pool from the snow quality budget', () => {
-    const renderer = createSnowRenderer(createCanvas(createContext()), size, options)
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, options)
 
     expect(renderer.getParticleCount()).toBeGreaterThan(0)
   })
 
   it('resizes the particle pool when density changes', () => {
-    const renderer = createSnowRenderer(createCanvas(createContext()), size, {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, {
       ...options,
       density: 1,
     })
@@ -73,7 +82,7 @@ describe('SnowRenderer', () => {
 
   it('draws drifting flakes without creating a new particle pool', () => {
     const context = createContext()
-    const renderer = createSnowRenderer(createCanvas(context), size, options)
+    const renderer = createSnowRenderer(createCanvases(context), size, options)
     const count = renderer.getParticleCount()
 
     renderer.render(16)
@@ -87,7 +96,7 @@ describe('SnowRenderer', () => {
   })
 
   it('re-seeds existing flake motion when speed changes from zero', () => {
-    const renderer = createSnowRenderer(createCanvas(createContext()), size, {
+    const renderer = createSnowRenderer(createCanvases(createContext()), size, {
       ...options,
       speed: 0,
       wind: 0,
@@ -107,7 +116,7 @@ describe('SnowRenderer', () => {
 
   it('clears the canvas and releases particles on destroy', () => {
     const context = createContext()
-    const renderer = createSnowRenderer(createCanvas(context), size, options)
+    const renderer = createSnowRenderer(createCanvases(context), size, options)
 
     renderer.destroy()
 

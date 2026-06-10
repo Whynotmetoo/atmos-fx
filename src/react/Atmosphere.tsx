@@ -30,6 +30,8 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
     color,
     quality,
     transparency,
+    contentOpacity,
+    surfaceOpacity,
     collisionSelector,
     opaqueSelector,
     pauseWhenHidden,
@@ -76,6 +78,14 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
         nextOptions.transparency = transparency
       }
 
+      if (contentOpacity !== undefined) {
+        nextOptions.contentOpacity = contentOpacity
+      }
+
+      if (surfaceOpacity !== undefined) {
+        nextOptions.surfaceOpacity = surfaceOpacity
+      }
+
       if (collisionSelector !== undefined) {
         nextOptions.collisionSelector = collisionSelector
       }
@@ -103,6 +113,8 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
       color,
       quality,
       transparency,
+      contentOpacity,
+      surfaceOpacity,
       collisionSelector,
       opaqueSelector,
       pauseWhenHidden,

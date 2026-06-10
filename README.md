@@ -14,6 +14,7 @@ const controller = createAtmosphere(document.querySelector('#hero')!, {
   preset: 'rain',
   density: 0.7,
   wind: -0.15,
+  surfaceOpacity: 0.16,
 })
 
 controller.start()
@@ -62,7 +63,9 @@ Core options:
 - `color`: Canvas color string
 - `quality`: `'auto' | 'low' | 'medium' | 'high'`
 - `transparency`: `'glass' | 'opacity' | 'none'`
-- `collisionSelector`: selector for rain landing surfaces
+- `surfaceOpacity`: `0` to `1`, controls glass surface opacity
+- `contentOpacity`: `0` to `1`, controls opacity-mode content fade
+- `collisionSelector`: selector for precipitation landing surfaces
 - `opaqueSelector`: selector for solid child controls
 - `pauseWhenHidden` and `respectReducedMotion`: production performance/accessibility toggles
 
@@ -77,6 +80,7 @@ React is an optional peer dependency. Install it only when using the React adapt
 ## Performance Notes
 
 - Prefer `quality: 'auto'` for responsive pages.
+- Transparent surfaces can reveal background-layer precipitation while foreground precipitation still collides with selected DOM surfaces.
 - Keep collision surfaces intentional; target rects refresh outside the animation frame loop.
 - Leave `respectReducedMotion` enabled in production.
 - Use `controller.destroy()` when removing an atmosphere root outside React.
