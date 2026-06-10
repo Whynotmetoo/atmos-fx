@@ -78,12 +78,61 @@ function randomRange(min: number, max: number): number {
   return min + Math.random() * (max - min)
 }
 
+let scratchCanvas: HTMLCanvasElement | null = null
+let scratchCtx: CanvasRenderingContext2D | null = null
+
 function parseColor(color: string): [number, number, number, number] {
+  if (typeof document !== 'undefined') {
+    try {
+      if (!scratchCanvas) {
+        scratchCanvas = document.createElement('canvas')
+        scratchCanvas.width = 1
+        scratchCanvas.height = 1
+        scratchCtx = scratchCanvas.getContext('2d', { willReadFrequently: true })
+      }
+
+      if (scratchCtx) {
+        scratchCtx.clearRect(0, 0, 1, 1)
+        scratchCtx.fillStyle = 'rgba(255, 255, 255, 0.72)' // default fallback
+        scratchCtx.fillStyle = color
+        scratchCtx.fillRect(0, 0, 1, 1)
+        const data = scratchCtx.getImageData(0, 0, 1, 1).data
+        return [
+          data[0] / 255,
+          data[1] / 255,
+          data[2] / 255,
+          data[3] / 255,
+        ]
+      }
+    } catch (_e) {
+      // Fall through to regex parser
+    }
+  }
+
+  // Fallback for SSR/Node/testing environments without 2D canvas support
   const match = color.match(
     /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/,
   )
 
   if (!match) {
+    if (color.startsWith('#')) {
+      const hex = color.slice(1)
+      if (hex.length === 3) {
+        return [
+          parseInt(hex[0] + hex[0], 16) / 255,
+          parseInt(hex[1] + hex[1], 16) / 255,
+          parseInt(hex[2] + hex[2], 16) / 255,
+          1.0,
+        ]
+      } else if (hex.length === 6) {
+        return [
+          parseInt(hex.slice(0, 2), 16) / 255,
+          parseInt(hex.slice(2, 4), 16) / 255,
+          parseInt(hex.slice(4, 6), 16) / 255,
+          1.0,
+        ]
+      }
+    }
     return [1, 1, 1, 0.72]
   }
 
@@ -224,6 +273,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
   private contextLost = false
   private size: CanvasLayerSize
   private options: NormalizedAtmosphereOptions
+  private parsedColor: [number, number, number, number] = [1, 1, 1, 0.72]
 
   private readonly handleContextLost = (event: Event) => {
     event.preventDefault()
@@ -242,6 +292,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
   ) {
     this.size = size
     this.options = options
+    this.parsedColor = parseColor(options.color)
     this.initializeLayers()
     this.syncBudgets(true)
     this.canvases.background.addEventListener('webglcontextlost', this.handleContextLost)
@@ -266,6 +317,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     const shouldReseedMotion =
       options.speed !== this.options.speed || options.wind !== this.options.wind
     this.options = options
+    this.parsedColor = parseColor(options.color)
     this.syncBudgets(false)
 
     if (shouldReseedMotion) {
@@ -511,7 +563,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
 
   private drawLayer(layer: WebGLLayer, vertexCount: number) {
     const { gl } = layer
-    const [red, green, blue, alpha] = parseColor(this.options.color)
+    const [red, green, blue, alpha] = this.parsedColor
 
     gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
     gl.clearColor(0, 0, 0, 0)

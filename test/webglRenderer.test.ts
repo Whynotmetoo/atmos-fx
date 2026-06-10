@@ -303,4 +303,58 @@ describe('WebGL renderer foundation', () => {
 
     renderer.destroy()
   })
+
+  it('correctly parses non-rgb/rgba CSS colors like Hex strings in WebGL for rain, snow, and hail', () => {
+    // Test Rain
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        color: '#9ccfff',
+        renderer: 'webgl',
+      })
+      expect(renderer.backend).toBe('webgl')
+      renderer.render(16)
+      const calls = vi.mocked(context.uniform4f).mock.calls
+      const match = calls.find((call) => Math.abs(call[1] - 156 / 255) < 0.05)
+      expect(match).toBeDefined()
+      renderer.destroy()
+    }
+
+    // Test Snow
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'snow',
+        particle: 'snow',
+        color: '#9ccfff',
+        renderer: 'webgl',
+      })
+      expect(renderer.backend).toBe('webgl')
+      renderer.render(16)
+      const calls = vi.mocked(context.uniform4f).mock.calls
+      const match = calls.find((call) => Math.abs(call[1] - 156 / 255) < 0.05)
+      expect(match).toBeDefined()
+      renderer.destroy()
+    }
+
+    // Test Hail
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'hail',
+        particle: 'hail',
+        color: '#9ccfff',
+        renderer: 'webgl',
+      })
+      expect(renderer.backend).toBe('webgl')
+      renderer.render(16)
+      const calls = vi.mocked(context.uniform4f).mock.calls
+      const match = calls.find((call) => Math.abs(call[1] - 156 / 255) < 0.05)
+      expect(match).toBeDefined()
+      renderer.destroy()
+    }
+  })
 })
