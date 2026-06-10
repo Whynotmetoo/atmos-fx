@@ -554,7 +554,8 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     y1: number,
     x2: number,
     y2: number,
-    alpha: number,
+    alpha1: number,
+    alpha2 = alpha1,
   ) {
     const start = vertexOffset * VALUES_PER_VERTEX
     if (start + 5 >= layer.vertices.length) {
@@ -562,10 +563,10 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
     layer.vertices[start] = x1
     layer.vertices[start + 1] = y1
-    layer.vertices[start + 2] = alpha
+    layer.vertices[start + 2] = alpha1
     layer.vertices[start + 3] = x2
     layer.vertices[start + 4] = y2
-    layer.vertices[start + 5] = alpha
+    layer.vertices[start + 5] = alpha2
 
     return VERTICES_PER_PARTICLE
   }
@@ -578,6 +579,20 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     if (drip.state === 'gathering') {
       const height = S * 3.0
       const step = 0.5
+      const hlX = drip.x - S * 0.4
+      const hlY = drip.y + height * 0.25
+      const hlRadiusSq = 0.12 * height * height + 0.1
+
+      const getVertexAlpha = (vx: number, vy: number, base: number) => {
+        const t = (vy - drip.y) / (height || 1)
+        const shading = 0.5 + 0.5 * (1 - t)
+        const dx = vx - hlX
+        const dy = vy - hlY
+        const distSq = dx * dx + dy * dy
+        const hl = Math.exp(-distSq / hlRadiusSq) * 0.8
+        return Math.min(0.98, Math.max(0.02, base * shading + hl)) * alpha
+      }
+
       for (let dy = 0; dy <= height; dy += step) {
         const t = dy / (height || 1)
         let w = 0
@@ -588,26 +603,38 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
           const bt = (t - 0.65) / 0.35
           w = S * (0.35 * (1.0 - (t - 0.3) / 0.7) + 1.15 * Math.sqrt(Math.max(0, 1 - bt * bt)))
         }
-        count += this.writeSegment(
-          layer,
-          vertexOffset + count,
-          drip.x - w,
-          drip.y + dy,
-          drip.x + w,
-          drip.y + dy,
-          alpha,
-        )
+
+        const y = drip.y + dy
+        const aEdge = getVertexAlpha(drip.x - w, y, 0.75)
+        const aCenter = getVertexAlpha(drip.x, y, 0.2)
+
+        count += this.writeSegment(layer, vertexOffset + count, drip.x - w, y, drip.x, y, aEdge, aCenter)
+        count += this.writeSegment(layer, vertexOffset + count, drip.x, y, drip.x + w, y, aCenter, aEdge)
       }
     } else if (drip.detachProgress !== undefined && drip.detachProgress < 1) {
       // Snapping/stretching phase: single line neck + bulbous body at drip.y
       const anchorY = drip.target ? drip.target.bottom : drip.y
       
       // Neck (stretched connection line)
-      count += this.writeSegment(layer, vertexOffset + count, drip.x, anchorY, drip.x, drip.y, alpha * 0.5)
+      count += this.writeSegment(layer, vertexOffset + count, drip.x, anchorY, drip.x, drip.y, alpha * 0.4)
 
       // Bulbous body
       const height = S * 3.0
       const step = 0.5
+      const hlX = drip.x - S * 0.4
+      const hlY = drip.y + height * 0.25
+      const hlRadiusSq = 0.12 * height * height + 0.1
+
+      const getVertexAlpha = (vx: number, vy: number, base: number) => {
+        const t = (vy - drip.y) / (height || 1)
+        const shading = 0.5 + 0.5 * (1 - t)
+        const dx = vx - hlX
+        const dy = vy - hlY
+        const distSq = dx * dx + dy * dy
+        const hl = Math.exp(-distSq / hlRadiusSq) * 0.8
+        return Math.min(0.98, Math.max(0.02, base * shading + hl)) * alpha
+      }
+
       for (let dy = 0; dy <= height; dy += step) {
         const t = dy / (height || 1)
         let w = 0
@@ -618,15 +645,13 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
           const bt = (t - 0.65) / 0.35
           w = S * (0.35 * (1.0 - (t - 0.3) / 0.7) + 1.15 * Math.sqrt(Math.max(0, 1 - bt * bt)))
         }
-        count += this.writeSegment(
-          layer,
-          vertexOffset + count,
-          drip.x - w,
-          drip.y + dy,
-          drip.x + w,
-          drip.y + dy,
-          alpha,
-        )
+
+        const y = drip.y + dy
+        const aEdge = getVertexAlpha(drip.x - w, y, 0.75)
+        const aCenter = getVertexAlpha(drip.x, y, 0.2)
+
+        count += this.writeSegment(layer, vertexOffset + count, drip.x - w, y, drip.x, y, aEdge, aCenter)
+        count += this.writeSegment(layer, vertexOffset + count, drip.x, y, drip.x + w, y, aCenter, aEdge)
       }
     } else {
       // Normal free fall (slightly thicker falling raindrop streak)
@@ -635,6 +660,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       for (let dx = -w; dx <= w; dx += 0.5) {
         const edgeFactor = 1 - Math.abs(dx) / (w || 1)
         const startY = drip.y - (drip.y - tailY) * edgeFactor
+        const lineAlpha = alpha * (0.35 + 0.65 * edgeFactor)
         count += this.writeSegment(
           layer,
           vertexOffset + count,
@@ -642,7 +668,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
           startY,
           drip.x + dx,
           drip.y,
-          alpha,
+          lineAlpha,
         )
       }
     }
