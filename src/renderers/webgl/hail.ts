@@ -15,6 +15,9 @@ type HailParticle = {
   alpha: number
   depth: number
   bounces: number
+  rolling?: boolean
+  rollTime?: number
+  lastTarget?: CollisionTargetRect
 }
 
 type WebGLHailLayer = {
@@ -442,12 +445,35 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
       const previousY = particle.y
       const gravity = 520 * (0.7 + particle.depth * 0.5) * this.options.speed
 
-      particle.vy = Math.min(1120, particle.vy + gravity * deltaSeconds)
+      // Handle rolling state
+      if (particle.rolling) {
+        particle.rollTime = (particle.rollTime ?? 0) + deltaSeconds
+        particle.vx *= Math.max(0, 1 - 2.5 * deltaSeconds) // surface friction
+        particle.x += particle.vx * deltaSeconds
 
-      const nextX = particle.x + particle.vx * deltaSeconds
-      const nextY = particle.y + particle.vy * deltaSeconds
+        if (particle.lastTarget) {
+          particle.y = particle.lastTarget.y - particle.radius
+          if (particle.x < particle.lastTarget.x || particle.x > particle.lastTarget.right) {
+            particle.rolling = false
+            particle.vy = 10 + Math.random() * 20
+          }
+        } else {
+          particle.rolling = false
+        }
+
+        if ((particle.rollTime ?? 0) > 0.45 || Math.abs(particle.vx) < 6) {
+          particle.rolling = false
+          recycleParticle(particle, this.size, this.options)
+          continue
+        }
+      } else {
+        particle.vy = Math.min(1120, particle.vy + gravity * deltaSeconds)
+      }
+
+      const nextX = particle.rolling ? particle.x : particle.x + particle.vx * deltaSeconds
+      const nextY = particle.rolling ? particle.y : particle.y + particle.vy * deltaSeconds
       const collision =
-        particle.vy > 0
+        !particle.rolling && particle.vy > 0
           ? findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
           : undefined
 
@@ -459,18 +485,30 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
           pileRadius,
           Math.min(0.74, particle.alpha * 0.78),
           particle.depth,
+          collision.target,
         )
 
-        if (particle.bounces < 2 && particle.vy > 150) {
+        const bounceFactor = randomRange(0.18, 0.3) * (this.options.hailBounce ?? 0.5)
+        if (particle.bounces < 2 && particle.vy > 150 && bounceFactor > 0.05) {
           particle.x = collision.x
           particle.y = collision.y - particle.radius
-          particle.vy = -particle.vy * randomRange(0.18, 0.3)
-          particle.vx = particle.vx * 0.5 + randomRange(-44, 44) * particle.depth
+          particle.vy = -particle.vy * bounceFactor
+          particle.vx = particle.vx * 0.4 + randomRange(-40, 40) * particle.depth
           particle.bounces += 1
         } else {
-          recycleParticle(particle, this.size, this.options)
-          continue
+          // Roll instead of disappearing immediately
+          if (Math.abs(particle.vx) > 12 && Math.random() > 0.28) {
+            particle.rolling = true
+            particle.rollTime = 0
+            particle.lastTarget = collision.target
+            particle.x = collision.x
+            particle.y = collision.y - particle.radius
+            particle.vy = 0
+          } else {
+            recycleParticle(particle, this.size, this.options)
+          }
         }
+        continue
       } else {
         particle.x = nextX
         particle.y = nextY
@@ -487,6 +525,8 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
       this.writeParticle(this.foregroundLayer, activeHailCount, particle.x, particle.y, particle.alpha, particle.radius)
       activeHailCount += 1
     }
+
+    this.accumulation.update(deltaSeconds, this.options, this.collisionTargets, this.size)
 
     let activeAccumulationCount = 0
     for (let index = 0; index < this.accumulation.particles.length; index += 1) {

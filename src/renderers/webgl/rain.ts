@@ -2,6 +2,7 @@ import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { findTopEdgeCollision } from '../canvas2d/collision'
+import { DripPool } from '../canvas2d/drips'
 import { calculateRainParticleBudget } from '../canvas2d/quality'
 import { SplashPool } from '../canvas2d/splash'
 import type { Canvas2DRenderer, RendererCanvases } from '../canvas2d/types'
@@ -249,6 +250,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private particles: RainParticle[] = []
   private collisionTargets: readonly CollisionTargetRect[] = []
   private readonly splashes = new SplashPool()
+  private readonly drips = new DripPool()
   private lastTime: number | undefined
   private contextLost = false
   private size: CanvasLayerSize
@@ -304,6 +306,10 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     return this.splashes.getActiveCount()
   }
 
+  getActiveDripCount() {
+    return this.drips.getActiveCount()
+  }
+
   getBackgroundParticleCount() {
     return this.particles.reduce(
       (count, particle) => (particle.layer === 'background' ? count + 1 : count),
@@ -351,6 +357,11 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
       if (collision) {
         this.splashes.spawn(collision.x, collision.y, particle.vx, particle.depth)
+        if (this.options.rainDripping > 0 && Math.random() < this.options.rainDripping) {
+          const target = collision.target
+          const dripX = Math.max(target.x, Math.min(target.right, collision.x))
+          this.drips.spawn(dripX, target.bottom, target)
+        }
         recycleParticle(particle, this.size, this.options)
         continue
       }
@@ -405,12 +416,25 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       foregroundVertexCount += this.writeSplash(this.foregroundLayer, foregroundVertexCount, splash, alpha)
     }
 
+    if (this.options.rainDripping > 0) {
+      const gravity = 250 * this.options.speed
+      this.drips.update(deltaSeconds, gravity, this.size.height, this.collisionTargets)
+
+      for (const drip of this.drips.particles) {
+        if (!drip.active) {
+          continue
+        }
+        foregroundVertexCount += this.writeDrip(this.foregroundLayer, foregroundVertexCount, drip)
+      }
+    }
+
     this.drawLayer(this.backgroundLayer, backgroundVertexCount)
     this.drawLayer(this.foregroundLayer, foregroundVertexCount)
   }
 
   clear() {
     this.splashes.clear()
+    this.drips.clear()
     this.clearLayer(this.backgroundLayer)
     this.clearLayer(this.foregroundLayer)
   }
@@ -441,7 +465,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private initializeLayers() {
     const capacity = Math.max(1, this.particles.length)
     this.backgroundLayer = createLayer(this.canvases.background, capacity)
-    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 320)
+    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 480)
   }
 
   private syncParticleBudget(initial: boolean) {
@@ -455,7 +479,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     if (budget !== this.particles.length) {
       this.particles = []
       this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, budget))
-      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 320))
+      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 480))
     }
 
     while (this.particles.length < budget) {
@@ -500,6 +524,21 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     layer.vertices[start + 2] = alpha
     layer.vertices[start + 3] = splash.x
     layer.vertices[start + 4] = splash.y
+    layer.vertices[start + 5] = alpha
+
+    return VERTICES_PER_PARTICLE
+  }
+
+  private writeDrip(layer: WebGLLayer, vertexOffset: number, drip: any) {
+    const start = vertexOffset * VALUES_PER_VERTEX
+    const tailY = drip.state === 'gathering' ? drip.y - drip.size * 0.4 : drip.y - Math.min(8, drip.vy * 0.04)
+    const alpha = drip.state === 'gathering' ? 0.76 : 0.85
+
+    layer.vertices[start] = drip.x
+    layer.vertices[start + 1] = tailY
+    layer.vertices[start + 2] = alpha
+    layer.vertices[start + 3] = drip.x
+    layer.vertices[start + 4] = drip.y
     layer.vertices[start + 5] = alpha
 
     return VERTICES_PER_PARTICLE

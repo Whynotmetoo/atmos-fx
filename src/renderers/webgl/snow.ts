@@ -381,6 +381,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
           particle.radius * randomRange(0.65, 1.2),
           Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
           particle.depth,
+          collision.target ?? null,
         )
         recycleParticle(particle, this.size, this.options)
         continue
@@ -397,6 +398,10 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
       const flakeX = particle.x + Math.sin(particle.phase) * particle.drift
       this.writeParticle(this.backgroundLayer, activeSnowflakeCount, flakeX, particle.y, particle.alpha, particle.radius)
       activeSnowflakeCount += 1
+    }
+
+    if (this.options.snowAccumulation > 0) {
+      this.accumulation.update(deltaSeconds, this.options, this.collisionTargets, this.size)
     }
 
     let activeAccumulationCount = 0
@@ -465,7 +470,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     previousY: number,
     nextX: number,
     nextY: number,
-  ): { x: number; y: number } | undefined {
+  ): { x: number; y: number; target?: CollisionTargetRect } | undefined {
     const collision = findTopEdgeCollision(
       previousX,
       previousY,

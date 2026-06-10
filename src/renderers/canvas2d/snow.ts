@@ -158,6 +158,7 @@ export class SnowRenderer implements Canvas2DRenderer {
           particle.radius * randomRange(0.65, 1.2),
           Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
           particle.depth,
+          collision.target ?? null,
         )
         recycleParticle(particle, this.size, this.options)
         continue
@@ -179,6 +180,10 @@ export class SnowRenderer implements Canvas2DRenderer {
         context.arc(flakeX, particle.y, particle.radius, 0, FULL_TURN)
         context.fill()
       }
+    }
+
+    if (this.options.snowAccumulation > 0) {
+      this.accumulation.update(deltaSeconds, this.options, this.collisionTargets, this.size)
     }
 
     if (this.foregroundContext) {
@@ -233,7 +238,7 @@ export class SnowRenderer implements Canvas2DRenderer {
     previousY: number,
     nextX: number,
     nextY: number,
-  ): { x: number; y: number } | undefined {
+  ): { x: number; y: number; target?: CollisionTargetRect } | undefined {
     const collision = findTopEdgeCollision(
       previousX,
       previousY,
