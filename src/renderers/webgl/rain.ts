@@ -558,119 +558,83 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     alpha2 = alpha1,
   ) {
     const start = vertexOffset * VALUES_PER_VERTEX
-    if (start + 5 >= layer.vertices.length) {
-      return 0
-    }
+    if (start + 5 >= layer.vertices.length) return 0
     layer.vertices[start] = x1
     layer.vertices[start + 1] = y1
     layer.vertices[start + 2] = alpha1
     layer.vertices[start + 3] = x2
     layer.vertices[start + 4] = y2
     layer.vertices[start + 5] = alpha2
-
     return VERTICES_PER_PARTICLE
   }
 
+  /**
+   * Render one drop as a filled ellipse using horizontal scanlines.
+   * Each scanline is two half-segments (left→centre, centre→right) so we can
+   * interpolate alpha to create a convex-lens shading: dark edges, bright
+   * interior, specular highlight near upper-left — matching the reference.
+   *
+   * The drop is an ellipse with:
+   *   rx = r * (1 + spreadX)
+   *   ry = r * (1 + spreadY) * 1.5     (slightly taller than wide, like a real drop)
+   * centred at (drip.x, drip.y + ry).
+   */
   private writeDrip(layer: WebGLLayer, vertexOffset: number, drip: any) {
     let count = 0
-    const alpha = drip.state === 'gathering' ? 0.76 : 0.85
-    const S = drip.size
 
-    if (drip.state === 'gathering') {
-      const height = S * 3.0
-      const step = 0.5
-      const hlX = drip.x - S * 0.4
-      const hlY = drip.y + height * 0.25
-      const hlRadiusSq = 0.12 * height * height + 0.1
+    const r: number = drip.r ?? drip.size ?? 2
+    if (r <= 0) return 0
 
-      const getVertexAlpha = (vx: number, vy: number, base: number) => {
-        const t = (vy - drip.y) / (height || 1)
-        const shading = 0.5 + 0.5 * (1 - t)
-        const dx = vx - hlX
-        const dy = vy - hlY
-        const distSq = dx * dx + dy * dy
-        const hl = Math.exp(-distSq / hlRadiusSq) * 0.8
-        return Math.min(0.98, Math.max(0.02, base * shading + hl)) * alpha
-      }
+    const spreadX: number = drip.spreadX ?? 0
+    const spreadY: number = drip.spreadY ?? 0
 
-      for (let dy = 0; dy <= height; dy += step) {
-        const t = dy / (height || 1)
-        let w = 0
-        if (t < 0.3) {
-          const nt = t / 0.3
-          w = S * (0.75 * (1 - nt) + 0.35 * nt)
-        } else {
-          const bt = (t - 0.65) / 0.35
-          w = S * (0.35 * (1.0 - (t - 0.3) / 0.7) + 1.15 * Math.sqrt(Math.max(0, 1 - bt * bt)))
-        }
+    const rx = r * (1 + spreadX)
+    const ry = r * (1 + spreadY) * 1.5  // taller than wide
 
-        const y = drip.y + dy
-        const aEdge = getVertexAlpha(drip.x - w, y, 0.75)
-        const aCenter = getVertexAlpha(drip.x, y, 0.2)
+    // Centre of the ellipse hangs below the anchor point
+    const cx = drip.x
+    const cy = (drip.anchorY ?? drip.y) + ry
 
-        count += this.writeSegment(layer, vertexOffset + count, drip.x - w, y, drip.x, y, aEdge, aCenter)
-        count += this.writeSegment(layer, vertexOffset + count, drip.x, y, drip.x + w, y, aCenter, aEdge)
-      }
-    } else if (drip.detachProgress !== undefined && drip.detachProgress < 1) {
-      // Snapping/stretching phase: single line neck + bulbous body at drip.y
-      const anchorY = drip.target ? drip.target.bottom : drip.y
-      
-      // Neck (stretched connection line)
-      count += this.writeSegment(layer, vertexOffset + count, drip.x, anchorY, drip.x, drip.y, alpha * 0.4)
+    // Overall opacity: trail children are dimmer
+    const baseAlpha = drip.parent ? 0.55 : 0.82
 
-      // Bulbous body
-      const height = S * 3.0
-      const step = 0.5
-      const hlX = drip.x - S * 0.4
-      const hlY = drip.y + height * 0.25
-      const hlRadiusSq = 0.12 * height * height + 0.1
+    // Specular highlight: upper-left quadrant, 35% of ry up from centre
+    const hlDX = -rx * 0.35
+    const hlDY = -ry * 0.35
+    const hlSigSq = (rx * 0.4) * (rx * 0.4)
 
-      const getVertexAlpha = (vx: number, vy: number, base: number) => {
-        const t = (vy - drip.y) / (height || 1)
-        const shading = 0.5 + 0.5 * (1 - t)
-        const dx = vx - hlX
-        const dy = vy - hlY
-        const distSq = dx * dx + dy * dy
-        const hl = Math.exp(-distSq / hlRadiusSq) * 0.8
-        return Math.min(0.98, Math.max(0.02, base * shading + hl)) * alpha
-      }
+    const step = Math.max(0.5, ry / 24)   // scanline step in CSS px
 
-      for (let dy = 0; dy <= height; dy += step) {
-        const t = dy / (height || 1)
-        let w = 0
-        if (t < 0.3) {
-          const nt = t / 0.3
-          w = S * (0.75 * (1 - nt) + 0.35 * nt)
-        } else {
-          const bt = (t - 0.65) / 0.35
-          w = S * (0.35 * (1.0 - (t - 0.3) / 0.7) + 1.15 * Math.sqrt(Math.max(0, 1 - bt * bt)))
-        }
+    for (let dy = -ry; dy <= ry; dy += step) {
+      // Half-width at this row using ellipse equation
+      const sinTheta = Math.max(0, 1 - (dy / ry) ** 2)
+      const hw = rx * Math.sqrt(sinTheta)
+      if (hw < 0.25) continue
 
-        const y = drip.y + dy
-        const aEdge = getVertexAlpha(drip.x - w, y, 0.75)
-        const aCenter = getVertexAlpha(drip.x, y, 0.2)
+      const y = cy + dy
 
-        count += this.writeSegment(layer, vertexOffset + count, drip.x - w, y, drip.x, y, aEdge, aCenter)
-        count += this.writeSegment(layer, vertexOffset + count, drip.x, y, drip.x + w, y, aCenter, aEdge)
-      }
-    } else {
-      // Normal free fall (slightly thicker falling raindrop streak)
-      const tailY = drip.y - Math.min(12, drip.vy * 0.04)
-      const w = S * 0.6
-      for (let dx = -w; dx <= w; dx += 0.5) {
-        const edgeFactor = 1 - Math.abs(dx) / (w || 1)
-        const startY = drip.y - (drip.y - tailY) * edgeFactor
-        const lineAlpha = alpha * (0.35 + 0.65 * edgeFactor)
-        count += this.writeSegment(
-          layer,
-          vertexOffset + count,
-          drip.x + dx,
-          startY,
-          drip.x + dx,
-          drip.y,
-          lineAlpha,
-        )
-      }
+      // Rim alpha: darkest at the very edge, brighter inside
+      const rimAlpha = baseAlpha * (0.55 + 0.45 * (1 - Math.abs(dy / ry)))
+
+      // Centre alpha: semi-transparent core (refractive glass look)
+      const coreAlpha = baseAlpha * 0.18
+
+      // Specular contribution at left vertex
+      const lDX = -hw - hlDX
+      const lDY = dy - hlDY
+      const specL = Math.exp(-(lDX * lDX + lDY * lDY) / hlSigSq) * 0.9
+
+      // Specular contribution at right vertex
+      const rDX = hw - hlDX
+      const rDY = dy - hlDY
+      const specR = Math.exp(-(rDX * rDX + rDY * rDY) / hlSigSq) * 0.9
+
+      const aLeft  = Math.min(0.98, rimAlpha + specL)
+      const aRight = Math.min(0.98, rimAlpha + specR)
+      const aCore  = Math.min(0.98, coreAlpha + Math.exp(-(hlDX * hlDX + (dy - hlDY) ** 2) / hlSigSq) * 0.7)
+
+      count += this.writeSegment(layer, vertexOffset + count, cx - hw, y, cx,       y, aLeft,  aCore)
+      count += this.writeSegment(layer, vertexOffset + count, cx,       y, cx + hw, y, aCore,  aRight)
     }
 
     return count
