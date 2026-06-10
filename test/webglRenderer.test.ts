@@ -36,6 +36,7 @@ function createWebGLContext() {
     bufferData: vi.fn(),
     enableVertexAttribArray: vi.fn(),
     vertexAttribPointer: vi.fn(),
+    uniform1f: vi.fn(),
     uniform2f: vi.fn(),
     uniform4f: vi.fn(),
     drawArrays: vi.fn(),
@@ -135,14 +136,225 @@ describe('WebGL renderer foundation', () => {
     expect(renderer.getStats().particleCount).toBeGreaterThan(0)
   })
 
-  it('keeps non-rain particles on Canvas 2D for the foundation pass', () => {
-    const renderer = createRenderer(createCanvases(createWebGLContext()), size, {
+  it('creates and renders the WebGL snow path', () => {
+    const context = createWebGLContext()
+    const renderer = createRenderer(createCanvases(context), size, {
       ...options,
       preset: 'snow',
       particle: 'snow',
-      renderer: 'auto',
+      renderer: 'webgl',
     })
 
-    expect(renderer.backend).toBe('canvas2d')
+    expect(renderer.backend).toBe('webgl')
+    expect(renderer.getStats().particleCount).toBeGreaterThan(0)
+
+    renderer.render(16)
+    renderer.render(32)
+
+    expect(context.viewport).toHaveBeenCalled()
+    expect(context.bufferData).toHaveBeenCalled()
+    expect(context.drawArrays).toHaveBeenCalled()
+
+    renderer.destroy()
+  })
+
+  it('creates and renders the WebGL hail path', () => {
+    const context = createWebGLContext()
+    const renderer = createRenderer(createCanvases(context), size, {
+      ...options,
+      preset: 'hail',
+      particle: 'hail',
+      renderer: 'webgl',
+    })
+
+    expect(renderer.backend).toBe('webgl')
+    expect(renderer.getStats().particleCount).toBeGreaterThan(0)
+
+    renderer.render(16)
+    renderer.render(32)
+
+    expect(context.viewport).toHaveBeenCalled()
+    expect(context.bufferData).toHaveBeenCalled()
+    expect(context.drawArrays).toHaveBeenCalled()
+
+    renderer.destroy()
+  })
+
+  it('spawns splash particles when WebGL rain crosses a collision top edge', () => {
+    const context = createWebGLContext()
+    const renderer = createRenderer(createCanvases(context), size, {
+      ...options,
+      preset: 'rain',
+      particle: 'rain',
+      renderer: 'webgl',
+    })
+
+    expect(renderer.backend).toBe('webgl')
+    const webglRenderer = renderer as any
+    const particle = webglRenderer.particles.find(
+      (candidate: any) => candidate.layer === 'foreground',
+    )
+    expect(particle).toBeDefined()
+
+    particle.x = 120
+    particle.y = 90
+    particle.vx = 0
+    particle.vy = 1200
+    particle.length = 18
+    particle.alpha = 0.7
+    particle.depth = 1
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    renderer.render(16)
+    expect(webglRenderer.getActiveSplashCount()).toBeGreaterThan(0)
+    
+    renderer.destroy()
+  })
+
+  it('spawns accumulation when WebGL snow lands on collision targets', () => {
+    const context = createWebGLContext()
+    const renderer = createRenderer(createCanvases(context), size, {
+      ...options,
+      preset: 'snow',
+      particle: 'snow',
+      renderer: 'webgl',
+      snowAccumulation: 0.5,
+    })
+
+    expect(renderer.backend).toBe('webgl')
+    const webglRenderer = renderer as any
+    const particle = webglRenderer.particles[0]
+    expect(particle).toBeDefined()
+
+    particle.x = 120
+    particle.y = 90
+    particle.vx = 0
+    particle.vy = 900
+    particle.radius = 2
+    particle.alpha = 0.7
+    particle.depth = 1
+    particle.drift = 0
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    renderer.render(16)
+    expect(webglRenderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+    
+    renderer.destroy()
+  })
+
+  it('spawns accumulation and bounces when WebGL hail lands on collision targets', () => {
+    const context = createWebGLContext()
+    const renderer = createRenderer(createCanvases(context), size, {
+      ...options,
+      preset: 'hail',
+      particle: 'hail',
+      renderer: 'webgl',
+    })
+
+    expect(renderer.backend).toBe('webgl')
+    const webglRenderer = renderer as any
+    const particle = webglRenderer.particles[0]
+    expect(particle).toBeDefined()
+
+    particle.x = 120
+    particle.y = 90
+    particle.vx = 0
+    particle.vy = 800
+    particle.radius = 3
+    particle.alpha = 0.7
+    particle.depth = 1
+    particle.bounces = 0
+
+    renderer.setCollisionTargets([
+      {
+        x: 80,
+        y: 100,
+        width: 140,
+        height: 60,
+        right: 220,
+        bottom: 160,
+      },
+    ])
+
+    renderer.render(16)
+    expect(webglRenderer.getActiveAccumulationCount()).toBeGreaterThan(0)
+    expect(particle.bounces).toBe(1)
+    expect(particle.vy).toBeLessThan(0)
+
+    renderer.destroy()
+  })
+
+  it('correctly parses non-rgb/rgba CSS colors like Hex strings in WebGL for rain, snow, and hail', () => {
+    // Test Rain
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        color: '#9ccfff',
+        renderer: 'webgl',
+      })
+      expect(renderer.backend).toBe('webgl')
+      renderer.render(16)
+      const calls = vi.mocked(context.uniform4f).mock.calls
+      const match = calls.find((call) => Math.abs(call[1] - 156 / 255) < 0.05)
+      expect(match).toBeDefined()
+      renderer.destroy()
+    }
+
+    // Test Snow
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'snow',
+        particle: 'snow',
+        color: '#9ccfff',
+        renderer: 'webgl',
+      })
+      expect(renderer.backend).toBe('webgl')
+      renderer.render(16)
+      const calls = vi.mocked(context.uniform4f).mock.calls
+      const match = calls.find((call) => Math.abs(call[1] - 156 / 255) < 0.05)
+      expect(match).toBeDefined()
+      renderer.destroy()
+    }
+
+    // Test Hail
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'hail',
+        particle: 'hail',
+        color: '#9ccfff',
+        renderer: 'webgl',
+      })
+      expect(renderer.backend).toBe('webgl')
+      renderer.render(16)
+      const calls = vi.mocked(context.uniform4f).mock.calls
+      const match = calls.find((call) => Math.abs(call[1] - 156 / 255) < 0.05)
+      expect(match).toBeDefined()
+      renderer.destroy()
+    }
   })
 })

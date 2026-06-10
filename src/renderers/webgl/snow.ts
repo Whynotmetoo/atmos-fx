@@ -1,22 +1,22 @@
 import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
+import { AccumulationPool } from '../canvas2d/accumulation'
 import { findTopEdgeCollision } from '../canvas2d/collision'
-import { calculateRainParticleBudget } from '../canvas2d/quality'
-import { SplashPool } from '../canvas2d/splash'
+import { calculateAccumulationBudget, calculateSnowParticleBudget } from '../canvas2d/quality'
 import type { Canvas2DRenderer, RendererCanvases } from '../canvas2d/types'
 
-type RainParticleLayer = 'background' | 'foreground'
-
-type RainParticle = {
+type SnowParticle = {
   x: number
   y: number
   vx: number
   vy: number
-  length: number
+  radius: number
   alpha: number
   depth: number
-  layer: RainParticleLayer
+  phase: number
+  phaseSpeed: number
+  drift: number
 }
 
 type WebGLLayer = {
@@ -26,37 +26,51 @@ type WebGLLayer = {
   buffer: WebGLBuffer
   positionLocation: number
   alphaLocation: number
+  radiusLocation: number
   colorLocation: WebGLUniformLocation | null
   resolutionLocation: WebGLUniformLocation | null
+  pixelRatioLocation: WebGLUniformLocation | null
   vertices: Float32Array
 }
 
 const MAX_DELTA_SECONDS = 0.05
-const VALUES_PER_VERTEX = 3
-const VERTICES_PER_PARTICLE = 2
+const FULL_TURN = Math.PI * 2
+const VALUES_PER_VERTEX = 4
+const VERTICES_PER_PARTICLE = 1
 
 const VERTEX_SHADER_SOURCE = `
 attribute vec2 a_position;
 attribute float a_alpha;
+attribute float a_radius;
 uniform vec2 u_resolution;
+uniform float u_pixelRatio;
 varying float v_alpha;
+varying float v_radius_px;
 
 void main() {
   vec2 zeroToOne = a_position / u_resolution;
   vec2 clipSpace = zeroToOne * 2.0 - 1.0;
   gl_Position = vec4(clipSpace * vec2(1.0, -1.0), 0.0, 1.0);
   v_alpha = a_alpha;
+  v_radius_px = a_radius * u_pixelRatio;
+  gl_PointSize = v_radius_px * 2.0;
 }
 `
 
 const FRAGMENT_SHADER_SOURCE = `
 precision mediump float;
-
 uniform vec4 u_color;
 varying float v_alpha;
+varying float v_radius_px;
 
 void main() {
-  gl_FragColor = vec4(u_color.rgb, u_color.a * v_alpha);
+  float dist = length(gl_PointCoord - vec2(0.5));
+  if (dist > 0.5) {
+    discard;
+  }
+  float dist_px = dist * 2.0 * v_radius_px;
+  float alpha_edge = smoothstep(v_radius_px, v_radius_px - 1.0, dist_px);
+  gl_FragColor = vec4(u_color.rgb, u_color.a * v_alpha * alpha_edge);
 }
 `
 
@@ -131,22 +145,25 @@ function parseColor(color: string): [number, number, number, number] {
 }
 
 function recycleParticle(
-  particle: RainParticle,
+  particle: SnowParticle,
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
   initial = false,
 ) {
-  const depth = randomRange(0.35, 1)
-  const speed = options.speed * randomRange(520, 980) * depth
-  const wind = options.wind * randomRange(120, 260) * depth
+  const depth = randomRange(0.28, 1)
+  const speed = options.speed * randomRange(34, 116) * (0.45 + depth)
+  const wind = options.wind * randomRange(20, 72) * depth
 
   particle.depth = depth
-  particle.x = randomRange(-size.width * 0.15, size.width * 1.15)
-  particle.y = initial ? randomRange(-size.height, size.height) : randomRange(-size.height * 0.35, 0)
+  particle.x = randomRange(-size.width * 0.12, size.width * 1.12)
+  particle.y = initial ? randomRange(-size.height, size.height) : randomRange(-size.height * 0.18, 0)
   particle.vx = wind
   particle.vy = speed
-  particle.length = randomRange(10, 26) * depth * (0.8 + options.speed * 0.35)
-  particle.alpha = randomRange(0.22, 0.78) * depth
+  particle.radius = randomRange(0.8, 2.9) * (0.7 + depth * 0.7)
+  particle.alpha = randomRange(0.24, 0.82) * (0.55 + depth * 0.45)
+  particle.phase = randomRange(0, FULL_TURN)
+  particle.phaseSpeed = randomRange(0.55, 1.65) * (0.7 + options.speed * 0.4)
+  particle.drift = randomRange(7, 28) * depth
 }
 
 function getWebGLContext(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
@@ -236,19 +253,22 @@ function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | 
     buffer,
     positionLocation: gl.getAttribLocation(program, 'a_position'),
     alphaLocation: gl.getAttribLocation(program, 'a_alpha'),
+    radiusLocation: gl.getAttribLocation(program, 'a_radius'),
     colorLocation: gl.getUniformLocation(program, 'u_color'),
     resolutionLocation: gl.getUniformLocation(program, 'u_resolution'),
+    pixelRatioLocation: gl.getUniformLocation(program, 'u_pixelRatio'),
     vertices: new Float32Array(capacity * VERTICES_PER_PARTICLE * VALUES_PER_VERTEX),
   }
 }
 
-export class WebGLRainRenderer implements Canvas2DRenderer {
+export class WebGLSnowRenderer implements Canvas2DRenderer {
   readonly backend = 'webgl' as const
   private backgroundLayer: WebGLLayer | undefined
   private foregroundLayer: WebGLLayer | undefined
-  private particles: RainParticle[] = []
+  private particles: SnowParticle[] = []
   private collisionTargets: readonly CollisionTargetRect[] = []
-  private readonly splashes = new SplashPool()
+  private collisionTargetSignature = ''
+  private readonly accumulation = new AccumulationPool()
   private lastTime: number | undefined
   private contextLost = false
   private size: CanvasLayerSize
@@ -274,7 +294,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     this.options = options
     this.parsedColor = parseColor(options.color)
     this.initializeLayers()
-    this.syncParticleBudget(true)
+    this.syncBudgets(true)
     this.canvases.background.addEventListener('webglcontextlost', this.handleContextLost)
     this.canvases.background.addEventListener('webglcontextrestored', this.handleContextRestored)
     this.canvases.foreground.addEventListener('webglcontextlost', this.handleContextLost)
@@ -286,33 +306,38 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   }
 
   resize(size: CanvasLayerSize) {
+    if (size.width !== this.size.width || size.height !== this.size.height) {
+      this.accumulation.clear()
+    }
     this.size = size
-    this.syncParticleBudget(true)
+    this.syncBudgets(true)
   }
 
   updateOptions(options: NormalizedAtmosphereOptions) {
+    const shouldReseedMotion =
+      options.speed !== this.options.speed || options.wind !== this.options.wind
     this.options = options
     this.parsedColor = parseColor(options.color)
-    this.syncParticleBudget(false)
+    this.syncBudgets(false)
+
+    if (shouldReseedMotion) {
+      for (const particle of this.particles) {
+        recycleParticle(particle, this.size, this.options, true)
+      }
+    }
   }
 
   setCollisionTargets(targets: readonly CollisionTargetRect[]) {
+    const nextSignature = targets
+      .map((target) => `${target.x},${target.y},${target.width},${target.height}`)
+      .join('|')
+
+    if (nextSignature !== this.collisionTargetSignature) {
+      this.accumulation.clear()
+      this.collisionTargetSignature = nextSignature
+    }
+
     this.collisionTargets = targets
-  }
-
-  getActiveSplashCount() {
-    return this.splashes.getActiveCount()
-  }
-
-  getBackgroundParticleCount() {
-    return this.particles.reduce(
-      (count, particle) => (particle.layer === 'background' ? count + 1 : count),
-      0,
-    )
-  }
-
-  getForegroundParticleCount() {
-    return this.particles.length - this.getBackgroundParticleCount()
   }
 
   render(time: number) {
@@ -333,90 +358,79 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
     this.lastTime = time
 
-    const backgroundCount = Math.floor(this.particles.length * 0.42)
-    let backgroundVertexCount = 0
-    let foregroundVertexCount = 0
+    let activeSnowflakeCount = 0
 
     for (let index = 0; index < this.particles.length; index += 1) {
       const particle = this.particles[index]
-      const previousX = particle.x
+      const previousDrawX = particle.x + Math.sin(particle.phase) * particle.drift
       const previousY = particle.y
-      const nextX = particle.x + particle.vx * deltaSeconds
-      const nextY = particle.y + particle.vy * deltaSeconds
+      particle.phase += particle.phaseSpeed * deltaSeconds
+      particle.x += particle.vx * deltaSeconds
+      particle.y += particle.vy * deltaSeconds
 
+      const drawX = particle.x + Math.sin(particle.phase) * particle.drift
       const collision =
-        index >= backgroundCount
-          ? findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
+        this.options.snowAccumulation > 0 && particle.vy > 0
+          ? this.findSnowLanding(previousDrawX, previousY, drawX, particle.y)
           : undefined
 
       if (collision) {
-        this.splashes.spawn(collision.x, collision.y, particle.vx, particle.depth)
+        this.accumulation.spawn(
+          collision.x,
+          collision.y,
+          particle.radius * randomRange(0.65, 1.2),
+          Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
+          particle.depth,
+        )
         recycleParticle(particle, this.size, this.options)
         continue
       }
 
-      particle.x = nextX
-      particle.y = nextY
-
       if (
-        particle.y - particle.length > this.size.height ||
-        particle.x > this.size.width * 1.2 ||
-        particle.x < -this.size.width * 0.2
+        particle.y - particle.radius > this.size.height ||
+        drawX > this.size.width * 1.15 ||
+        drawX < -this.size.width * 0.15
       ) {
         recycleParticle(particle, this.size, this.options)
       }
 
-      if (index < backgroundCount) {
-        backgroundVertexCount += this.writeParticle(this.backgroundLayer, backgroundVertexCount, particle)
-      } else {
-        foregroundVertexCount += this.writeParticle(this.foregroundLayer, foregroundVertexCount, particle)
-      }
+      const flakeX = particle.x + Math.sin(particle.phase) * particle.drift
+      this.writeParticle(this.backgroundLayer, activeSnowflakeCount, flakeX, particle.y, particle.alpha, particle.radius)
+      activeSnowflakeCount += 1
     }
 
-    for (const splash of this.splashes.particles) {
-      if (!splash.active) {
-        continue
-      }
-
-      splash.age += deltaSeconds
-
-      if (splash.age >= splash.lifetime) {
-        splash.active = false
-        continue
-      }
-
-      splash.vy += 520 * deltaSeconds
-      splash.x += splash.vx * deltaSeconds
-      splash.y += splash.vy * deltaSeconds
-
+    let activeAccumulationCount = 0
+    for (let index = 0; index < this.accumulation.particles.length; index += 1) {
+      const pile = this.accumulation.particles[index]
       if (
-        splash.x < -20 ||
-        splash.x > this.size.width + 20 ||
-        splash.y < -20 ||
-        splash.y > this.size.height + 20
+        !pile.active ||
+        pile.x < -pile.radius ||
+        pile.x > this.size.width + pile.radius ||
+        pile.y < -pile.radius ||
+        pile.y > this.size.height + pile.radius
       ) {
-        splash.active = false
         continue
       }
 
-      const lifeProgress = splash.age / splash.lifetime
-      const alpha = splash.alpha * (1 - lifeProgress)
-
-      foregroundVertexCount += this.writeSplash(this.foregroundLayer, foregroundVertexCount, splash, alpha)
+      const drawY = pile.y - pile.radius * 0.45
+      const drawRadius = pile.radius * (0.85 + pile.depth * 0.2)
+      this.writeParticle(this.foregroundLayer, activeAccumulationCount, pile.x, drawY, pile.alpha, drawRadius)
+      activeAccumulationCount += 1
     }
 
-    this.drawLayer(this.backgroundLayer, backgroundVertexCount)
-    this.drawLayer(this.foregroundLayer, foregroundVertexCount)
+    this.drawLayer(this.backgroundLayer, activeSnowflakeCount)
+    this.drawLayer(this.foregroundLayer, activeAccumulationCount)
   }
 
   clear() {
-    this.splashes.clear()
+    this.accumulation.clear()
     this.clearLayer(this.backgroundLayer)
     this.clearLayer(this.foregroundLayer)
   }
 
   destroy() {
     this.clear()
+    this.accumulation.destroy()
     this.canvases.background.removeEventListener('webglcontextlost', this.handleContextLost)
     this.canvases.background.removeEventListener('webglcontextrestored', this.handleContextRestored)
     this.canvases.foreground.removeEventListener('webglcontextlost', this.handleContextLost)
@@ -431,6 +445,14 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     return this.particles.length
   }
 
+  getActiveAccumulationCount() {
+    return this.accumulation.getActiveCount()
+  }
+
+  getAccumulationCapacity() {
+    return this.accumulation.getCapacity()
+  }
+
   getStats() {
     return {
       backend: this.backend,
@@ -438,36 +460,84 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
   }
 
-  private initializeLayers() {
-    const capacity = Math.max(1, this.particles.length)
-    this.backgroundLayer = createLayer(this.canvases.background, capacity)
-    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 320)
+  private findSnowLanding(
+    previousX: number,
+    previousY: number,
+    nextX: number,
+    nextY: number,
+  ): { x: number; y: number } | undefined {
+    const collision = findTopEdgeCollision(
+      previousX,
+      previousY,
+      nextX,
+      nextY,
+      this.collisionTargets,
+    )
+
+    if (collision) {
+      return collision
+    }
+
+    if (previousY <= this.size.height && nextY >= this.size.height) {
+      const progress = (this.size.height - previousY) / (nextY - previousY)
+      return {
+        x: previousX + (nextX - previousX) * progress,
+        y: this.size.height,
+      }
+    }
+
+    return undefined
   }
 
-  private syncParticleBudget(initial: boolean) {
-    const budget = calculateRainParticleBudget({
+  private initializeLayers() {
+    const particleCapacity = Math.max(1, this.particles.length)
+    const accumulationCapacity = Math.max(1, this.accumulation.getCapacity())
+    this.backgroundLayer = createLayer(this.canvases.background, particleCapacity)
+    this.foregroundLayer = createLayer(this.canvases.foreground, accumulationCapacity)
+  }
+
+  private syncBudgets(initial: boolean) {
+    const particleBudget = calculateSnowParticleBudget({
       width: this.size.width,
       height: this.size.height,
       density: this.options.density,
       quality: this.options.quality,
     })
+    const accumulationBudget =
+      this.options.snowAccumulation <= 0
+        ? 0
+        : calculateAccumulationBudget({
+            width: this.size.width,
+            height: this.size.height,
+            density: this.options.density * this.options.snowAccumulation,
+            quality: this.options.quality,
+          })
 
-    if (budget !== this.particles.length) {
+    const accumulationCapacityBefore = this.accumulation.getCapacity()
+    this.accumulation.syncBudget(accumulationBudget)
+    const accumulationCapacityAfter = this.accumulation.getCapacity()
+
+    if (
+      particleBudget !== this.particles.length ||
+      accumulationCapacityBefore !== accumulationCapacityAfter
+    ) {
       this.particles = []
-      this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, budget))
-      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 320))
+      this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, particleBudget))
+      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, accumulationCapacityAfter))
     }
 
-    while (this.particles.length < budget) {
-      const particle: RainParticle = {
+    while (this.particles.length < particleBudget) {
+      const particle: SnowParticle = {
         x: 0,
         y: 0,
         vx: 0,
         vy: 0,
-        length: 0,
+        radius: 0,
         alpha: 0,
         depth: 0,
-        layer: this.particles.length < Math.floor(budget * 0.42) ? 'background' : 'foreground',
+        phase: 0,
+        phaseSpeed: 0,
+        drift: 0,
       }
 
       recycleParticle(particle, this.size, this.options, initial)
@@ -475,33 +545,19 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
   }
 
-  private writeParticle(layer: WebGLLayer, vertexOffset: number, particle: RainParticle) {
-    const tailX = particle.x - particle.vx * 0.018
-    const tailY = particle.y - particle.length
+  private writeParticle(
+    layer: WebGLLayer,
+    vertexOffset: number,
+    x: number,
+    y: number,
+    alpha: number,
+    radius: number,
+  ) {
     const start = vertexOffset * VALUES_PER_VERTEX
-
-    layer.vertices[start] = tailX
-    layer.vertices[start + 1] = tailY
-    layer.vertices[start + 2] = particle.alpha
-    layer.vertices[start + 3] = particle.x
-    layer.vertices[start + 4] = particle.y
-    layer.vertices[start + 5] = particle.alpha
-
-    return VERTICES_PER_PARTICLE
-  }
-
-  private writeSplash(layer: WebGLLayer, vertexOffset: number, splash: any, alpha: number) {
-    const tailX = splash.x - splash.vx * 0.012
-    const tailY = splash.y - splash.vy * 0.012 - splash.length
-    const start = vertexOffset * VALUES_PER_VERTEX
-
-    layer.vertices[start] = tailX
-    layer.vertices[start + 1] = tailY
+    layer.vertices[start] = x
+    layer.vertices[start + 1] = y
     layer.vertices[start + 2] = alpha
-    layer.vertices[start + 3] = splash.x
-    layer.vertices[start + 4] = splash.y
-    layer.vertices[start + 5] = alpha
-
+    layer.vertices[start + 3] = radius
     return VERTICES_PER_PARTICLE
   }
 
@@ -519,7 +575,12 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
     gl.useProgram(layer.program)
     gl.bindBuffer(gl.ARRAY_BUFFER, layer.buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, layer.vertices, gl.DYNAMIC_DRAW)
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      layer.vertices.subarray(0, vertexCount * VALUES_PER_VERTEX),
+      gl.DYNAMIC_DRAW,
+    )
+
     gl.enableVertexAttribArray(layer.positionLocation)
     gl.vertexAttribPointer(
       layer.positionLocation,
@@ -538,16 +599,27 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
       2 * Float32Array.BYTES_PER_ELEMENT,
     )
+    gl.enableVertexAttribArray(layer.radiusLocation)
+    gl.vertexAttribPointer(
+      layer.radiusLocation,
+      1,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      3 * Float32Array.BYTES_PER_ELEMENT,
+    )
 
     if (layer.resolutionLocation) {
       gl.uniform2f(layer.resolutionLocation, this.size.width, this.size.height)
     }
-
+    if (layer.pixelRatioLocation) {
+      gl.uniform1f(layer.pixelRatioLocation, this.size.pixelRatio)
+    }
     if (layer.colorLocation) {
       gl.uniform4f(layer.colorLocation, red, green, blue, alpha)
     }
 
-    gl.drawArrays(gl.LINES, 0, vertexCount)
+    gl.drawArrays(gl.POINTS, 0, vertexCount)
   }
 
   private clearLayer(layer: WebGLLayer | undefined) {
@@ -561,12 +633,12 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   }
 }
 
-export function createWebGLRainRenderer(
+export function createWebGLSnowRenderer(
   canvases: RendererCanvases,
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
-): WebGLRainRenderer | undefined {
-  const renderer = new WebGLRainRenderer(canvases, size, options)
+): WebGLSnowRenderer | undefined {
+  const renderer = new WebGLSnowRenderer(canvases, size, options)
 
   if (!renderer.isReady()) {
     renderer.destroy()
