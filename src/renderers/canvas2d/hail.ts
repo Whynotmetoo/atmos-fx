@@ -45,6 +45,7 @@ function recycleParticle(
 }
 
 export class HailRenderer implements Canvas2DRenderer {
+  readonly backend = 'canvas2d' as const
   private readonly context: CanvasRenderingContext2D | null
   private particles: HailParticle[] = []
   private collisionTargets: readonly CollisionTargetRect[] = []
@@ -206,6 +207,13 @@ export class HailRenderer implements Canvas2DRenderer {
 
   getAccumulationCapacity() {
     return this.accumulation.getCapacity()
+  }
+
+  getStats() {
+    return {
+      backend: this.backend,
+      particleCount: this.particles.length,
+    }
   }
 
   private syncBudgets(initial: boolean) {

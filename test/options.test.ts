@@ -6,6 +6,7 @@ describe('normalizeAtmosphereOptions', () => {
     expect(normalizeAtmosphereOptions()).toMatchObject({
       preset: 'rain',
       particle: 'rain',
+      renderer: 'canvas2d',
       density: 0.65,
       quality: 'auto',
       transparency: 'glass',
@@ -19,11 +20,13 @@ describe('normalizeAtmosphereOptions', () => {
     expect(
       normalizeAtmosphereOptions({
         preset: 'snow',
+        renderer: 'webgl',
         density: 0.2,
       }),
     ).toMatchObject({
       preset: 'snow',
       particle: 'snow',
+      renderer: 'webgl',
       density: 0.2,
     })
   })

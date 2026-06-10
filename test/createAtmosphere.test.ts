@@ -92,6 +92,44 @@ function createCanvasContext() {
   } as unknown as CanvasRenderingContext2D
 }
 
+function createWebGLContext() {
+  return {
+    VERTEX_SHADER: 0x8b31,
+    FRAGMENT_SHADER: 0x8b30,
+    COMPILE_STATUS: 0x8b81,
+    LINK_STATUS: 0x8b82,
+    ARRAY_BUFFER: 0x8892,
+    DYNAMIC_DRAW: 0x88e8,
+    FLOAT: 0x1406,
+    LINES: 0x0001,
+    COLOR_BUFFER_BIT: 0x4000,
+    createShader: vi.fn(() => ({})),
+    shaderSource: vi.fn(),
+    compileShader: vi.fn(),
+    getShaderParameter: vi.fn(() => true),
+    deleteShader: vi.fn(),
+    createProgram: vi.fn(() => ({})),
+    attachShader: vi.fn(),
+    linkProgram: vi.fn(),
+    getProgramParameter: vi.fn(() => true),
+    deleteProgram: vi.fn(),
+    createBuffer: vi.fn(() => ({})),
+    getAttribLocation: vi.fn((_program, name) => (name === 'a_position' ? 0 : 1)),
+    getUniformLocation: vi.fn(() => ({})),
+    viewport: vi.fn(),
+    clearColor: vi.fn(),
+    clear: vi.fn(),
+    useProgram: vi.fn(),
+    bindBuffer: vi.fn(),
+    bufferData: vi.fn(),
+    enableVertexAttribArray: vi.fn(),
+    vertexAttribPointer: vi.fn(),
+    uniform2f: vi.fn(),
+    uniform4f: vi.fn(),
+    drawArrays: vi.fn(),
+  } as unknown as WebGLRenderingContext
+}
+
 describe('createAtmosphere', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
@@ -138,6 +176,8 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBe('running')
     expect(root.dataset.atomsFxPreset).toBe('storm')
     expect(root.dataset.atomsParticle).toBe('rain')
+    expect(root.dataset.atomsRendererRequested).toBe('canvas2d')
+    expect(root.dataset.atomsRenderer).toBe('canvas2d')
     expect(root.dataset.atomsTransparency).toBe('glass')
 
     controller.stop()
@@ -149,7 +189,55 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atomsFx).toBeUndefined()
     expect(root.dataset.atomsFxPreset).toBeUndefined()
     expect(root.dataset.atomsParticle).toBeUndefined()
+    expect(root.dataset.atomsRendererRequested).toBeUndefined()
+    expect(root.dataset.atomsRenderer).toBeUndefined()
     expect(root.dataset.atomsTransparency).toBeUndefined()
+  })
+
+  it('falls back to Canvas 2D when WebGL is requested but unavailable', () => {
+    const root = createRoot()
+    const controller = createAtmosphere(root, { renderer: 'webgl' })
+
+    controller.start()
+
+    expect(root.dataset.atomsRendererRequested).toBe('webgl')
+    expect(root.dataset.atomsRenderer).toBe('canvas2d')
+
+    controller.destroy()
+  })
+
+  it('recreates canvases when switching from Canvas 2D to WebGL', () => {
+    const contextTypeByCanvas = new WeakMap<HTMLCanvasElement, '2d' | 'webgl'>()
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockImplementation(function getContext(
+      this: HTMLCanvasElement,
+      contextId: string,
+    ) {
+      const nextType = contextId === 'webgl' || contextId === 'experimental-webgl' ? 'webgl' : '2d'
+      const previousType = contextTypeByCanvas.get(this)
+
+      if (previousType && previousType !== nextType) {
+        return null
+      }
+
+      contextTypeByCanvas.set(this, nextType)
+      return nextType === 'webgl' ? createWebGLContext() : createCanvasContext()
+    })
+
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+    const firstForegroundCanvas = root.querySelector('[data-atoms-layer="weather-foreground"]')
+
+    controller.update({ renderer: 'webgl' })
+
+    expect(root.dataset.atomsRendererRequested).toBe('webgl')
+    expect(root.dataset.atomsRenderer).toBe('webgl')
+    expect(root.querySelector('[data-atoms-layer="weather-foreground"]')).not.toBe(
+      firstForegroundCanvas,
+    )
+
+    controller.destroy()
   })
 
   it('syncs glass controls during lifecycle updates', () => {

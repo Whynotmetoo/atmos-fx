@@ -53,6 +53,7 @@ const size: CanvasLayerSize = {
 const options: NormalizedAtmosphereOptions = {
   preset: 'hail',
   particle: 'hail',
+  renderer: 'canvas2d',
   density: 0.46,
   speed: 0.92,
   wind: -0.08,

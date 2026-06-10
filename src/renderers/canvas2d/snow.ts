@@ -49,6 +49,7 @@ function recycleParticle(
 }
 
 export class SnowRenderer implements Canvas2DRenderer {
+  readonly backend = 'canvas2d' as const
   private readonly backgroundContext: CanvasRenderingContext2D | null
   private readonly foregroundContext: CanvasRenderingContext2D | null
   private readonly accumulation = new AccumulationPool()
@@ -218,6 +219,13 @@ export class SnowRenderer implements Canvas2DRenderer {
 
   getAccumulationCapacity() {
     return this.accumulation.getCapacity()
+  }
+
+  getStats() {
+    return {
+      backend: this.backend,
+      particleCount: this.particles.length,
+    }
   }
 
   private findSnowLanding(

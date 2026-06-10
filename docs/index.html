@@ -639,6 +639,15 @@
           </div>
 
           <div class="control-group">
+            <div class="control-label">Renderer</div>
+            <div class="segmented" style="--count: 3" data-control="renderer">
+              <button type="button" data-value="canvas2d" aria-pressed="true">Canvas</button>
+              <button type="button" data-value="webgl">WebGL</button>
+              <button type="button" data-value="auto">Auto</button>
+            </div>
+          </div>
+
+          <div class="control-group">
             <div class="control-label">Transparency</div>
             <div class="segmented" style="--count: 3" data-control="transparency">
               <button type="button" data-value="glass" aria-pressed="true">Glass</button>
@@ -795,6 +804,13 @@
                   <td><code>auto</code>, <code>low</code>, <code>medium</code>, <code>high</code></td>
                 </tr>
                 <tr>
+                  <td><code>renderer</code></td>
+                  <td>
+                    <code>canvas2d</code>, <code>webgl</code>, <code>auto</code>; WebGL currently
+                    covers rain and falls back to Canvas 2D when unsupported
+                  </td>
+                </tr>
+                <tr>
                   <td><code>transparency</code></td>
                   <td><code>glass</code>, <code>opacity</code>, <code>none</code></td>
                 </tr>
@@ -829,6 +845,7 @@
               <li>Leave <code>respectReducedMotion</code> enabled for production UI.</li>
               <li>Rain uses background and foreground layers so translucent surfaces can reveal rain behind them.</li>
               <li>Snow accumulation uses a bounded foreground pool and scales with quality and density.</li>
+              <li>WebGL rendering is available for rain and falls back to Canvas 2D if the context is unavailable.</li>
             </ul>
           </div>
 
@@ -866,6 +883,7 @@
         speed: 1.25,
         wind: -0.28,
         quality: 'high',
+        renderer: 'canvas2d',
         transparency: 'glass',
         surfaceOpacity: 0.14,
         contentOpacity: 0.72,
@@ -917,6 +935,7 @@
           speed: state.speed,
           wind: state.wind,
           quality: state.quality,
+          renderer: state.renderer,
           transparency: state.transparency,
           surfaceOpacity: state.surfaceOpacity,
           contentOpacity: state.contentOpacity,
@@ -969,6 +988,7 @@ controller.start()`
         syncRange('snowAccumulation')
         updatePressed('preset', state.preset)
         updatePressed('quality', state.quality)
+        updatePressed('renderer', state.renderer)
         updatePressed('transparency', state.transparency)
         updatePressed('color', state.color)
         syncCodeSample()
@@ -1000,7 +1020,7 @@ controller.start()`
         })
       }
 
-      for (const group of ['preset', 'quality', 'transparency', 'color']) {
+      for (const group of ['preset', 'quality', 'renderer', 'transparency', 'color']) {
         for (const button of document.querySelectorAll(`[data-control="${group}"] [data-value]`)) {
           button.addEventListener('click', () => {
             state[group] = button.dataset.value

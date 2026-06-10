@@ -3,6 +3,7 @@ import type { AtmosphereOptions, AtmospherePreset } from './types'
 export const DEFAULT_OPTIONS = {
   preset: 'rain',
   particle: 'rain',
+  renderer: 'canvas2d',
   density: 0.65,
   speed: 1,
   wind: -0.12,

@@ -6,9 +6,12 @@ export type AtmosphereQuality = 'auto' | 'low' | 'medium' | 'high'
 
 export type TransparencyMode = 'glass' | 'opacity' | 'none'
 
+export type AtmosphereRendererBackend = 'canvas2d' | 'webgl' | 'auto'
+
 export type AtmosphereOptions = {
   preset?: AtmospherePreset
   particle?: AtmosphereParticle
+  renderer?: AtmosphereRendererBackend
   density?: number
   speed?: number
   wind?: number
