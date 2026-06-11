@@ -483,7 +483,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private initializeLayers() {
     const capacity = Math.max(1, this.particles.length)
     this.backgroundLayer = createLayer(this.canvases.background, capacity)
-    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 4000)
+    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 6000)
   }
 
   private syncParticleBudget(initial: boolean) {
@@ -497,7 +497,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     if (budget !== this.particles.length) {
       this.particles = []
       this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, budget))
-      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 4000))
+      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 6000))
     }
 
     while (this.particles.length < budget) {
@@ -554,87 +554,159 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     y1: number,
     x2: number,
     y2: number,
-    alpha1: number,
-    alpha2 = alpha1,
+    alpha: number,
   ) {
     const start = vertexOffset * VALUES_PER_VERTEX
-    if (start + 5 >= layer.vertices.length) return 0
+    if (start + 5 >= layer.vertices.length) {
+      return 0
+    }
     layer.vertices[start] = x1
     layer.vertices[start + 1] = y1
-    layer.vertices[start + 2] = alpha1
+    layer.vertices[start + 2] = alpha
     layer.vertices[start + 3] = x2
     layer.vertices[start + 4] = y2
-    layer.vertices[start + 5] = alpha2
+    layer.vertices[start + 5] = alpha
+
     return VERTICES_PER_PARTICLE
   }
 
-  /**
-   * Render one drop as a filled ellipse using horizontal scanlines.
-   * Each scanline is two half-segments (left→centre, centre→right) so we can
-   * interpolate alpha to create a convex-lens shading: dark edges, bright
-   * interior, specular highlight near upper-left — matching the reference.
-   *
-   * The drop is an ellipse with:
-   *   rx = r * (1 + spreadX)
-   *   ry = r * (1 + spreadY) * 1.5     (slightly taller than wide, like a real drop)
-   * centred at (drip.x, drip.y + ry).
-   */
   private writeDrip(layer: WebGLLayer, vertexOffset: number, drip: any) {
     let count = 0
 
-    const r: number = drip.r ?? drip.size ?? 2
-    if (r <= 0) return 0
+    if (drip.state === 'gathering' && drip.target) {
+      const target = drip.target
+      const fill = drip.size / (drip.maxSize || 1) // 0..1 accumulation progress
 
-    const spreadX: number = drip.spreadX ?? 0
-    const spreadY: number = drip.spreadY ?? 0
+      // --- Water film (meniscus) along card bottom edge ---
+      const filmAlpha = 0.2 + fill * 0.25
+      const filmStep = 2
+      const maxSag = 1.5 + fill * 4 // sag deepens as water accumulates
 
-    const rx = r * (1 + spreadX)
-    const ry = r * (1 + spreadY) * 1.5  // taller than wide
+      for (let fx = target.x + 1; fx < target.right; fx += filmStep) {
+        const distRatio = Math.abs(fx - drip.x) / (target.width * 0.5 || 1)
+        const proximity = Math.max(0, 1 - distRatio)
 
-    // Centre of the ellipse hangs below the anchor point
-    const cx = drip.x
-    const cy = (drip.anchorY ?? drip.y) + ry
+        // Catenary-like sag toward gathering point + gentle wave
+        const sag =
+          maxSag * proximity * proximity +
+          0.4 * Math.sin(fx * 0.06 + (drip.filmPhase || 0))
+        const thickness = 0.8 + proximity * (0.8 + fill * 1.5)
 
-    // Overall opacity: trail children are dimmer
-    const baseAlpha = drip.parent ? 0.55 : 0.82
+        count += this.writeSegment(
+          layer,
+          vertexOffset + count,
+          fx,
+          target.bottom,
+          fx,
+          target.bottom + Math.max(0.5, sag + thickness),
+          filmAlpha * (0.4 + proximity * 0.6),
+        )
+      }
 
-    // Specular highlight: upper-left quadrant, 35% of ry up from centre
-    const hlDX = -rx * 0.35
-    const hlDY = -ry * 0.35
-    const hlSigSq = (rx * 0.4) * (rx * 0.4)
+      // --- Single bulbous drop at gathering point ---
+      if (drip.size > 0.8) {
+        const dropScale = Math.min(1, (drip.size - 0.8) / ((drip.maxSize || 5) - 0.8))
+        const dropHeight = 4 + dropScale * 14
+        const dropMaxWidth = 2 + dropScale * 6
+        const dropAlpha = 0.5 + fill * 0.35
+        const neckY = target.bottom + maxSag * 0.7 // drop hangs from film sag
+        const dropStep = 0.5
 
-    const step = Math.max(0.5, ry / 24)   // scanline step in CSS px
+        for (let dy = 0; dy <= dropHeight; dy += dropStep) {
+          const t = dy / dropHeight
+          let w: number
 
-    for (let dy = -ry; dy <= ry; dy += step) {
-      // Half-width at this row using ellipse equation
-      const sinTheta = Math.max(0, 1 - (dy / ry) ** 2)
-      const hw = rx * Math.sqrt(sinTheta)
-      if (hw < 0.25) continue
+          if (t < 0.12) {
+            // Narrow neck connecting to film
+            w = dropMaxWidth * (0.12 + t * 0.9)
+          } else if (t < 0.7) {
+            // Bulbous body — elliptical
+            const bt = (t - 0.12) / 0.58
+            w = dropMaxWidth * (0.22 + 0.78 * Math.sin(bt * Math.PI))
+          } else {
+            // Round bottom taper
+            const tt = (t - 0.7) / 0.3
+            w = dropMaxWidth * 0.22 * Math.cos(tt * Math.PI * 0.5)
+          }
 
-      const y = cy + dy
+          count += this.writeSegment(
+            layer,
+            vertexOffset + count,
+            drip.x - w,
+            neckY + dy,
+            drip.x + w,
+            neckY + dy,
+            dropAlpha,
+          )
+        }
+      }
+    } else if (drip.detachProgress !== undefined && drip.detachProgress < 1) {
+      // Stretching phase: thin neck from anchor + falling bulbous drop
+      const anchorY = drip.target ? drip.target.bottom : drip.y
+      const neckAlpha = 0.35 * (1 - (drip.detachProgress || 0))
 
-      // Rim alpha: darkest at the very edge, brighter inside
-      const rimAlpha = baseAlpha * (0.55 + 0.45 * (1 - Math.abs(dy / ry)))
+      // Thin stretching neck
+      count += this.writeSegment(layer, vertexOffset + count, drip.x, anchorY, drip.x, drip.y, neckAlpha)
 
-      // Centre alpha: semi-transparent core (refractive glass look)
-      const coreAlpha = baseAlpha * 0.18
+      // Falling drop body
+      const dropHeight = Math.min(drip.size * 1.8, 15)
+      const dropMaxWidth = Math.min(drip.size * 1.0, 7)
+      const dropStep = 0.5
 
-      // Specular contribution at left vertex
-      const lDX = -hw - hlDX
-      const lDY = dy - hlDY
-      const specL = Math.exp(-(lDX * lDX + lDY * lDY) / hlSigSq) * 0.9
+      for (let dy = 0; dy <= dropHeight; dy += dropStep) {
+        const t = dy / dropHeight
+        let w: number
 
-      // Specular contribution at right vertex
-      const rDX = hw - hlDX
-      const rDY = dy - hlDY
-      const specR = Math.exp(-(rDX * rDX + rDY * rDY) / hlSigSq) * 0.9
+        if (t < 0.1) {
+          w = dropMaxWidth * 0.1
+        } else if (t < 0.7) {
+          const bt = (t - 0.1) / 0.6
+          w = dropMaxWidth * (0.1 + 0.9 * Math.sin(bt * Math.PI))
+        } else {
+          const tt = (t - 0.7) / 0.3
+          w = dropMaxWidth * 0.1 * Math.cos(tt * Math.PI * 0.5)
+        }
 
-      const aLeft  = Math.min(0.98, rimAlpha + specL)
-      const aRight = Math.min(0.98, rimAlpha + specR)
-      const aCore  = Math.min(0.98, coreAlpha + Math.exp(-(hlDX * hlDX + (dy - hlDY) ** 2) / hlSigSq) * 0.7)
+        count += this.writeSegment(
+          layer,
+          vertexOffset + count,
+          drip.x - w,
+          drip.y + dy,
+          drip.x + w,
+          drip.y + dy,
+          0.75,
+        )
+      }
+    } else {
+      // Free fall: teardrop shape — tapered tail up, bulbous body down
+      const dropHeight = Math.min(drip.size * 1.6, 13)
+      const dropMaxWidth = Math.min(drip.size * 0.85, 6)
+      const dropStep = 0.5
 
-      count += this.writeSegment(layer, vertexOffset + count, cx - hw, y, cx,       y, aLeft,  aCore)
-      count += this.writeSegment(layer, vertexOffset + count, cx,       y, cx + hw, y, aCore,  aRight)
+      for (let dy = 0; dy <= dropHeight; dy += dropStep) {
+        const t = dy / dropHeight
+        let w: number
+
+        if (t < 0.15) {
+          w = dropMaxWidth * 0.06 * (t / 0.15)
+        } else if (t < 0.7) {
+          const bt = (t - 0.15) / 0.55
+          w = dropMaxWidth * (0.06 + 0.94 * Math.sin(bt * Math.PI))
+        } else {
+          const tt = (t - 0.7) / 0.3
+          w = dropMaxWidth * 0.06 * Math.cos(tt * Math.PI * 0.5)
+        }
+
+        count += this.writeSegment(
+          layer,
+          vertexOffset + count,
+          drip.x - w,
+          drip.y - dropHeight + dy,
+          drip.x + w,
+          drip.y - dropHeight + dy,
+          0.8,
+        )
+      }
     }
 
     return count
