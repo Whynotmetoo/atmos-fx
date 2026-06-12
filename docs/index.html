@@ -130,6 +130,11 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
+      #weather-stage[data-atoms-transparency='none'] #collision-card,
+      #weather-stage[data-atoms-transparency='opacity'] #collision-card {
+        background: #111a22;
+      }
+
       /* Weather Card Content */
       .weather-card-content {
         display: flex;

@@ -148,19 +148,23 @@ function recycleParticle(
   particle: SnowParticle,
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
+  isBackground: boolean,
   initial = false,
 ) {
-  const depth = randomRange(0.28, 1)
+  const depth = isBackground ? randomRange(0.2, 0.48) : randomRange(0.55, 1.0)
   const speed = options.speed * randomRange(34, 116) * (0.45 + depth)
   const wind = options.wind * randomRange(20, 72) * depth
+
+  const alphaScale = isBackground ? (0.65 + depth * 0.35) : (0.55 + depth * 0.45)
+  const radiusScale = isBackground ? (0.85 + depth * 0.5) : (0.7 + depth * 0.7)
 
   particle.depth = depth
   particle.x = randomRange(-size.width * 0.12, size.width * 1.12)
   particle.y = initial ? randomRange(-size.height, size.height) : randomRange(-size.height * 0.18, 0)
   particle.vx = wind
   particle.vy = speed
-  particle.radius = randomRange(0.8, 2.9) * (0.7 + depth * 0.7)
-  particle.alpha = randomRange(0.24, 0.82) * (0.55 + depth * 0.45)
+  particle.radius = randomRange(0.8, 2.9) * radiusScale
+  particle.alpha = randomRange(0.24, 0.82) * alphaScale
   particle.phase = randomRange(0, FULL_TURN)
   particle.phaseSpeed = randomRange(0.55, 1.65) * (0.7 + options.speed * 0.4)
   particle.drift = randomRange(7, 28) * depth
@@ -321,8 +325,10 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     this.syncBudgets(false)
 
     if (shouldReseedMotion) {
-      for (const particle of this.particles) {
-        recycleParticle(particle, this.size, this.options, true)
+      const backgroundCount = Math.floor(this.particles.length * 0.42)
+      for (let index = 0; index < this.particles.length; index += 1) {
+        const particle = this.particles[index]
+        recycleParticle(particle, this.size, this.options, index < backgroundCount, true)
       }
     }
   }
@@ -358,7 +364,9 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
 
     this.lastTime = time
 
-    let activeSnowflakeCount = 0
+    const backgroundCount = Math.floor(this.particles.length * 0.42)
+    let activeBackgroundCount = 0
+    let activeForegroundCount = 0
 
     for (let index = 0; index < this.particles.length; index += 1) {
       const particle = this.particles[index]
@@ -369,22 +377,26 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
       particle.y += particle.vy * deltaSeconds
 
       const drawX = particle.x + Math.sin(particle.phase) * particle.drift
-      const collision =
-        this.options.snowAccumulation > 0 && particle.vy > 0
-          ? this.findSnowLanding(previousDrawX, previousY, drawX, particle.y)
-          : undefined
+      const isBackground = index < backgroundCount
 
-      if (collision) {
-        this.accumulation.spawn(
-          collision.x,
-          collision.y,
-          particle.radius * randomRange(0.65, 1.2),
-          Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
-          particle.depth,
-          collision.target ?? null,
-        )
-        recycleParticle(particle, this.size, this.options)
-        continue
+      if (!isBackground) {
+        const collision =
+          this.options.snowAccumulation > 0 && particle.vy > 0
+            ? this.findSnowLanding(previousDrawX, previousY, drawX, particle.y)
+            : undefined
+
+        if (collision) {
+          this.accumulation.spawn(
+            collision.x,
+            collision.y,
+            particle.radius * randomRange(0.65, 1.2),
+            Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
+            particle.depth,
+            collision.target ?? null,
+          )
+          recycleParticle(particle, this.size, this.options, false)
+          continue
+        }
       }
 
       if (
@@ -392,12 +404,17 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
         drawX > this.size.width * 1.15 ||
         drawX < -this.size.width * 0.15
       ) {
-        recycleParticle(particle, this.size, this.options)
+        recycleParticle(particle, this.size, this.options, isBackground)
       }
 
       const flakeX = particle.x + Math.sin(particle.phase) * particle.drift
-      this.writeParticle(this.backgroundLayer, activeSnowflakeCount, flakeX, particle.y, particle.alpha, particle.radius)
-      activeSnowflakeCount += 1
+      if (isBackground) {
+        this.writeParticle(this.backgroundLayer, activeBackgroundCount, flakeX, particle.y, particle.alpha, particle.radius)
+        activeBackgroundCount += 1
+      } else {
+        this.writeParticle(this.foregroundLayer, activeForegroundCount, flakeX, particle.y, particle.alpha, particle.radius)
+        activeForegroundCount += 1
+      }
     }
 
     if (this.options.snowAccumulation > 0) {
@@ -419,12 +436,12 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
 
       const drawY = pile.y - pile.radius * 0.45
       const drawRadius = pile.radius * (0.85 + pile.depth * 0.2)
-      this.writeParticle(this.foregroundLayer, activeAccumulationCount, pile.x, drawY, pile.alpha, drawRadius)
+      this.writeParticle(this.foregroundLayer, activeForegroundCount + activeAccumulationCount, pile.x, drawY, pile.alpha, drawRadius)
       activeAccumulationCount += 1
     }
 
-    this.drawLayer(this.backgroundLayer, activeSnowflakeCount)
-    this.drawLayer(this.foregroundLayer, activeAccumulationCount)
+    this.drawLayer(this.backgroundLayer, activeBackgroundCount)
+    this.drawLayer(this.foregroundLayer, activeForegroundCount + activeAccumulationCount)
   }
 
   clear() {
@@ -498,7 +515,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     const particleCapacity = Math.max(1, this.particles.length)
     const accumulationCapacity = Math.max(1, this.accumulation.getCapacity())
     this.backgroundLayer = createLayer(this.canvases.background, particleCapacity)
-    this.foregroundLayer = createLayer(this.canvases.foreground, accumulationCapacity)
+    this.foregroundLayer = createLayer(this.canvases.foreground, particleCapacity + accumulationCapacity)
   }
 
   private syncBudgets(initial: boolean) {
@@ -528,10 +545,11 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     ) {
       this.particles = []
       this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, particleBudget))
-      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, accumulationCapacityAfter))
+      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, particleBudget + accumulationCapacityAfter))
     }
 
     while (this.particles.length < particleBudget) {
+      const isBackground = this.particles.length < Math.floor(particleBudget * 0.42)
       const particle: SnowParticle = {
         x: 0,
         y: 0,
@@ -545,7 +563,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
         drift: 0,
       }
 
-      recycleParticle(particle, this.size, this.options, initial)
+      recycleParticle(particle, this.size, this.options, isBackground, initial)
       this.particles.push(particle)
     }
   }

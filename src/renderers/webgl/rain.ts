@@ -134,19 +134,23 @@ function recycleParticle(
   particle: RainParticle,
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
+  isBackground: boolean,
   initial = false,
 ) {
-  const depth = randomRange(0.35, 1)
+  const depth = isBackground ? randomRange(0.2, 0.48) : randomRange(0.55, 1.0)
   const speed = options.speed * randomRange(520, 980) * depth
   const wind = options.wind * randomRange(120, 260) * depth
+
+  const alphaScale = isBackground ? (0.35 + depth * 0.65) : depth
+  const lengthScale = isBackground ? (0.4 + depth * 0.6) : depth
 
   particle.depth = depth
   particle.x = randomRange(-size.width * 0.15, size.width * 1.15)
   particle.y = initial ? randomRange(-size.height, size.height) : randomRange(-size.height * 0.35, 0)
   particle.vx = wind
   particle.vy = speed
-  particle.length = randomRange(10, 26) * depth * (0.8 + options.speed * 0.35)
-  particle.alpha = randomRange(0.22, 0.78) * depth
+  particle.length = randomRange(10, 26) * lengthScale * (0.8 + options.speed * 0.35)
+  particle.alpha = randomRange(0.22, 0.78) * alphaScale
 }
 
 function getWebGLContext(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
@@ -344,14 +348,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       const nextX = particle.x + particle.vx * deltaSeconds
       const nextY = particle.y + particle.vy * deltaSeconds
 
-      // Background rain top-edge collision: recycle silently without spawning splash/drips
-      if (index < backgroundCount) {
-        const bgCollision = findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
-        if (bgCollision) {
-          recycleParticle(particle, this.size, this.options)
-          continue
-        }
-      }
+
 
       const collision =
         index >= backgroundCount
@@ -360,7 +357,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
       if (collision) {
         this.splashes.spawn(collision.x, collision.y, particle.vx, particle.depth)
-        recycleParticle(particle, this.size, this.options)
+        recycleParticle(particle, this.size, this.options, false)
         continue
       }
 
@@ -369,7 +366,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
         const t = (this.size.height - previousY) / (nextY - previousY || 1)
         const collideX = previousX + (nextX - previousX) * t
         this.splashes.spawn(collideX, this.size.height, particle.vx, particle.depth)
-        recycleParticle(particle, this.size, this.options)
+        recycleParticle(particle, this.size, this.options, false)
         continue
       }
 
@@ -381,7 +378,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
         particle.x > this.size.width * 1.2 ||
         particle.x < -this.size.width * 0.2
       ) {
-        recycleParticle(particle, this.size, this.options)
+        recycleParticle(particle, this.size, this.options, index < backgroundCount)
       }
 
       if (index < backgroundCount) {
@@ -479,6 +476,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
 
     while (this.particles.length < budget) {
+      const isBackground = this.particles.length < Math.floor(budget * 0.42)
       const particle: RainParticle = {
         x: 0,
         y: 0,
@@ -487,10 +485,10 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
         length: 0,
         alpha: 0,
         depth: 0,
-        layer: this.particles.length < Math.floor(budget * 0.42) ? 'background' : 'foreground',
+        layer: isBackground ? 'background' : 'foreground',
       }
 
-      recycleParticle(particle, this.size, this.options, initial)
+      recycleParticle(particle, this.size, this.options, isBackground, initial)
       this.particles.push(particle)
     }
   }

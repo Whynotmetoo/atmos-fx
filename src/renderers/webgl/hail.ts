@@ -44,13 +44,6 @@ type WebGLHailLayer = {
   vertices: Float32Array
 }
 
-type WebGLBackgroundLayer = {
-  canvas: HTMLCanvasElement
-  gl: WebGLRenderingContext
-  program: WebGLProgram
-  buffer: WebGLBuffer
-}
-
 const MAX_DELTA_SECONDS = 0.05
 const VALUES_PER_VERTEX = 4
 const VERTICES_PER_PARTICLE = 1
@@ -206,19 +199,23 @@ function recycleParticle(
   particle: HailParticle,
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
+  isBackground: boolean,
   initial = false,
 ) {
-  const depth = randomRange(0.42, 1)
+  const depth = isBackground ? randomRange(0.2, 0.48) : randomRange(0.55, 1.0)
   const speed = options.speed * randomRange(430, 780) * (0.75 + depth * 0.4)
   const wind = options.wind * randomRange(42, 126) * depth
+
+  const alphaScale = isBackground ? (0.7 + depth * 0.3) : (0.6 + depth * 0.4)
+  const radiusScale = isBackground ? (0.86 + depth * 0.35) : (0.76 + depth * 0.45)
 
   particle.depth = depth
   particle.x = randomRange(-size.width * 0.12, size.width * 1.12)
   particle.y = initial ? randomRange(-size.height, size.height) : randomRange(-size.height * 0.22, 0)
   particle.vx = wind
   particle.vy = speed
-  particle.radius = randomRange(1.6, 4.2) * (0.76 + depth * 0.45)
-  particle.alpha = randomRange(0.36, 0.86) * (0.6 + depth * 0.4)
+  particle.radius = randomRange(1.6, 4.2) * radiusScale
+  particle.alpha = randomRange(0.36, 0.86) * alphaScale
   particle.bounces = 0
 }
 
@@ -292,7 +289,7 @@ function createProgram(
   return program
 }
 
-function createForegroundLayer(canvas: HTMLCanvasElement, capacity: number): WebGLHailLayer | undefined {
+function createHailLayer(canvas: HTMLCanvasElement, capacity: number): WebGLHailLayer | undefined {
   const gl = getWebGLContext(canvas)
 
   if (!gl) {
@@ -332,31 +329,9 @@ function createForegroundLayer(canvas: HTMLCanvasElement, capacity: number): Web
   }
 }
 
-function createBackgroundLayer(canvas: HTMLCanvasElement): WebGLBackgroundLayer | undefined {
-  const gl = getWebGLContext(canvas)
-
-  if (!gl) {
-    return undefined
-  }
-
-  const program = createProgram(gl, VERTEX_SHADER_SOURCE, SOLID_FRAGMENT_SHADER_SOURCE)
-  const buffer = gl.createBuffer()
-
-  if (!program || !buffer) {
-    return undefined
-  }
-
-  return {
-    canvas,
-    gl,
-    program,
-    buffer,
-  }
-}
-
 export class WebGLHailRenderer implements Canvas2DRenderer {
   readonly backend = 'webgl' as const
-  private backgroundLayer: WebGLBackgroundLayer | undefined
+  private backgroundLayer: WebGLHailLayer | undefined
   private foregroundLayer: WebGLHailLayer | undefined
   private particles: HailParticle[] = []
   private collisionTargets: readonly CollisionTargetRect[] = []
@@ -394,7 +369,7 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
   }
 
   isReady() {
-    return Boolean(this.foregroundLayer)
+    return Boolean(this.backgroundLayer && this.foregroundLayer)
   }
 
   resize(size: CanvasLayerSize) {
@@ -410,8 +385,10 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
     this.syncBudgets(false)
 
     if (shouldReseedMotion) {
-      for (const particle of this.particles) {
-        recycleParticle(particle, this.size, this.options, true)
+      const backgroundCount = Math.floor(this.particles.length * 0.42)
+      for (let index = 0; index < this.particles.length; index += 1) {
+        const particle = this.particles[index]
+        recycleParticle(particle, this.size, this.options, index < backgroundCount, true)
       }
     }
   }
@@ -437,16 +414,19 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
 
     this.lastTime = time
 
-    let activeHailCount = 0
+    const backgroundCount = Math.floor(this.particles.length * 0.42)
+    let activeBackgroundHailCount = 0
+    let activeForegroundHailCount = 0
 
     for (let index = 0; index < this.particles.length; index += 1) {
       const particle = this.particles[index]
       const previousX = particle.x
       const previousY = particle.y
       const gravity = 520 * (0.7 + particle.depth * 0.5) * this.options.speed
+      const isBackground = index < backgroundCount
 
       // Handle rolling state
-      if (particle.rolling) {
+      if (!isBackground && particle.rolling) {
         particle.rollTime = (particle.rollTime ?? 0) + deltaSeconds
         particle.vx *= Math.max(0, 1 - 2.5 * deltaSeconds) // surface friction
         particle.x += particle.vx * deltaSeconds
@@ -466,22 +446,22 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
 
         if ((particle.rollTime ?? 0) > 0.45 || Math.abs(particle.vx) < 6) {
           particle.rolling = false
-          recycleParticle(particle, this.size, this.options)
+          recycleParticle(particle, this.size, this.options, false)
           continue
         }
       } else {
         particle.vy = Math.min(1120, particle.vy + gravity * deltaSeconds)
       }
 
-      const nextX = particle.rolling ? particle.x : particle.x + particle.vx * deltaSeconds
-      const nextY = particle.rolling ? particle.y : particle.y + particle.vy * deltaSeconds
+      const nextX = (!isBackground && particle.rolling) ? particle.x : particle.x + particle.vx * deltaSeconds
+      const nextY = (!isBackground && particle.rolling) ? particle.y : particle.y + particle.vy * deltaSeconds
       
       let collision =
-        !particle.rolling && particle.vy > 0
+        !isBackground && !particle.rolling && particle.vy > 0
           ? findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
           : undefined
 
-      if (!collision && this.options.bottomCollision && !particle.rolling && nextY >= this.size.height && particle.vy > 0) {
+      if (!isBackground && !collision && this.options.bottomCollision && !particle.rolling && nextY >= this.size.height && particle.vy > 0) {
         const t = (this.size.height - previousY) / (nextY - previousY || 1)
         collision = {
           x: previousX + (nextX - previousX) * t,
@@ -490,7 +470,7 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
         }
       }
 
-      if (collision) {
+      if (!isBackground && collision) {
         const pileRadius = particle.radius * randomRange(0.42, 0.72)
         this.accumulation.spawn(
           collision.x,
@@ -518,7 +498,7 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
             particle.y = collision.y - particle.radius
             particle.vy = 0
           } else {
-            recycleParticle(particle, this.size, this.options)
+            recycleParticle(particle, this.size, this.options, false)
           }
         }
         continue
@@ -532,11 +512,18 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
         particle.x > this.size.width * 1.15 ||
         particle.x < -this.size.width * 0.15
       ) {
-        recycleParticle(particle, this.size, this.options)
+        recycleParticle(particle, this.size, this.options, isBackground)
       }
 
-      this.writeParticle(this.foregroundLayer, activeHailCount, particle.x, particle.y, particle.alpha, particle.radius)
-      activeHailCount += 1
+      if (isBackground) {
+        if (this.backgroundLayer) {
+          this.writeParticle(this.backgroundLayer, activeBackgroundHailCount, particle.x, particle.y, particle.alpha, particle.radius)
+          activeBackgroundHailCount += 1
+        }
+      } else {
+        this.writeParticle(this.foregroundLayer, activeForegroundHailCount, particle.x, particle.y, particle.alpha, particle.radius)
+        activeForegroundHailCount += 1
+      }
     }
 
     this.accumulation.update(deltaSeconds, this.options, this.collisionTargets, this.size)
@@ -556,41 +543,59 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
 
       const drawY = pile.y - pile.radius * 0.45
       const drawRadius = pile.radius * (0.85 + pile.depth * 0.2)
-      const vertexIndex = activeHailCount + activeAccumulationCount
+      const vertexIndex = activeForegroundHailCount + activeAccumulationCount
       
       this.writeParticle(this.foregroundLayer, vertexIndex, pile.x, drawY, pile.alpha, drawRadius)
       activeAccumulationCount += 1
     }
 
-    const gl = this.foregroundLayer.gl
-    gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
-    gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    if (activeBackgroundHailCount > 0 && this.backgroundLayer) {
+      const gl = this.backgroundLayer.gl
+      gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
+      gl.clearColor(0, 0, 0, 0)
+      gl.clear(gl.COLOR_BUFFER_BIT)
 
-    const totalActiveCount = activeHailCount + activeAccumulationCount
-    if (totalActiveCount > 0) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.backgroundLayer.buffer)
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        this.backgroundLayer.vertices.subarray(0, activeBackgroundHailCount * VALUES_PER_VERTEX),
+        gl.DYNAMIC_DRAW,
+      )
+
+      const [red, green, blue, alpha] = this.parsedColor
+      this.setupAttribsAndUniforms(this.backgroundLayer, 'hail', red, green, blue, alpha)
+      gl.drawArrays(gl.POINTS, 0, activeBackgroundHailCount)
+    } else if (this.backgroundLayer) {
+      this.clearLayer(this.backgroundLayer)
+    }
+
+    const totalForegroundActiveCount = activeForegroundHailCount + activeAccumulationCount
+    if (totalForegroundActiveCount > 0 && this.foregroundLayer) {
+      const gl = this.foregroundLayer.gl
+      gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
+      gl.clearColor(0, 0, 0, 0)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+
       gl.bindBuffer(gl.ARRAY_BUFFER, this.foregroundLayer.buffer)
       gl.bufferData(
         gl.ARRAY_BUFFER,
-        this.foregroundLayer.vertices.subarray(0, totalActiveCount * VALUES_PER_VERTEX),
+        this.foregroundLayer.vertices.subarray(0, totalForegroundActiveCount * VALUES_PER_VERTEX),
         gl.DYNAMIC_DRAW,
       )
 
       const [red, green, blue, alpha] = this.parsedColor
 
-      if (activeHailCount > 0) {
+      if (activeForegroundHailCount > 0) {
         this.setupAttribsAndUniforms(this.foregroundLayer, 'hail', red, green, blue, alpha)
-        gl.drawArrays(gl.POINTS, 0, activeHailCount)
+        gl.drawArrays(gl.POINTS, 0, activeForegroundHailCount)
       }
 
       if (activeAccumulationCount > 0) {
         this.setupAttribsAndUniforms(this.foregroundLayer, 'solid', red, green, blue, alpha)
-        gl.drawArrays(gl.POINTS, activeHailCount, activeAccumulationCount)
+        gl.drawArrays(gl.POINTS, activeForegroundHailCount, activeAccumulationCount)
       }
-    }
-
-    if (this.backgroundLayer) {
-      this.clearLayer(this.backgroundLayer)
+    } else if (this.foregroundLayer) {
+      this.clearLayer(this.foregroundLayer)
     }
   }
 
@@ -697,9 +702,9 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
   }
 
   private initializeLayers() {
-    this.backgroundLayer = createBackgroundLayer(this.canvases.background)
+    this.backgroundLayer = createHailLayer(this.canvases.background, Math.max(1, this.particles.length))
     const capacity = Math.max(1, this.particles.length + this.accumulation.getCapacity())
-    this.foregroundLayer = createForegroundLayer(this.canvases.foreground, capacity)
+    this.foregroundLayer = createHailLayer(this.canvases.foreground, capacity)
   }
 
   private syncBudgets(initial: boolean) {
@@ -727,11 +732,12 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
       accumulationCapacityBefore !== accumulationCapacityAfter
     ) {
       this.particles = []
-      this.backgroundLayer = createBackgroundLayer(this.canvases.background)
-      this.foregroundLayer = createForegroundLayer(this.canvases.foreground, Math.max(1, capacityNeeded))
+      this.backgroundLayer = createHailLayer(this.canvases.background, Math.max(1, particleBudget))
+      this.foregroundLayer = createHailLayer(this.canvases.foreground, Math.max(1, capacityNeeded))
     }
 
     while (this.particles.length < particleBudget) {
+      const isBackground = this.particles.length < Math.floor(particleBudget * 0.42)
       const particle: HailParticle = {
         x: 0,
         y: 0,
@@ -743,7 +749,7 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
         bounces: 0,
       }
 
-      recycleParticle(particle, this.size, this.options, initial)
+      recycleParticle(particle, this.size, this.options, isBackground, initial)
       this.particles.push(particle)
     }
   }
@@ -764,7 +770,7 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
     return VERTICES_PER_PARTICLE
   }
 
-  private clearLayer(layer: WebGLBackgroundLayer | WebGLHailLayer | undefined) {
+  private clearLayer(layer: WebGLHailLayer | undefined) {
     if (!layer) {
       return
     }
