@@ -6,3 +6,4 @@ coverage/
 AGENTS.md
 docs_local/
 .agents/
+dist-docs/

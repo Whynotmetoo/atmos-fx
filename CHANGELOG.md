@@ -4,6 +4,11 @@ All notable changes to atmos-fx will be documented in this file.
 
 The project follows semantic versioning once published.
 
+## [0.1.1] - 2026-06-12
+
+- Added dedicated Vite build configuration for bundling the interactive docs playground independently.
+- Renamed all package name, DOM dataset attribute, CSS variable, and file references from `atoms-fx` / `atoms` to `atmos-fx` / `atmos`.
+
 ## [0.1.0] - 2026-06-12
 
 - Added the framework-agnostic `createAtmosphere()` core API.
