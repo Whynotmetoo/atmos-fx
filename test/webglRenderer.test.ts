@@ -238,7 +238,7 @@ describe('WebGL renderer foundation', () => {
 
     expect(renderer.backend).toBe('webgl')
     const webglRenderer = renderer as any
-    const particle = webglRenderer.particles[0]
+    const particle = webglRenderer.particles[webglRenderer.particles.length - 1]
     expect(particle).toBeDefined()
 
     particle.x = 120
@@ -277,7 +277,7 @@ describe('WebGL renderer foundation', () => {
 
     expect(renderer.backend).toBe('webgl')
     const webglRenderer = renderer as any
-    const particle = webglRenderer.particles[0]
+    const particle = webglRenderer.particles[webglRenderer.particles.length - 1]
     expect(particle).toBeDefined()
 
     particle.x = 120
@@ -405,7 +405,7 @@ describe('WebGL renderer foundation', () => {
       })
       expect(renderer.backend).toBe('webgl')
       const webglRenderer = renderer as any
-      const particle = webglRenderer.particles[0]
+      const particle = webglRenderer.particles[webglRenderer.particles.length - 1]
       expect(particle).toBeDefined()
 
       // Move other particles away to prevent random noise
@@ -439,7 +439,7 @@ describe('WebGL renderer foundation', () => {
       })
       expect(renderer.backend).toBe('webgl')
       const webglRenderer = renderer as any
-      const particle = webglRenderer.particles[0]
+      const particle = webglRenderer.particles[webglRenderer.particles.length - 1]
       expect(particle).toBeDefined()
 
       // Move other particles away to prevent random noise
@@ -462,7 +462,7 @@ describe('WebGL renderer foundation', () => {
     }
   })
 
-  it('recycles background rain silently on card top edge crossings', () => {
+  it('does not recycle background rain on card top edge crossings', () => {
     const context = createWebGLContext()
     const renderer = createRenderer(createCanvases(context), size, options)
     const webglRenderer = renderer as any
@@ -494,7 +494,8 @@ describe('WebGL renderer foundation', () => {
     ])
 
     renderer.render(16)
-    // Background rain should recycle silently (no splash created)
+    // Background rain should fall straight down (no collision, y should increase normally)
+    expect(particle.y).toBeCloseTo(110, 1)
     expect(webglRenderer.getActiveSplashCount()).toBe(0)
     renderer.destroy()
   })
