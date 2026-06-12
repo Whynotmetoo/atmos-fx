@@ -53,7 +53,8 @@ const CSS_CONTENT = `
   isolation: isolate;
 }
 [data-atmos-layer='weather-background'],
-[data-atmos-layer='weather-foreground'] {
+[data-atmos-layer='weather-foreground'],
+[data-atmos-layer='liquid'] {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -65,6 +66,9 @@ const CSS_CONTENT = `
 }
 [data-atmos-layer='weather-foreground'] {
   z-index: 3;
+}
+[data-atmos-layer='liquid'] {
+  z-index: 4;
 }
 [data-atmos-fx] :where([data-atmos-glass], [data-atmos-opaque], [data-atmos-opacity], [data-atmos-collision]) {
   position: relative;
