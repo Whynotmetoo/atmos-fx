@@ -149,4 +149,36 @@ describe('createGlassController', () => {
     expect(button.dataset.atmosOpaque).toBeUndefined()
     expect(panel.dataset.atmosContainsOpaque).toBeUndefined()
   })
+
+  it('manages data-atmos-opaque="managed" attribute dynamically', () => {
+    const root = document.createElement('section')
+    const firstTarget = document.createElement('article')
+    const secondTarget = document.createElement('aside')
+    root.append(firstTarget, secondTarget)
+    firstTarget.dataset.atmosOpaque = 'custom'
+    secondTarget.className = 'solid'
+
+    const controller = createGlassController(root)
+    controller.sync(createOptions({ opaqueSelector: '[data-atmos-opaque], .solid' }))
+
+    // The element matching [data-atmos-opaque] should keep its original attribute
+    expect(firstTarget.dataset.atmosOpaque).toBe('custom')
+    // The element matching .solid should get "managed"
+    expect(secondTarget.dataset.atmosOpaque).toBe('managed')
+
+    // Change options to only match the original selector
+    controller.sync(createOptions({ opaqueSelector: '[data-atmos-opaque]' }))
+    // .solid element should lose the managed attribute
+    expect(secondTarget.dataset.atmosOpaque).toBeUndefined()
+    expect(firstTarget.dataset.atmosOpaque).toBe('custom')
+
+    // Add .solid back
+    controller.sync(createOptions({ opaqueSelector: '.solid' }))
+    expect(secondTarget.dataset.atmosOpaque).toBe('managed')
+
+    // Destroy the controller
+    controller.destroy()
+    // It should clean up the managed attribute
+    expect(secondTarget.dataset.atmosOpaque).toBeUndefined()
+  })
 })

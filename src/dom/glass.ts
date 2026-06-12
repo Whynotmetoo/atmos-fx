@@ -60,6 +60,12 @@ export function createGlassController(root: HTMLElement): GlassController {
       return
     }
 
+    for (const element of managedOpaqueElements) {
+      if (element.dataset.atmosOpaque === MANAGED_OPAQUE_VALUE) {
+        delete element.dataset.atmosOpaque
+      }
+    }
+
     const nextElements = new Set<HTMLElement>()
 
     for (const element of root.querySelectorAll(options.opaqueSelector)) {
