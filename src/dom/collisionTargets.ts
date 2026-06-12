@@ -148,8 +148,18 @@ export function createCollisionTargetManager(
   const mutationObserver =
     MutationObserverCtor === undefined
       ? undefined
-      : new MutationObserverCtor(() => {
-          scheduleRefresh()
+      : new MutationObserverCtor((mutations) => {
+          const hasSignificantMutation = mutations.some((mutation) => {
+            const target = mutation.target as HTMLElement
+            if (target && typeof target.closest === 'function') {
+              return !target.closest('[data-atoms-layer]')
+            }
+            return true
+          })
+
+          if (hasSignificantMutation) {
+            scheduleRefresh()
+          }
         })
 
   resizeObserver?.observe(root)

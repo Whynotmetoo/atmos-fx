@@ -39,6 +39,7 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
     opaqueSelector,
     pauseWhenHidden,
     respectReducedMotion,
+    liquidDripping,
     ...elementProps
   },
   forwardedRef,
@@ -117,6 +118,10 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
         nextOptions.respectReducedMotion = respectReducedMotion
       }
 
+      if (liquidDripping !== undefined) {
+        nextOptions.liquidDripping = liquidDripping
+      }
+
       return nextOptions
     },
     [
@@ -137,6 +142,7 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
       opaqueSelector,
       pauseWhenHidden,
       respectReducedMotion,
+      liquidDripping,
     ],
   )
   const optionsRef = useRef(atmosphereOptions)

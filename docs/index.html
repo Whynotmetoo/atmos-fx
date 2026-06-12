@@ -124,7 +124,6 @@
         padding: 32px;
         border-radius: 20px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        z-index: 10;
         position: relative;
         box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -595,6 +594,15 @@
             </label>
           </div>
 
+          <!-- Switch Liquid Dripping -->
+          <div class="switch-container" id="liquid-dripping-container">
+            <div class="switch-label">Liquid Dripping</div>
+            <label class="switch">
+              <input type="checkbox" id="liquidDripping" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
           <!-- Dropdown Quality -->
           <div class="control-group">
             <div class="control-label">Quality</div>
@@ -864,6 +872,7 @@
         snowAccumulation: 0.55,
         hailBounce: 0.50,
         bottomCollision: false,
+        liquidDripping: true,
         color: 'rgba(220, 235, 255, 0.72)'
       }
 
@@ -932,6 +941,7 @@
           surfaceOpacity: state.surfaceOpacity,
           contentOpacity: state.contentOpacity,
           bottomCollision: state.bottomCollision,
+          liquidDripping: state.liquidDripping,
           color: state.color
         }
 
@@ -966,6 +976,7 @@ controller.start()`
         // Display correct controls depending on preset
         document.querySelector('#snow-accum-control').style.display = state.preset === 'snow' ? 'flex' : 'none'
         document.querySelector('#hail-bounce-control').style.display = state.preset === 'hail' ? 'flex' : 'none'
+        document.querySelector('#liquid-dripping-container').style.display = state.preset === 'rain' ? 'flex' : 'none'
 
         // Display correct opacity sliders
         document.querySelector('#surface-opacity-control').style.display = state.transparency === 'glass' ? 'flex' : 'none'
@@ -980,8 +991,9 @@ controller.start()`
         syncSliderValue('surfaceOpacity')
         syncSliderValue('contentOpacity')
 
-        // Bottom collision toggle
+        // Bottom collision and liquid dripping toggles
         document.querySelector('#bottomCollision').checked = state.bottomCollision
+        document.querySelector('#liquidDripping').checked = state.liquidDripping
 
         // Color and preset active buttons
         syncButtonGroup('preset', state.preset)
@@ -1010,6 +1022,7 @@ controller.start()`
           snowAccumulation: state.snowAccumulation,
           hailBounce: state.hailBounce,
           bottomCollision: state.bottomCollision,
+          liquidDripping: state.liquidDripping,
           color: state.color
         })
       }
@@ -1029,6 +1042,12 @@ controller.start()`
       // Bottom collision switch listener
       document.querySelector('#bottomCollision').addEventListener('change', (e) => {
         state.bottomCollision = e.target.checked
+        apply()
+      })
+
+      // Liquid dripping switch listener
+      document.querySelector('#liquidDripping').addEventListener('change', (e) => {
+        state.liquidDripping = e.target.checked
         apply()
       })
 

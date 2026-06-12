@@ -30,5 +30,6 @@ export function normalizeAtmosphereOptions(
     hailBounce: clamp01(merged.hailBounce, DEFAULT_OPTIONS.hailBounce),
     bottomCollision: merged.bottomCollision ?? DEFAULT_OPTIONS.bottomCollision,
     speed: Math.max(0, merged.speed ?? DEFAULT_OPTIONS.speed),
+    liquidDripping: merged.liquidDripping ?? DEFAULT_OPTIONS.liquidDripping,
   }
 }

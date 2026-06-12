@@ -24,6 +24,7 @@ export type AtmosphereOptions = {
   opaqueSelector?: string
   pauseWhenHidden?: boolean
   respectReducedMotion?: boolean
+  liquidDripping?: boolean
 }
 
 export type NormalizedAtmosphereOptions = Required<AtmosphereOptions>
