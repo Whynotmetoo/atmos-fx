@@ -15,7 +15,7 @@ Use small, focused pull requests. Include tests when changing option normalizati
 
 ## Local Smoke Checks
 
-After building, run the static examples and docs playground:
+After building, run the docs playground:
 
 ```bash
 npx vite --host 127.0.0.1 --port 4173
@@ -23,8 +23,6 @@ npx vite --host 127.0.0.1 --port 4173
 
 Open:
 
-- `http://127.0.0.1:4173/examples/rain.html`
-- `http://127.0.0.1:4173/examples/react.html`
 - `http://127.0.0.1:4173/docs/`
 
 For visual changes, check at least one desktop viewport and one narrow/mobile viewport.
