@@ -56,7 +56,7 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
   }
 
   setupCanvas(backgroundCanvas, 'weather-background', '0')
-  setupCanvas(foregroundCanvas, 'weather-foreground', '2')
+  setupCanvas(foregroundCanvas, 'weather-foreground', '3')
 
   if (shouldSetPosition) {
     root.style.position = 'relative'

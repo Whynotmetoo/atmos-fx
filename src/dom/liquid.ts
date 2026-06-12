@@ -54,7 +54,36 @@ function getWaveY(
   }
 }
 
+let scratchCanvas: HTMLCanvasElement | null = null
+let scratchCtx: CanvasRenderingContext2D | null = null
+
 function parseColorRGB(colorStr: string): { rgb: string; alpha: number } {
+  if (typeof document !== 'undefined') {
+    try {
+      if (!scratchCanvas) {
+        scratchCanvas = document.createElement('canvas')
+        scratchCanvas.width = 1
+        scratchCanvas.height = 1
+        scratchCtx = scratchCanvas.getContext('2d', { willReadFrequently: true })
+      }
+
+      if (scratchCtx) {
+        scratchCtx.clearRect(0, 0, 1, 1)
+        scratchCtx.fillStyle = 'rgba(255, 255, 255, 0.72)' // default fallback
+        scratchCtx.fillStyle = colorStr
+        scratchCtx.fillRect(0, 0, 1, 1)
+        const data = scratchCtx.getImageData(0, 0, 1, 1).data
+        return {
+          rgb: `rgb(${data[0]}, ${data[1]}, ${data[2]})`,
+          alpha: data[3] / 255,
+        }
+      }
+    } catch (_e) {
+      // Fall through to regex parser
+    }
+  }
+
+  // Fallback for SSR/Node/testing environments without 2D canvas support
   let r = 255
   let g = 255
   let b = 255
@@ -201,8 +230,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
   return {
     sync(nextOptions, targets) {
       options = nextOptions
-      const isRain = options.preset === 'rain' || options.particle === 'rain'
-      const isEnabled = isRain && options.liquidDripping
+      const isEnabled = options.particle === 'rain' && options.liquidDripping
 
       if (!isEnabled) {
         svg.style.display = 'none'
@@ -244,8 +272,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
 
     update(deltaTimeSeconds) {
       if (!options) return
-      const isRain = options.preset === 'rain' || options.particle === 'rain'
-      const isEnabled = isRain && options.liquidDripping
+      const isEnabled = options.particle === 'rain' && options.liquidDripping
 
       if (!isEnabled || drips.length === 0) {
         return
