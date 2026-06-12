@@ -4,6 +4,10 @@ All notable changes to atmos-fx will be documented in this file.
 
 The project follows semantic versioning once published.
 
+## [0.1.2] - 2026-06-12
+
+- Fixed release checklist references and document formatting.
+
 ## [0.1.1] - 2026-06-12
 
 - Added dedicated Vite build configuration for bundling the interactive docs playground independently.
