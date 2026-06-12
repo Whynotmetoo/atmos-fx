@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve atoms-fx.
+Thanks for helping improve atmos-fx.
 
 ## Development Setup
 

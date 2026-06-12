@@ -45,7 +45,7 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
     (!previousPosition && (!computedPosition || computedPosition === 'static'))
 
   const setupCanvas = (canvas: HTMLCanvasElement, layer: string, zIndex: string) => {
-    canvas.dataset.atomsLayer = layer
+    canvas.dataset.atmosLayer = layer
     canvas.setAttribute('aria-hidden', 'true')
     canvas.style.position = 'absolute'
     canvas.style.inset = '0'

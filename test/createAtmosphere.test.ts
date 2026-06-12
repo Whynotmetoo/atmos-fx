@@ -123,10 +123,10 @@ describe('createAtmosphere', () => {
     controller.start()
 
     const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-background"]',
+      '[data-atmos-layer="weather-background"]',
     )
     const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-foreground"]',
+      '[data-atmos-layer="weather-foreground"]',
     )
 
     expect(backgroundCanvas).not.toBeNull()
@@ -135,23 +135,23 @@ describe('createAtmosphere', () => {
     expect(backgroundCanvas?.height).toBe(360)
     expect(foregroundCanvas?.width).toBe(640)
     expect(foregroundCanvas?.height).toBe(360)
-    expect(root.dataset.atomsFx).toBe('running')
-    expect(root.dataset.atomsFxPreset).toBe('rain')
-    expect(root.dataset.atomsParticle).toBe('rain')
-    expect(root.dataset.atomsRenderer).toBe('canvas2d')
-    expect(root.dataset.atomsTransparency).toBe('glass')
+    expect(root.dataset.atmosFx).toBe('running')
+    expect(root.dataset.atmosFxPreset).toBe('rain')
+    expect(root.dataset.atmosParticle).toBe('rain')
+    expect(root.dataset.atmosRenderer).toBe('canvas2d')
+    expect(root.dataset.atmosTransparency).toBe('glass')
 
     controller.stop()
-    expect(root.dataset.atomsFx).toBe('stopped')
+    expect(root.dataset.atmosFx).toBe('stopped')
 
     controller.destroy()
-    expect(root.querySelector('[data-atoms-layer="weather-background"]')).toBeNull()
-    expect(root.querySelector('[data-atoms-layer="weather-foreground"]')).toBeNull()
-    expect(root.dataset.atomsFx).toBeUndefined()
-    expect(root.dataset.atomsFxPreset).toBeUndefined()
-    expect(root.dataset.atomsParticle).toBeUndefined()
-    expect(root.dataset.atomsRenderer).toBeUndefined()
-    expect(root.dataset.atomsTransparency).toBeUndefined()
+    expect(root.querySelector('[data-atmos-layer="weather-background"]')).toBeNull()
+    expect(root.querySelector('[data-atmos-layer="weather-foreground"]')).toBeNull()
+    expect(root.dataset.atmosFx).toBeUndefined()
+    expect(root.dataset.atmosFxPreset).toBeUndefined()
+    expect(root.dataset.atmosParticle).toBeUndefined()
+    expect(root.dataset.atmosRenderer).toBeUndefined()
+    expect(root.dataset.atmosTransparency).toBeUndefined()
   })
 
   it('syncs glass controls during lifecycle updates', () => {
@@ -159,7 +159,7 @@ describe('createAtmosphere', () => {
     const solid = document.createElement('button')
     const translucent = document.createElement('div')
     solid.className = 'solid'
-    translucent.dataset.atomsOpacity = '0.35'
+    translucent.dataset.atmosOpacity = '0.35'
     root.append(solid, translucent)
 
     const controller = createAtmosphere(root, {
@@ -170,33 +170,33 @@ describe('createAtmosphere', () => {
 
     controller.start()
 
-    expect(solid.dataset.atomsOpaque).toBe('managed')
-    expect(translucent.style.getPropertyValue('--atoms-fx-opacity')).toBe('0.35')
-    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('0.55')
-    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('0.22')
+    expect(solid.dataset.atmosOpaque).toBe('managed')
+    expect(translucent.style.getPropertyValue('--atmos-fx-opacity')).toBe('0.35')
+    expect(root.style.getPropertyValue('--atmos-fx-content-opacity')).toBe('0.55')
+    expect(root.style.getPropertyValue('--atmos-fx-surface-opacity')).toBe('0.22')
 
     controller.update({ transparency: 'opacity' })
 
-    expect(root.dataset.atomsTransparency).toBe('opacity')
+    expect(root.dataset.atmosTransparency).toBe('opacity')
 
     controller.destroy()
 
-    expect(solid.dataset.atomsOpaque).toBeUndefined()
-    expect(translucent.style.getPropertyValue('--atoms-fx-opacity')).toBe('')
-    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('')
-    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('')
+    expect(solid.dataset.atmosOpaque).toBeUndefined()
+    expect(translucent.style.getPropertyValue('--atmos-fx-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atmos-fx-content-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atmos-fx-surface-opacity')).toBe('')
   })
 
   it('creates, gates, and cleans up liquid dripping layer through lifecycle', () => {
     const root = createRoot()
     const card = document.createElement('div')
-    card.setAttribute('data-atoms-collision', '')
+    card.setAttribute('data-atmos-collision', '')
     root.append(card)
 
     const controller = createAtmosphere(root, { preset: 'rain' })
     controller.start()
 
-    const liquidSvg = root.querySelector<SVGElement>('[data-atoms-layer="liquid"]')
+    const liquidSvg = root.querySelector<SVGElement>('[data-atmos-layer="liquid"]')
     expect(liquidSvg).not.toBeNull()
     expect(liquidSvg?.style.display).toBe('block')
 
@@ -213,7 +213,7 @@ describe('createAtmosphere', () => {
     expect(liquidSvg?.style.display).toBe('block')
 
     controller.destroy()
-    expect(root.querySelector('[data-atoms-layer="liquid"]')).toBeNull()
+    expect(root.querySelector('[data-atmos-layer="liquid"]')).toBeNull()
   })
 
   it('clears rendered rain when stopped', () => {
@@ -232,7 +232,7 @@ describe('createAtmosphere', () => {
     controller.stop()
 
     expect(context.clearRect).toHaveBeenCalledWith(0, 0, 320, 180)
-    expect(root.dataset.atomsFx).toBe('stopped')
+    expect(root.dataset.atmosFx).toBe('stopped')
   })
 
   it('starts with the snow preset and switches renderer state through updates', () => {
@@ -241,13 +241,13 @@ describe('createAtmosphere', () => {
 
     controller.start()
 
-    expect(root.dataset.atomsFxPreset).toBe('snow')
-    expect(root.dataset.atomsParticle).toBe('snow')
+    expect(root.dataset.atmosFxPreset).toBe('snow')
+    expect(root.dataset.atmosParticle).toBe('snow')
 
     controller.update({ preset: 'rain' })
 
-    expect(root.dataset.atomsFxPreset).toBe('rain')
-    expect(root.dataset.atomsParticle).toBe('rain')
+    expect(root.dataset.atmosFxPreset).toBe('rain')
+    expect(root.dataset.atmosParticle).toBe('rain')
 
     controller.destroy()
   })
@@ -258,8 +258,8 @@ describe('createAtmosphere', () => {
 
     controller.start()
 
-    expect(root.dataset.atomsFxPreset).toBe('hail')
-    expect(root.dataset.atomsParticle).toBe('hail')
+    expect(root.dataset.atmosFxPreset).toBe('hail')
+    expect(root.dataset.atmosParticle).toBe('hail')
 
     controller.destroy()
   })
@@ -273,8 +273,8 @@ describe('createAtmosphere', () => {
     options.preset = 'rain'
     controller.update({ density: 0.8 })
 
-    expect(root.dataset.atomsFxPreset).toBe('snow')
-    expect(root.dataset.atomsParticle).toBe('snow')
+    expect(root.dataset.atmosFxPreset).toBe('snow')
+    expect(root.dataset.atmosParticle).toBe('snow')
 
     controller.destroy()
   })
@@ -286,11 +286,11 @@ describe('createAtmosphere', () => {
     controller.start()
     controller.pause()
 
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
 
     controller.resume()
 
-    expect(root.dataset.atomsFx).toBe('running')
+    expect(root.dataset.atmosFx).toBe('running')
   })
 
   it('does not resume a manual pause during option updates', () => {
@@ -301,7 +301,7 @@ describe('createAtmosphere', () => {
     controller.pause()
     controller.update({ density: 0.8 })
 
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
   })
 
   it('pauses while the document is hidden and resumes when visible', () => {
@@ -312,12 +312,12 @@ describe('createAtmosphere', () => {
     setDocumentHidden(true)
     document.dispatchEvent(new Event('visibilitychange'))
 
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
 
     setDocumentHidden(false)
     document.dispatchEvent(new Event('visibilitychange'))
 
-    expect(root.dataset.atomsFx).toBe('running')
+    expect(root.dataset.atmosFx).toBe('running')
   })
 
   it('resumes when hidden-document auto-pause is disabled by update', () => {
@@ -327,11 +327,11 @@ describe('createAtmosphere', () => {
     const controller = createAtmosphere(root)
 
     controller.start()
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
 
     controller.update({ pauseWhenHidden: false })
 
-    expect(root.dataset.atomsFx).toBe('running')
+    expect(root.dataset.atmosFx).toBe('running')
   })
 
   it('starts paused when reduced motion is requested', () => {
@@ -342,7 +342,7 @@ describe('createAtmosphere', () => {
 
     controller.start()
 
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
   })
 
   it('resumes when reduced-motion auto-pause is disabled by update', () => {
@@ -352,11 +352,11 @@ describe('createAtmosphere', () => {
     const controller = createAtmosphere(root)
 
     controller.start()
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
 
     controller.update({ respectReducedMotion: false })
 
-    expect(root.dataset.atomsFx).toBe('running')
+    expect(root.dataset.atmosFx).toBe('running')
   })
 
   it('reacts to reduced motion preference changes', () => {
@@ -372,12 +372,12 @@ describe('createAtmosphere', () => {
     mediaQuery.matches = true
     handleChange(new Event('change'))
 
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
 
     mediaQuery.matches = false
     handleChange(new Event('change'))
 
-    expect(root.dataset.atomsFx).toBe('running')
+    expect(root.dataset.atmosFx).toBe('running')
   })
 
   it('supports legacy reduced-motion media query listeners', () => {
@@ -393,7 +393,7 @@ describe('createAtmosphere', () => {
     mediaQuery.matches = true
     handleChange()
 
-    expect(root.dataset.atomsFx).toBe('paused')
+    expect(root.dataset.atmosFx).toBe('paused')
 
     controller.destroy()
 
@@ -421,10 +421,10 @@ describe('createAtmosphere', () => {
     controller.resize()
 
     const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-background"]',
+      '[data-atmos-layer="weather-background"]',
     )
     const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-foreground"]',
+      '[data-atmos-layer="weather-foreground"]',
     )
 
     expect(backgroundCanvas?.width).toBe(400)
@@ -454,10 +454,10 @@ describe('createAtmosphere', () => {
     window.dispatchEvent(new Event('resize'))
 
     const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-background"]',
+      '[data-atmos-layer="weather-background"]',
     )
     const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-foreground"]',
+      '[data-atmos-layer="weather-foreground"]',
     )
 
     expect(backgroundCanvas?.width).toBe(360)
@@ -503,10 +503,10 @@ describe('createAtmosphere', () => {
     resizeCallback?.([], {} as ResizeObserver)
 
     const backgroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-background"]',
+      '[data-atmos-layer="weather-background"]',
     )
     const foregroundCanvas = root.querySelector<HTMLCanvasElement>(
-      '[data-atoms-layer="weather-foreground"]',
+      '[data-atmos-layer="weather-foreground"]',
     )
 
     expect(backgroundCanvas?.width).toBe(480)

@@ -1,12 +1,12 @@
 {
-  "name": "atoms-fx",
+  "name": "atmos-fx",
   "version": "0.1.0",
   "description": "DOM-aware atmosphere effects for creative interfaces.",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/Whynotmetoo/atoms-fx.git"
+    "url": "git+ssh://git@github.com/Whynotmetoo/atmos-fx.git"
   },
   "keywords": [
     "atmosphere",
@@ -33,7 +33,7 @@
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react.js"
     },
-    "./styles.css": "./dist/atoms-fx.css",
+    "./styles.css": "./dist/atmos-fx.css",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -41,7 +41,7 @@
     "build": "npm run clean && npm run build:bundle && npm run build:types && npm run build:styles",
     "build:bundle": "vite build",
     "build:types": "tsc -p tsconfig.build.json",
-    "build:styles": "mkdir -p dist/styles && cp src/styles/atoms-fx.css dist/atoms-fx.css && cp src/styles/atoms-fx.css dist/styles/atoms-fx.css",
+    "build:styles": "mkdir -p dist/styles && cp src/styles/atmos-fx.css dist/atmos-fx.css && cp src/styles/atmos-fx.css dist/styles/atmos-fx.css",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

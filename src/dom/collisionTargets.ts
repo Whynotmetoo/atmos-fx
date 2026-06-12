@@ -52,7 +52,7 @@ export function collectCollisionTargetRects(
   const targets: CollisionTargetRect[] = []
 
   for (const target of root.querySelectorAll(selector)) {
-    if (!(target instanceof HTMLElement) || target.dataset.atomsLayer !== undefined) {
+    if (!(target instanceof HTMLElement) || target.dataset.atmosLayer !== undefined) {
       continue
     }
 
@@ -100,7 +100,7 @@ export function createCollisionTargetManager(
       const nextObservedTargets = new Set<HTMLElement>()
 
       for (const target of root.querySelectorAll(currentOptions.collisionSelector)) {
-        if (!(target instanceof HTMLElement) || target.dataset.atomsLayer !== undefined) {
+        if (!(target instanceof HTMLElement) || target.dataset.atmosLayer !== undefined) {
           continue
         }
 
@@ -158,7 +158,7 @@ export function createCollisionTargetManager(
           const hasSignificantMutation = mutations.some((mutation) => {
             const target = mutation.target as HTMLElement
             if (target && typeof target.closest === 'function') {
-              return !target.closest('[data-atoms-layer]')
+              return !target.closest('[data-atmos-layer]')
             }
             return true
           })

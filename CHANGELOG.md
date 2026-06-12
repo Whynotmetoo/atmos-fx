@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to atoms-fx will be documented in this file.
+All notable changes to atmos-fx will be documented in this file.
 
 The project follows semantic versioning once published.
 

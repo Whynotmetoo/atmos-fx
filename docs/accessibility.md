@@ -1,6 +1,6 @@
 # Accessibility and Motion
 
-atoms-fx is decorative by default. It should enhance an interface without becoming required to understand or operate it.
+atmos-fx is decorative by default. It should enhance an interface without becoming required to understand or operate it.
 
 ## Reduced Motion
 
@@ -28,8 +28,8 @@ createAtmosphere(root, {
 ## Content Readability
 
 - Prefer `transparency: 'glass'` for panels over reducing opacity on large text blocks.
-- Mark critical controls with `data-atoms-opaque`.
-- Use `data-atoms-opacity` sparingly and verify text contrast after applying it.
+- Mark critical controls with `data-atmos-opaque`.
+- Use `data-atmos-opacity` sparingly and verify text contrast after applying it.
 - Keep weather colors subtle when content appears above the canvas.
 
 ## Interaction
@@ -38,7 +38,7 @@ The canvas layer is pointer-events disabled, so it should not block pointer or t
 
 ## Testing Guidance
 
-Before shipping a page that uses atoms-fx:
+Before shipping a page that uses atmos-fx:
 
 - Test with the operating system reduced-motion setting enabled.
 - Test keyboard focus states on controls inside the atmosphere root.
