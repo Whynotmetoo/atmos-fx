@@ -1,6 +1,7 @@
 import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
+import { createLiquidDripsController } from '../dom/liquid'
 import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
@@ -52,6 +53,7 @@ export function createAtmosphere(
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   const glassController = createGlassController(element)
+  const liquidDripsController = createLiquidDripsController(element)
   let currentOptions: AtmosphereOptions = { ...options }
   let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(currentOptions)
   let state: ControllerState = 'idle'
@@ -61,9 +63,17 @@ export function createAtmosphere(
   let visibilityPaused = false
   let reducedMotionPaused = false
   let manuallyPaused = false
+  let lastTime: number | undefined
 
   const scheduler = createAnimationScheduler((time) => {
+    const deltaSeconds =
+      lastTime === undefined
+        ? 1 / 60
+        : Math.min(0.05, Math.max(0, (time - lastTime) / 1000))
+    lastTime = time
+
     renderer?.render(time)
+    liquidDripsController.update(deltaSeconds)
   })
 
   const collisionTargetManager = createCollisionTargetManager(
@@ -71,6 +81,7 @@ export function createAtmosphere(
     normalizedOptions,
     (targets) => {
       renderer?.setCollisionTargets(targets)
+      liquidDripsController.sync(normalizedOptions, targets)
     },
   )
 
@@ -92,7 +103,9 @@ export function createAtmosphere(
   }
 
   const syncCollisionTargets = () => {
-    renderer?.setCollisionTargets(collisionTargetManager.updateOptions(normalizedOptions))
+    const targets = collisionTargetManager.updateOptions(normalizedOptions)
+    renderer?.setCollisionTargets(targets)
+    liquidDripsController.sync(normalizedOptions, targets)
   }
 
   const setState = (nextState: ControllerState) => {
@@ -118,8 +131,10 @@ export function createAtmosphere(
     const size = canvasLayer?.resize()
 
     if (size) {
+      const targets = collisionTargetManager.refresh()
       renderer?.resize(size)
-      renderer?.setCollisionTargets(collisionTargetManager.refresh())
+      renderer?.setCollisionTargets(targets)
+      liquidDripsController.sync(normalizedOptions, targets)
     }
 
     return size
@@ -277,6 +292,8 @@ export function createAtmosphere(
       manuallyPaused = false
       scheduler.stop()
       renderer?.clear()
+      liquidDripsController.sync(normalizedOptions, [])
+      lastTime = undefined
       setState('stopped')
     },
     pause() {
@@ -325,6 +342,7 @@ export function createAtmosphere(
       renderer?.destroy()
       renderer = undefined
       rendererParticle = undefined
+      liquidDripsController.destroy()
       glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined

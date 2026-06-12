@@ -88,6 +88,7 @@ const options: NormalizedAtmosphereOptions = {
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
   respectReducedMotion: true,
+  liquidDripping: true,
 }
 
 describe('WebGL renderer foundation', () => {

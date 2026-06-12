@@ -18,6 +18,7 @@ export const DEFAULT_OPTIONS = {
   opaqueSelector: '[data-atoms-opaque]',
   pauseWhenHidden: true,
   respectReducedMotion: true,
+  liquidDripping: true,
 } satisfies Required<AtmosphereOptions>
 
 export const PRESET_OPTIONS = {
@@ -27,6 +28,7 @@ export const PRESET_OPTIONS = {
     speed: 1,
     wind: -0.12,
     color: 'rgba(220, 235, 255, 0.72)',
+    liquidDripping: true,
   },
   snow: {
     particle: 'snow',
@@ -34,6 +36,7 @@ export const PRESET_OPTIONS = {
     speed: 0.42,
     wind: 0.16,
     color: 'rgba(245, 250, 255, 0.86)',
+    liquidDripping: false,
   },
   hail: {
     particle: 'hail',
@@ -42,6 +45,7 @@ export const PRESET_OPTIONS = {
     wind: -0.08,
     color: 'rgba(218, 235, 247, 0.84)',
     hailBounce: 0.5,
+    liquidDripping: false,
   },
 } satisfies Record<AtmospherePreset, Partial<AtmosphereOptions>>
 

@@ -14,6 +14,7 @@ describe('normalizeAtmosphereOptions', () => {
       snowAccumulation: 0.55,
       hailBounce: 0.5,
       bottomCollision: false,
+      liquidDripping: true,
     })
   })
 
@@ -27,6 +28,7 @@ describe('normalizeAtmosphereOptions', () => {
       preset: 'snow',
       particle: 'snow',
       density: 0.2,
+      liquidDripping: false,
     })
   })
 
@@ -36,6 +38,7 @@ describe('normalizeAtmosphereOptions', () => {
       particle: 'hail',
       density: 0.46,
       hailBounce: 0.5,
+      liquidDripping: false,
     })
   })
 
