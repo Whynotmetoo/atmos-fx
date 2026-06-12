@@ -22,20 +22,27 @@ controller.start()
 
 ```tsx
 import { useRef } from 'react'
-import { Atmosphere } from 'atoms-fx/react'
+import { AtmosFx, AtmosCard } from 'atoms-fx/react'
 import 'atoms-fx/styles.css'
 
 export function WeatherPanel() {
   const rootRef = useRef<HTMLDivElement>(null)
 
   return (
-    <Atmosphere ref={rootRef} preset="rain" density={0.7} className="weather-panel">
-      <section data-atoms-collision>
-        Rain can land on this surface and splash from the top edge.
-      </section>
-      <button data-atoms-opaque>Opaque action</button>
-      <span data-atoms-opacity="0.64">Custom opacity</span>
-    </Atmosphere>
+    <AtmosFx ref={rootRef} mode="rain" density={0.7} className="weather-panel">
+      <AtmosCard transMode="glass">
+        <div>Rain can land on this surface and splash from the top edge.</div>
+      </AtmosCard>
+      
+      {/* Polymorphic element example using asChild */}
+      <AtmosCard asChild transMode="solid">
+        <button>Opaque action</button>
+      </AtmosCard>
+
+      <AtmosCard transMode="opacity" opacity={0.64}>
+        <span>Custom opacity</span>
+      </AtmosCard>
+    </AtmosFx>
   )
 }
 ```
@@ -74,7 +81,7 @@ Core options:
 React is available from `atoms-fx/react`:
 
 ```tsx
-<Atmosphere preset="snow" density={0.5} />
+<AtmosFx mode="snow" density={0.5} />
 ```
 
 React is an optional peer dependency. Install it only when using the React adapter.

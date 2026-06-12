@@ -668,6 +668,34 @@
         </div>
       </section>
 
+      <!-- React Integration Section -->
+      <section class="docs-section">
+        <h2 class="section-title">React Integration</h2>
+        <p style="margin-bottom: 16px; color: var(--muted);">Use the modern, type-safe React components to seamlessly integrate weather effects and interactive cards into your React application:</p>
+        <pre><code>import { AtmosFx, AtmosCard } from 'atoms-fx/react'
+import 'atoms-fx/styles.css'
+
+export function WeatherPanel() {
+  return (
+    &lt;AtmosFx mode="rain" density={1.0}&gt;
+      {/* Normal elements inside the wrapper */}
+      &lt;button&gt;Upgrade to Pro&lt;/button&gt;
+      
+      {/* Interactive cards wrapped with AtmosCard */}
+      &lt;AtmosCard transMode="glass" liquidDripping={true}&gt;
+        &lt;div&gt;Glass card content&lt;/div&gt;
+      &lt;/AtmosCard&gt;
+      
+      {/* Use asChild to merge styling and attributes onto custom child elements directly */}
+      &lt;AtmosCard asChild transMode="solid"&gt;
+        &lt;button className="custom-btn"&gt;Opaque Action Button&lt;/button&gt;
+      &lt;/AtmosCard&gt;
+    &lt;/AtmosFx&gt;
+  )
+}</code></pre>
+      </section>
+
+
       <!-- API Reference Section -->
       <section class="docs-section">
         <h2 class="section-title">API Reference</h2>
