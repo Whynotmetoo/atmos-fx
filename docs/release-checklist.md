@@ -8,7 +8,7 @@ Use this checklist before publishing atoms-fx.
 - Confirm `README.md` examples match the current public API.
 - Confirm `docs/accessibility.md` covers motion and readability guidance for any new effect.
 - Confirm package exports in `package.json` are intentional.
-- Confirm optional adapters are represented as optional peer dependencies when the core entrypoint does not require them.
+- Confirm optional adapters are represented as optional peer dependencies if the core entrypoint does not require them (Note: React is currently a required peer dependency since the root entrypoint exports React components directly).
 - Confirm no local-only files such as `AGENTS.md` or `docs_local/` are staged.
 
 ## Validation
@@ -36,7 +36,7 @@ npm install ../atoms-fx-*.tgz react
 Validate that package imports resolve:
 
 ```bash
-node --input-type=module -e "const core = await import('atoms-fx'); const react = await import('atoms-fx/react'); const pkg = await import('atoms-fx/package.json', { with: { type: 'json' } }); console.log(typeof core.createAtmosphere, typeof react.AtmosFx, pkg.default.name)"
+node --input-type=module -e "const core = await import('atoms-fx'); const pkg = await import('atoms-fx/package.json', { with: { type: 'json' } }); console.log(typeof core.createAtmosphere, typeof core.AtmosFx, pkg.default.name)"
 ```
 
 Inspect the installed package:

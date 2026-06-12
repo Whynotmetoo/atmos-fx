@@ -76,13 +76,13 @@ Core options:
 - `opaqueSelector`: selector for solid child controls
 - `pauseWhenHidden` and `respectReducedMotion`: production performance/accessibility toggles
 
-React is available from `atoms-fx/react`:
+React is available directly from `atoms-fx`:
 
 ```tsx
 <AtmosFx mode="snow" density={0.5} />
 ```
 
-React is an optional peer dependency. Install it only when using the React adapter.
+React is a required peer dependency.
 
 ## Performance Notes
 
@@ -107,18 +107,14 @@ The current implementation includes the project foundation, the core lifecycle s
 
 ## Local Smoke Test
 
-After building, open the weather smoke example:
+After building, open the interactive docs playground:
 
 ```bash
 npm run build
 npx vite --host 127.0.0.1 --port 4173
 ```
 
-Then visit `http://127.0.0.1:4173/examples/rain.html` and use the preset switcher to compare rain, storm, snow, and hail.
-
-The React adapter smoke page is available at `http://127.0.0.1:4173/examples/react.html`.
-
-The interactive docs playground is available at `http://127.0.0.1:4173/docs/`.
+Then visit `http://127.0.0.1:4173/docs/` to play with the switcher and compare rain, storm, snow, and hail.
 
 ## Release and Contribution Docs
 
