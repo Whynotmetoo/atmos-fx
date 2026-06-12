@@ -2,6 +2,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Atmosphere } from '../src/react'
+import * as createAtmosphereModule from '../src/core/createAtmosphere'
 
 function setDocumentHidden(hidden: boolean) {
   Object.defineProperty(document, 'hidden', {
@@ -80,5 +81,19 @@ describe('Atmosphere React adapter', () => {
     })
 
     expect(cleanup).toHaveBeenCalledOnce()
+  })
+
+  it('plumbs liquidDripping prop to createAtmosphere', async () => {
+    const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
+    await act(async () => {
+      reactRoot.render(<Atmosphere preset="rain" liquidDripping={false} />)
+    })
+    expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
+      preset: 'rain',
+      liquidDripping: false,
+    }))
+    await act(async () => {
+      reactRoot.unmount()
+    })
   })
 })

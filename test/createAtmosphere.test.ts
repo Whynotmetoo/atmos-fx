@@ -187,6 +187,35 @@ describe('createAtmosphere', () => {
     expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('')
   })
 
+  it('creates, gates, and cleans up liquid dripping layer through lifecycle', () => {
+    const root = createRoot()
+    const card = document.createElement('div')
+    card.setAttribute('data-atoms-collision', '')
+    root.append(card)
+
+    const controller = createAtmosphere(root, { preset: 'rain' })
+    controller.start()
+
+    const liquidSvg = root.querySelector<SVGElement>('[data-atoms-layer="liquid"]')
+    expect(liquidSvg).not.toBeNull()
+    expect(liquidSvg?.style.display).toBe('block')
+
+    // Gate: disable when particle is snow
+    controller.update({ preset: 'rain', particle: 'snow' })
+    expect(liquidSvg?.style.display).toBe('none')
+
+    // Gate: disable when liquidDripping is false
+    controller.update({ preset: 'rain', particle: 'rain', liquidDripping: false })
+    expect(liquidSvg?.style.display).toBe('none')
+
+    // Enable again
+    controller.update({ preset: 'rain', particle: 'rain', liquidDripping: true })
+    expect(liquidSvg?.style.display).toBe('block')
+
+    controller.destroy()
+    expect(root.querySelector('[data-atoms-layer="liquid"]')).toBeNull()
+  })
+
   it('clears rendered rain when stopped', () => {
     const context = createCanvasContext()
     vi.mocked(HTMLCanvasElement.prototype.getContext).mockImplementation((contextId) => {
