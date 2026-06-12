@@ -1,6 +1,6 @@
 {
   "name": "atmos-fx",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DOM-aware atmosphere effects for creative interfaces.",
   "type": "module",
   "license": "MIT",
@@ -42,6 +42,7 @@
     "build:bundle": "vite build",
     "build:types": "tsc -p tsconfig.build.json",
     "build:styles": "mkdir -p dist/styles && cp src/styles/atmos-fx.css dist/atmos-fx.css && cp src/styles/atmos-fx.css dist/styles/atmos-fx.css",
+    "build:docs": "vite build --config vite.config.docs.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
