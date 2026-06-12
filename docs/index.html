@@ -777,7 +777,7 @@ export function WeatherPanel() {
               <tr>
                 <td><code>collisionSelector</code></td>
                 <td><code>string</code></td>
-                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.</td>
+                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.<br/><small style="opacity: 0.7;">Note: Rotated elements (e.g. <code>transform: rotate(...)</code>) calculate collisions against their axis-aligned bounding box (AABB) rather than the rotated visual boundary.</small></td>
               </tr>
               <tr>
                 <td><code>opaqueSelector</code></td>
@@ -848,7 +848,7 @@ export function WeatherPanel() {
             <tbody>
               <tr>
                 <td><code>data-atmos-collision</code></td>
-                <td>Marks the element as a top-edge landing surface for snow, rain splashes, and hail.</td>
+                <td>Marks the element as a top-edge landing surface for snow, rain splashes, and hail.<br/><small style="opacity: 0.7;">Note: Rotated elements calculate collisions against their outer bounding box rather than the rotated edge.</small></td>
               </tr>
               <tr>
                 <td><code>data-atmos-opaque</code></td>
