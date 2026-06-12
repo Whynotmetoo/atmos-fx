@@ -36,7 +36,7 @@ npm install ../atoms-fx-*.tgz react
 Validate that package imports resolve:
 
 ```bash
-node --input-type=module -e "const core = await import('atoms-fx'); const react = await import('atoms-fx/react'); const pkg = await import('atoms-fx/package.json', { with: { type: 'json' } }); console.log(typeof core.createAtmosphere, typeof react.Atmosphere, pkg.default.name)"
+node --input-type=module -e "const core = await import('atoms-fx'); const react = await import('atoms-fx/react'); const pkg = await import('atoms-fx/package.json', { with: { type: 'json' } }); console.log(typeof core.createAtmosphere, typeof react.AtmosFx, pkg.default.name)"
 ```
 
 Inspect the installed package:

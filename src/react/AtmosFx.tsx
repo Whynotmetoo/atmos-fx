@@ -8,9 +8,7 @@ import type { AtmosphereController, AtmosphereOptions, AtmospherePreset } from '
 type AtmosphereElementProps = Omit<ComponentPropsWithoutRef<'div'>, keyof AtmosphereOptions>
 type RefCleanup = void | (() => void)
 
-export interface AtmosphereProps extends AtmosphereOptions, AtmosphereElementProps {}
-
-export interface AtmosFxProps extends AtmosphereProps {
+export interface AtmosFxProps extends AtmosphereOptions, AtmosphereElementProps {
   mode?: AtmospherePreset
 }
 
@@ -201,9 +199,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
 
   return <div ref={setRootRef} {...elementProps} />
 })
-
-/** @deprecated Use AtmosFx instead */
-export const Atmosphere = AtmosFx
 
 export interface AtmosCardProps extends React.HTMLAttributes<HTMLDivElement> {
   liquidDripping?: boolean

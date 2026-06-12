@@ -1,7 +1,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Atmosphere, AtmosFx, AtmosCard } from '../src/react'
+import { AtmosFx, AtmosCard } from '../src/react'
 import * as createAtmosphereModule from '../src/core/createAtmosphere'
 
 function setDocumentHidden(hidden: boolean) {
@@ -70,7 +70,7 @@ describe('Atmosphere React adapter', () => {
     })
 
     await act(async () => {
-      reactRoot.render(<Atmosphere ref={ref} preset="rain" pauseWhenHidden={false} />)
+      reactRoot.render(<AtmosFx ref={ref} preset="rain" pauseWhenHidden={false} />)
     })
 
     expect(ref).toHaveBeenCalledWith(expect.any(HTMLDivElement))
@@ -86,7 +86,7 @@ describe('Atmosphere React adapter', () => {
   it('plumbs liquidDripping prop to createAtmosphere', async () => {
     const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
     await act(async () => {
-      reactRoot.render(<Atmosphere preset="rain" liquidDripping={false} />)
+      reactRoot.render(<AtmosFx preset="rain" liquidDripping={false} />)
     })
     expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
       preset: 'rain',

@@ -10,3 +10,6 @@ export type {
   NormalizedAtmosphereOptions,
   TransparencyMode,
 } from './core/types'
+export { AtmosFx, AtmosCard } from './react'
+export type { AtmosFxProps, AtmosCardProps } from './react'
+
