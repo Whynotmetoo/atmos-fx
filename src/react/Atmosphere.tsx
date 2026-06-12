@@ -1,14 +1,18 @@
 'use client'
 
-import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react'
+import { forwardRef, useCallback, useEffect, useMemo, useRef, Children, cloneElement, isValidElement } from 'react'
 import type { ComponentPropsWithoutRef, ForwardedRef } from 'react'
 import { createAtmosphere } from '../core/createAtmosphere'
-import type { AtmosphereController, AtmosphereOptions } from '../core/types'
+import type { AtmosphereController, AtmosphereOptions, AtmospherePreset } from '../core/types'
 
 type AtmosphereElementProps = Omit<ComponentPropsWithoutRef<'div'>, keyof AtmosphereOptions>
 type RefCleanup = void | (() => void)
 
-export type AtmosphereProps = AtmosphereOptions & AtmosphereElementProps
+export interface AtmosphereProps extends AtmosphereOptions, AtmosphereElementProps {}
+
+export interface AtmosFxProps extends AtmosphereProps {
+  mode?: AtmospherePreset
+}
 
 function assignRef<T>(ref: ForwardedRef<T>, value: T | null): RefCleanup {
   if (typeof ref === 'function') {
@@ -20,8 +24,9 @@ function assignRef<T>(ref: ForwardedRef<T>, value: T | null): RefCleanup {
   }
 }
 
-export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function Atmosphere(
+export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx(
   {
+    mode,
     preset,
     particle,
     density,
@@ -50,8 +55,9 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
     () => {
       const nextOptions: AtmosphereOptions = {}
 
-      if (preset !== undefined) {
-        nextOptions.preset = preset
+      const resolvedPreset = mode !== undefined ? mode : preset
+      if (resolvedPreset !== undefined) {
+        nextOptions.preset = resolvedPreset
       }
 
       if (particle !== undefined) {
@@ -125,6 +131,7 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
       return nextOptions
     },
     [
+      mode,
       preset,
       particle,
       density,
@@ -193,4 +200,63 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
   }, [atmosphereOptions])
 
   return <div ref={setRootRef} {...elementProps} />
+})
+
+/** @deprecated Use AtmosFx instead */
+export const Atmosphere = AtmosFx
+
+export interface AtmosCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  liquidDripping?: boolean
+  transMode?: 'glass' | 'opacity' | 'solid'
+  opacity?: number
+  asChild?: boolean
+}
+
+export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function AtmosCard(
+  { liquidDripping, transMode, opacity, asChild, children, ...props },
+  ref,
+) {
+  if (asChild) {
+    const child = Children.only(children)
+    if (isValidElement(child)) {
+      const childElement = child as React.ReactElement<any>
+      return cloneElement(childElement, {
+        ref: (node: any) => {
+          if (typeof ref === 'function') {
+            ref(node)
+          } else if (ref) {
+            (ref as any).current = node
+          }
+          const childRef = (childElement as any).ref
+          if (typeof childRef === 'function') {
+            childRef(node)
+          } else if (childRef) {
+            childRef.current = node
+          }
+        },
+        'data-atoms-collision': '',
+        'data-atoms-liquid-dripping': liquidDripping !== undefined ? String(liquidDripping) : undefined,
+        'data-atoms-glass': transMode === 'glass' ? '' : undefined,
+        'data-atoms-opaque': transMode === 'solid' ? 'managed' : undefined,
+        'data-atoms-opacity': transMode === 'opacity' ? String(opacity ?? 0.72) : undefined,
+        ...childElement.props,
+        className: [childElement.props.className, props.className].filter(Boolean).join(' ') || undefined,
+        style: { ...props.style, ...childElement.props.style },
+      })
+    }
+  }
+
+  return (
+    <div
+      ref={ref}
+      data-atoms-collision=""
+      data-atoms-liquid-dripping={liquidDripping !== undefined ? String(liquidDripping) : undefined}
+      data-atoms-glass={transMode === 'glass' ? '' : undefined}
+      data-atoms-opaque={transMode === 'solid' ? 'managed' : undefined}
+      data-atoms-opacity={transMode === 'opacity' ? String(opacity ?? 0.72) : undefined}
+      {...props}
+    >
+      {children}
+    </div>
+  )
 })

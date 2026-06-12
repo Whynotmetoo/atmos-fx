@@ -1,2 +1,3 @@
-export { Atmosphere } from './Atmosphere'
-export type { AtmosphereProps } from './Atmosphere'
+export { Atmosphere, AtmosFx, AtmosCard } from './Atmosphere'
+export type { AtmosphereProps, AtmosFxProps, AtmosCardProps } from './Atmosphere'
+

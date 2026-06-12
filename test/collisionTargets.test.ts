@@ -45,6 +45,7 @@ describe('collision targets', () => {
 
     expect(collectCollisionTargetRects(root, '[data-atoms-collision]')).toEqual([
       {
+        element: target,
         x: 36,
         y: 44,
         width: 120,
@@ -76,6 +77,7 @@ describe('collision targets', () => {
 
     expect(updated).toEqual([
       {
+        element: secondTarget,
         x: 30,
         y: 70,
         width: 110,

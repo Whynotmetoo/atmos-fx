@@ -1,6 +1,7 @@
 import type { NormalizedAtmosphereOptions } from '../core/types'
 
 export type CollisionTargetRect = {
+  element?: HTMLElement
   x: number
   y: number
   width: number
@@ -18,13 +19,18 @@ export type CollisionTargetManager = {
 
 const SCHEDULE_FALLBACK_DELAY = 50
 
-function toRootRelativeRect(rootRect: DOMRect, targetRect: DOMRect): CollisionTargetRect {
+function toRootRelativeRect(
+  element: HTMLElement,
+  rootRect: DOMRect,
+  targetRect: DOMRect,
+): CollisionTargetRect {
   const x = targetRect.left - rootRect.left
   const y = targetRect.top - rootRect.top
   const width = Math.max(0, targetRect.width)
   const height = Math.max(0, targetRect.height)
 
   return {
+    element,
     x,
     y,
     width,
@@ -56,7 +62,7 @@ export function collectCollisionTargetRects(
       continue
     }
 
-    targets.push(toRootRelativeRect(rootRect, targetRect))
+    targets.push(toRootRelativeRect(target, rootRect, targetRect))
   }
 
   return targets

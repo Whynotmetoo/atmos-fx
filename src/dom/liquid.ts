@@ -8,6 +8,7 @@ type LiquidDrip = {
   waveRight: number
   dripX: number
   targetBottom: number
+  liquidDripping: boolean
   
   // DOM Elements
   group: SVGGElement
@@ -203,6 +204,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
       waveRight: 0,
       dripX: 0,
       targetBottom: 0,
+      liquidDripping: true,
       group: cardGroup,
       path,
       bulge,
@@ -261,6 +263,10 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
         drip.dripX = drip.waveLeft + (drip.waveRight - drip.waveLeft) * 0.65
         drip.targetBottom = target.bottom
 
+        const cardLiquidDripping = target.element?.dataset.atomsLiquidDripping !== 'false'
+        drip.liquidDripping = cardLiquidDripping
+        drip.group.style.display = cardLiquidDripping ? 'block' : 'none'
+
         drip.path.setAttribute('fill', parsedColor.rgb)
         drip.bulge.setAttribute('fill', parsedColor.rgb)
         drip.droplet.setAttribute('fill', parsedColor.rgb)
@@ -283,6 +289,14 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
 
       for (let i = 0; i < drips.length; i++) {
         const drip = drips[i]
+
+        if (!drip.liquidDripping) {
+          drip.path.setAttribute('d', '')
+          drip.bulge.setAttribute('r', '0')
+          drip.droplet.setAttribute('rx', '0')
+          drip.droplet.setAttribute('ry', '0')
+          continue
+        }
         const leftSpan = drip.dripX - drip.waveLeft
         const rightSpan = drip.waveRight - drip.dripX
 
