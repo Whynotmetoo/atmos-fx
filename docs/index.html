@@ -672,8 +672,7 @@
       <section class="docs-section">
         <h2 class="section-title">React Integration</h2>
         <p style="margin-bottom: 16px; color: var(--muted);">Use the modern, type-safe React components to seamlessly integrate weather effects and interactive cards into your React application:</p>
-        <pre><code>import { AtmosFx, AtmosCard } from 'atoms-fx/react'
-import 'atoms-fx/styles.css'
+        <pre><code>import { AtmosFx, AtmosCard } from 'atoms-fx'
 
 export function WeatherPanel() {
   return (
@@ -980,7 +979,6 @@ export function WeatherPanel() {
         }
 
         codeSample.textContent = `import { createAtmosphere } from 'atoms-fx'
-import 'atoms-fx/styles.css'
 
 const controller = createAtmosphere(
   document.querySelector('#container'),

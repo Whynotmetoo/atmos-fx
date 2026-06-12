@@ -8,7 +8,6 @@ atoms-fx is an early-stage TypeScript library for making weather-like visual eff
 
 ```ts
 import { createAtmosphere } from 'atoms-fx'
-import 'atoms-fx/styles.css'
 
 const controller = createAtmosphere(document.querySelector('#hero')!, {
   preset: 'rain',
@@ -22,8 +21,7 @@ controller.start()
 
 ```tsx
 import { useRef } from 'react'
-import { AtmosFx, AtmosCard } from 'atoms-fx/react'
-import 'atoms-fx/styles.css'
+import { AtmosFx, AtmosCard } from 'atoms-fx'
 
 export function WeatherPanel() {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -49,7 +47,7 @@ export function WeatherPanel() {
 
 ## DOM Controls
 
-Import `atoms-fx/styles.css` to enable the default content integration styles.
+Styling rules are automatically injected into the document head upon initialization, so no manual stylesheet import is required.
 
 - `data-atoms-opaque` keeps an element out of automatic glass or opacity treatment.
 - `data-atoms-opacity="0.64"` applies a per-element opacity value.
