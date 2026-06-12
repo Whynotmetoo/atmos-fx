@@ -41,6 +41,74 @@ function addReducedMotionListener(
   return () => query.removeListener(listener)
 }
 
+const CSS_CONTENT = `
+[data-atoms-fx] {
+  --atoms-fx-content-opacity: 0.72;
+  --atoms-fx-surface-opacity: 0.14;
+  --atoms-fx-glass-background: rgb(255 255 255 / var(--atoms-fx-surface-opacity));
+  --atoms-fx-glass-border: rgb(255 255 255 / 0.2);
+  --atoms-fx-glass-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+[data-atoms-layer='weather-background'],
+[data-atoms-layer='weather-foreground'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+[data-atoms-layer='weather-background'] {
+  z-index: 0;
+}
+[data-atoms-layer='weather-foreground'] {
+  z-index: 3;
+}
+[data-atoms-fx] > :not([data-atoms-layer]) {
+  position: relative;
+  z-index: 2;
+}
+[data-atoms-fx][data-atoms-transparency='glass'] > :not([data-atoms-layer], [data-atoms-opaque]),
+[data-atoms-fx][data-atoms-transparency='glass'] :where([data-atoms-glass]) {
+  background: rgb(255 255 255 / 0.14);
+  background: var(--atoms-fx-glass-background);
+  border-color: var(--atoms-fx-glass-border);
+  box-shadow: var(--atoms-fx-glass-shadow);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+}
+[data-atoms-fx][data-atoms-transparency='opacity'] > :not([data-atoms-layer], [data-atoms-opaque], [data-atoms-contains-opaque]) {
+  opacity: var(--atoms-fx-content-opacity);
+}
+[data-atoms-fx] :where([data-atoms-opacity]) {
+  opacity: var(--atoms-fx-opacity, 1);
+}
+[data-atoms-fx] :where([data-atoms-opaque]) {
+  opacity: 1;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+`
+
+function injectStyles(doc: Document, nonce?: string) {
+  const id = 'atoms-fx-styles'
+  let style = doc.getElementById(id) as HTMLStyleElement | null
+  if (!style) {
+    style = doc.createElement('style')
+    style.id = id
+    style.textContent = CSS_CONTENT
+    if (nonce) {
+      style.setAttribute('nonce', nonce)
+    }
+    doc.head.appendChild(style)
+  } else if (nonce) {
+    style.setAttribute('nonce', nonce)
+  }
+}
+
 export function createAtmosphere(
   element: HTMLElement,
   options: AtmosphereOptions = {},
@@ -49,13 +117,16 @@ export function createAtmosphere(
     throw new TypeError('createAtmosphere requires an HTMLElement root.')
   }
 
+  let currentOptions: AtmosphereOptions = { ...options }
+  let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(currentOptions)
   const ownerDocument = element.ownerDocument
+  if (normalizedOptions.injectStyles) {
+    injectStyles(ownerDocument, normalizedOptions.styleNonce)
+  }
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   const glassController = createGlassController(element)
   const liquidDripsController = createLiquidDripsController(element)
-  let currentOptions: AtmosphereOptions = { ...options }
-  let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(currentOptions)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
@@ -327,6 +398,9 @@ export function createAtmosphere(
         ...nextOptions,
       }
       normalizedOptions = normalizeAtmosphereOptions(currentOptions)
+      if (normalizedOptions.injectStyles) {
+        injectStyles(ownerDocument, normalizedOptions.styleNonce)
+      }
       syncDataset()
       syncCollisionTargets()
       ensureRenderer()

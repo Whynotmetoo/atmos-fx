@@ -31,5 +31,7 @@ export function normalizeAtmosphereOptions(
     bottomCollision: merged.bottomCollision ?? DEFAULT_OPTIONS.bottomCollision,
     speed: Math.max(0, merged.speed ?? DEFAULT_OPTIONS.speed),
     liquidDripping: merged.liquidDripping ?? DEFAULT_OPTIONS.liquidDripping,
+    injectStyles: merged.injectStyles ?? DEFAULT_OPTIONS.injectStyles,
+    styleNonce: merged.styleNonce ?? DEFAULT_OPTIONS.styleNonce,
   }
 }

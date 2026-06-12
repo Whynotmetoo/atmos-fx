@@ -1,7 +1,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Atmosphere } from '../src/react'
+import { AtmosFx, AtmosCard } from '../src/react'
 import * as createAtmosphereModule from '../src/core/createAtmosphere'
 
 function setDocumentHidden(hidden: boolean) {
@@ -70,7 +70,7 @@ describe('Atmosphere React adapter', () => {
     })
 
     await act(async () => {
-      reactRoot.render(<Atmosphere ref={ref} preset="rain" pauseWhenHidden={false} />)
+      reactRoot.render(<AtmosFx ref={ref} preset="rain" pauseWhenHidden={false} />)
     })
 
     expect(ref).toHaveBeenCalledWith(expect.any(HTMLDivElement))
@@ -86,12 +86,167 @@ describe('Atmosphere React adapter', () => {
   it('plumbs liquidDripping prop to createAtmosphere', async () => {
     const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
     await act(async () => {
-      reactRoot.render(<Atmosphere preset="rain" liquidDripping={false} />)
+      reactRoot.render(<AtmosFx preset="rain" liquidDripping={false} />)
     })
     expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
       preset: 'rain',
       liquidDripping: false,
     }))
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('plumbs mode prop as preset to createAtmosphere', async () => {
+    const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
+    await act(async () => {
+      reactRoot.render(<AtmosFx mode="snow" />)
+    })
+    expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
+      preset: 'snow',
+    }))
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('renders AtmosCard with data attributes', async () => {
+    await act(async () => {
+      reactRoot.render(
+        <AtmosCard liquidDripping={false} transMode="glass" className="my-card">
+          <span>content</span>
+        </AtmosCard>
+      )
+    })
+    const cardEl = host.querySelector('.my-card')
+    expect(cardEl).not.toBeNull()
+    expect(cardEl?.getAttribute('data-atoms-collision')).toBe('')
+    expect(cardEl?.getAttribute('data-atoms-liquid-dripping')).toBe('false')
+    expect(cardEl?.getAttribute('data-atoms-glass')).toBe('')
+    expect(cardEl?.querySelector('span')?.textContent).toBe('content')
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('renders AtmosCard asChild and merges props onto child', async () => {
+    const customRef = vi.fn()
+    await act(async () => {
+      reactRoot.render(
+        <AtmosCard liquidDripping={true} transMode="solid" asChild className="extra-class" style={{ color: 'red' }}>
+          <button ref={customRef} className="base-class" style={{ background: 'blue' }}>
+            click me
+          </button>
+        </AtmosCard>
+      )
+    })
+    const buttonEl = host.querySelector('button')
+    expect(buttonEl).not.toBeNull()
+    expect(buttonEl?.getAttribute('data-atoms-collision')).toBe('')
+    expect(buttonEl?.getAttribute('data-atoms-liquid-dripping')).toBe('true')
+    expect(buttonEl?.getAttribute('data-atoms-opaque')).toBe('')
+    expect(buttonEl?.className).toBe('base-class extra-class')
+    expect(buttonEl?.style.color).toBe('red')
+    expect(buttonEl?.style.background).toBe('blue')
+    expect(customRef).toHaveBeenCalledWith(expect.any(HTMLButtonElement))
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('supports disabling style injection', async () => {
+    const existing = document.getElementById('atoms-fx-styles')
+    if (existing) {
+      existing.remove()
+    }
+
+    await act(async () => {
+      reactRoot.render(<AtmosFx injectStyles={false} />)
+    })
+
+    expect(document.getElementById('atoms-fx-styles')).toBeNull()
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('supports injecting styles with a nonce', async () => {
+    const existing = document.getElementById('atoms-fx-styles')
+    if (existing) {
+      existing.remove()
+    }
+
+    await act(async () => {
+      reactRoot.render(<AtmosFx injectStyles={true} styleNonce="test-nonce" />)
+    })
+
+    const styleEl = document.getElementById('atoms-fx-styles')
+    expect(styleEl).not.toBeNull()
+    expect(styleEl?.getAttribute('nonce')).toBe('test-nonce')
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('composes and runs callback ref cleanups for AtmosCard asChild', async () => {
+    const parentCleanup = vi.fn()
+    const parentRef = vi.fn((node: any) => {
+      if (!node) return undefined
+      return parentCleanup
+    })
+
+    const childCleanup = vi.fn()
+    const childRef = vi.fn((node: any) => {
+      if (!node) return undefined
+      return childCleanup
+    })
+
+    await act(async () => {
+      reactRoot.render(
+        <AtmosCard asChild ref={parentRef}>
+          <button ref={childRef}>Click me</button>
+        </AtmosCard>
+      )
+    })
+
+    expect(parentRef).toHaveBeenCalledWith(expect.any(HTMLButtonElement))
+    expect(childRef).toHaveBeenCalledWith(expect.any(HTMLButtonElement))
+    expect(parentCleanup).not.toHaveBeenCalled()
+    expect(childCleanup).not.toHaveBeenCalled()
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+
+    expect(parentCleanup).toHaveBeenCalledOnce()
+    expect(childCleanup).toHaveBeenCalledOnce()
+  })
+
+  it('composes event handlers and forwards wrapper props on AtmosCard asChild', async () => {
+    const parentClick = vi.fn()
+    const childClick = vi.fn()
+
+    await act(async () => {
+      reactRoot.render(
+        <AtmosCard asChild onClick={parentClick} id="my-card-id" aria-label="custom-label">
+          <button onClick={childClick}>Click me</button>
+        </AtmosCard>
+      )
+    })
+
+    const buttonEl = host.querySelector('button')
+    expect(buttonEl).not.toBeNull()
+    expect(buttonEl?.getAttribute('id')).toBe('my-card-id')
+    expect(buttonEl?.getAttribute('aria-label')).toBe('custom-label')
+
+    buttonEl?.click()
+    expect(parentClick).toHaveBeenCalledOnce()
+    expect(childClick).toHaveBeenCalledOnce()
+
     await act(async () => {
       reactRoot.unmount()
     })

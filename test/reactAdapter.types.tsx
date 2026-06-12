@@ -1,5 +1,5 @@
 import { createRef } from 'react'
-import { Atmosphere, type AtmosphereProps } from '../src/react'
+import { AtmosFx, type AtmosFxProps } from '../src/react'
 
 const rootRef = createRef<HTMLDivElement>()
 const cleanupRef = (node: HTMLDivElement | null) => {
@@ -10,7 +10,7 @@ const cleanupRef = (node: HTMLDivElement | null) => {
   return () => undefined
 }
 
-export const reactAtmosphereProps: AtmosphereProps = {
+export const reactAtmosFxProps: AtmosFxProps = {
   preset: 'rain',
   density: 0.7,
   wind: -0.2,
@@ -25,11 +25,12 @@ export const reactAtmosphereProps: AtmosphereProps = {
 
 export function ReactAdapterTypeSmoke() {
   return (
-    <Atmosphere ref={rootRef} {...reactAtmosphereProps}>
+    <AtmosFx ref={rootRef} {...reactAtmosFxProps}>
       <section data-atoms-collision>
         <button data-atoms-opaque>Action</button>
       </section>
-      <Atmosphere ref={cleanupRef} preset="rain" />
-    </Atmosphere>
+      <AtmosFx ref={cleanupRef} preset="rain" />
+    </AtmosFx>
   )
 }
+

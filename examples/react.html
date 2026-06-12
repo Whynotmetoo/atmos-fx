@@ -143,22 +143,22 @@
     <script type="module">
       import React from 'react'
       import { createRoot } from 'react-dom/client'
-      import { Atmosphere } from '../dist/react.js'
+      import { AtmosFx, AtmosCard } from '../dist/react.js'
 
       function App() {
         return React.createElement(
-          Atmosphere,
+          AtmosFx,
           {
             className: 'react-weather-shell',
-            preset: 'storm',
+            mode: 'rain', // demonstrating the new 'mode' prop alias
             density: 0.82,
             wind: -0.24,
             quality: 'high',
             pauseWhenHidden: false,
           },
           React.createElement(
-            'section',
-            { className: 'forecast-panel', 'data-atoms-collision': true },
+            AtmosCard,
+            { className: 'forecast-panel', transMode: 'glass' },
             React.createElement('p', { className: 'forecast-kicker' }, 'Lakefront station'),
             React.createElement(
               'div',
@@ -183,10 +183,14 @@
             React.createElement(
               'div',
               { className: 'action-row' },
-              React.createElement('button', { 'data-atoms-opaque': true }, 'Open radar'),
               React.createElement(
-                'span',
-                { className: 'reading', 'data-atoms-opacity': '0.68' },
+                AtmosCard,
+                { asChild: true, transMode: 'solid' },
+                React.createElement('button', null, 'Open radar'),
+              ),
+              React.createElement(
+                AtmosCard,
+                { className: 'reading', transMode: 'opacity', opacity: 0.68 },
                 'Wind 24 mph',
               ),
             ),

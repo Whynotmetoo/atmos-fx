@@ -8,7 +8,6 @@ atoms-fx is an early-stage TypeScript library for making weather-like visual eff
 
 ```ts
 import { createAtmosphere } from 'atoms-fx'
-import 'atoms-fx/styles.css'
 
 const controller = createAtmosphere(document.querySelector('#hero')!, {
   preset: 'rain',
@@ -22,27 +21,33 @@ controller.start()
 
 ```tsx
 import { useRef } from 'react'
-import { Atmosphere } from 'atoms-fx/react'
-import 'atoms-fx/styles.css'
+import { AtmosFx, AtmosCard } from 'atoms-fx'
 
 export function WeatherPanel() {
   const rootRef = useRef<HTMLDivElement>(null)
 
   return (
-    <Atmosphere ref={rootRef} preset="rain" density={0.7} className="weather-panel">
-      <section data-atoms-collision>
-        Rain can land on this surface and splash from the top edge.
-      </section>
-      <button data-atoms-opaque>Opaque action</button>
-      <span data-atoms-opacity="0.64">Custom opacity</span>
-    </Atmosphere>
+    <AtmosFx ref={rootRef} mode="rain" density={0.7} className="weather-panel">
+      <AtmosCard transMode="glass">
+        <div>Rain can land on this surface and splash from the top edge.</div>
+      </AtmosCard>
+      
+      {/* Polymorphic element example using asChild */}
+      <AtmosCard asChild transMode="solid">
+        <button>Opaque action</button>
+      </AtmosCard>
+
+      <AtmosCard transMode="opacity" opacity={0.64}>
+        <span>Custom opacity</span>
+      </AtmosCard>
+    </AtmosFx>
   )
 }
 ```
 
 ## DOM Controls
 
-Import `atoms-fx/styles.css` to enable the default content integration styles.
+Styling rules are automatically injected into the document head upon initialization, so no manual stylesheet import is required.
 
 - `data-atoms-opaque` keeps an element out of automatic glass or opacity treatment.
 - `data-atoms-opacity="0.64"` applies a per-element opacity value.
@@ -74,7 +79,7 @@ Core options:
 React is available from `atoms-fx/react`:
 
 ```tsx
-<Atmosphere preset="snow" density={0.5} />
+<AtmosFx mode="snow" density={0.5} />
 ```
 
 React is an optional peer dependency. Install it only when using the React adapter.
