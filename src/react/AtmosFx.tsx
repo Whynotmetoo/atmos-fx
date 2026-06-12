@@ -290,11 +290,11 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
             }
           }
         },
-        'data-atoms-collision': '',
-        'data-atoms-liquid-dripping': liquidDripping !== undefined ? String(liquidDripping) : undefined,
-        'data-atoms-glass': transMode === 'glass' ? '' : undefined,
-        'data-atoms-opaque': transMode === 'solid' ? '' : undefined,
-        'data-atoms-opacity': transMode === 'opacity' ? String(opacity ?? 0.72) : undefined,
+        'data-atmos-collision': '',
+        'data-atmos-liquid-dripping': liquidDripping !== undefined ? String(liquidDripping) : undefined,
+        'data-atmos-glass': transMode === 'glass' ? '' : undefined,
+        'data-atmos-opaque': transMode === 'solid' ? '' : undefined,
+        'data-atmos-opacity': transMode === 'opacity' ? String(opacity ?? 0.72) : undefined,
       })
     }
   }
@@ -302,11 +302,11 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
   return (
     <div
       ref={ref}
-      data-atoms-collision=""
-      data-atoms-liquid-dripping={liquidDripping !== undefined ? String(liquidDripping) : undefined}
-      data-atoms-glass={transMode === 'glass' ? '' : undefined}
-      data-atoms-opaque={transMode === 'solid' ? '' : undefined}
-      data-atoms-opacity={transMode === 'opacity' ? String(opacity ?? 0.72) : undefined}
+      data-atmos-collision=""
+      data-atmos-liquid-dripping={liquidDripping !== undefined ? String(liquidDripping) : undefined}
+      data-atmos-glass={transMode === 'glass' ? '' : undefined}
+      data-atmos-opaque={transMode === 'solid' ? '' : undefined}
+      data-atmos-opacity={transMode === 'opacity' ? String(opacity ?? 0.72) : undefined}
       {...props}
     >
       {children}

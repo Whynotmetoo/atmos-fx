@@ -1,13 +1,13 @@
-# atoms-fx
+# atmos-fx
 
 DOM-aware atmosphere effects for creative interfaces.
 
-atoms-fx is an early-stage TypeScript library for making weather-like visual effects part of the DOM instead of a detached background. The first target effect is Apple Weather-inspired precipitation where child UI can become glass, stay opaque, or act as collision surfaces.
+atmos-fx is an early-stage TypeScript library for making weather-like visual effects part of the DOM instead of a detached background. The first target effect is Apple Weather-inspired precipitation where child UI can become glass, stay opaque, or act as collision surfaces.
 
 ## Usage
 
 ```ts
-import { createAtmosphere } from 'atoms-fx'
+import { createAtmosphere } from 'atmos-fx'
 
 const controller = createAtmosphere(document.querySelector('#hero')!, {
   preset: 'rain',
@@ -21,7 +21,7 @@ controller.start()
 
 ```tsx
 import { useRef } from 'react'
-import { AtmosFx, AtmosCard } from 'atoms-fx'
+import { AtmosFx, AtmosCard } from 'atmos-fx'
 
 export function WeatherPanel() {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -49,10 +49,10 @@ export function WeatherPanel() {
 
 Styling rules are automatically injected into the document head upon initialization, so no manual stylesheet import is required.
 
-- `data-atoms-opaque` keeps an element out of automatic glass or opacity treatment.
-- `data-atoms-opacity="0.64"` applies a per-element opacity value.
-- `data-atoms-glass` opts nested elements into the glass surface style.
-- `data-atoms-collision` makes the element's top edge a precipitation collision surface.
+- `data-atmos-opaque` keeps an element out of automatic glass or opacity treatment.
+- `data-atmos-opacity="0.64"` applies a per-element opacity value.
+- `data-atmos-glass` opts nested elements into the glass surface style.
+- `data-atmos-collision` makes the element's top edge a precipitation collision surface.
 - `transparency: 'glass' | 'opacity' | 'none'` controls the root integration mode.
 
 ## API Reference
@@ -76,7 +76,7 @@ Core options:
 - `opaqueSelector`: selector for solid child controls
 - `pauseWhenHidden` and `respectReducedMotion`: production performance/accessibility toggles
 
-React is available directly from `atoms-fx`:
+React is available directly from `atmos-fx`:
 
 ```tsx
 <AtmosFx mode="snow" density={0.5} />

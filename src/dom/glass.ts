@@ -1,8 +1,8 @@
 import type { NormalizedAtmosphereOptions } from '../core/types'
 
-const OPACITY_VARIABLE = '--atoms-fx-opacity'
-const CONTENT_OPACITY_VARIABLE = '--atoms-fx-content-opacity'
-const SURFACE_OPACITY_VARIABLE = '--atoms-fx-surface-opacity'
+const OPACITY_VARIABLE = '--atmos-fx-opacity'
+const CONTENT_OPACITY_VARIABLE = '--atmos-fx-content-opacity'
+const SURFACE_OPACITY_VARIABLE = '--atmos-fx-surface-opacity'
 const MANAGED_OPAQUE_VALUE = 'managed'
 const MANAGED_CONTAINS_OPAQUE_VALUE = 'managed'
 
@@ -37,8 +37,8 @@ export function createGlassController(root: HTMLElement): GlassController {
 
   const clearManagedOpaqueElements = (nextElements = new Set<HTMLElement>()) => {
     for (const element of managedOpaqueElements) {
-      if (!nextElements.has(element) && element.dataset.atomsOpaque === MANAGED_OPAQUE_VALUE) {
-        delete element.dataset.atomsOpaque
+      if (!nextElements.has(element) && element.dataset.atmosOpaque === MANAGED_OPAQUE_VALUE) {
+        delete element.dataset.atmosOpaque
       }
     }
 
@@ -69,13 +69,13 @@ export function createGlassController(root: HTMLElement): GlassController {
 
       managedOpaqueElements.add(element)
 
-      if (element.dataset.atomsOpaque === undefined) {
-        if (element.dataset.atomsOpaque !== MANAGED_OPAQUE_VALUE) {
-          element.dataset.atomsOpaque = MANAGED_OPAQUE_VALUE
+      if (element.dataset.atmosOpaque === undefined) {
+        if (element.dataset.atmosOpaque !== MANAGED_OPAQUE_VALUE) {
+          element.dataset.atmosOpaque = MANAGED_OPAQUE_VALUE
         }
       }
 
-      if (element.dataset.atomsOpaque === MANAGED_OPAQUE_VALUE) {
+      if (element.dataset.atmosOpaque === MANAGED_OPAQUE_VALUE) {
         nextElements.add(element)
       }
     }
@@ -86,13 +86,13 @@ export function createGlassController(root: HTMLElement): GlassController {
   const syncOpacityElements = () => {
     const nextElements = new Set<HTMLElement>()
 
-    for (const element of root.querySelectorAll('[data-atoms-opacity]')) {
+    for (const element of root.querySelectorAll('[data-atmos-opacity]')) {
       if (!(element instanceof HTMLElement)) {
         continue
       }
 
       nextElements.add(element)
-      const opacity = clampOpacity(element.dataset.atomsOpacity ?? '')
+      const opacity = clampOpacity(element.dataset.atmosOpacity ?? '')
 
       if (opacity === undefined) {
         element.style.removeProperty(OPACITY_VARIABLE)
@@ -122,15 +122,15 @@ export function createGlassController(root: HTMLElement): GlassController {
     for (const element of Array.from(root.children)) {
       if (
         !(element instanceof HTMLElement) ||
-        element.dataset.atomsLayer !== undefined ||
-        element.dataset.atomsOpaque !== undefined
+        element.dataset.atmosLayer !== undefined ||
+        element.dataset.atmosOpaque !== undefined
       ) {
         continue
       }
 
-      if (element.querySelector('[data-atoms-opaque]')) {
-        if (element.dataset.atomsContainsOpaque !== MANAGED_CONTAINS_OPAQUE_VALUE) {
-          element.dataset.atomsContainsOpaque = MANAGED_CONTAINS_OPAQUE_VALUE
+      if (element.querySelector('[data-atmos-opaque]')) {
+        if (element.dataset.atmosContainsOpaque !== MANAGED_CONTAINS_OPAQUE_VALUE) {
+          element.dataset.atmosContainsOpaque = MANAGED_CONTAINS_OPAQUE_VALUE
         }
         nextElements.add(element)
       }
@@ -139,9 +139,9 @@ export function createGlassController(root: HTMLElement): GlassController {
     for (const element of managedOpaqueContainerElements) {
       if (
         !nextElements.has(element) &&
-        element.dataset.atomsContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE
+        element.dataset.atmosContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE
       ) {
-        delete element.dataset.atomsContainsOpaque
+        delete element.dataset.atmosContainsOpaque
       }
     }
 
@@ -191,7 +191,7 @@ export function createGlassController(root: HTMLElement): GlassController {
   return {
     sync(nextOptions) {
       options = nextOptions
-      root.dataset.atomsTransparency = nextOptions.transparency
+      root.dataset.atmosTransparency = nextOptions.transparency
       root.style.setProperty(CONTENT_OPACITY_VARIABLE, String(nextOptions.contentOpacity))
       root.style.setProperty(SURFACE_OPACITY_VARIABLE, String(nextOptions.surfaceOpacity))
       syncDomState()
@@ -205,8 +205,8 @@ export function createGlassController(root: HTMLElement): GlassController {
       }
 
       for (const element of managedOpaqueContainerElements) {
-        if (element.dataset.atomsContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE) {
-          delete element.dataset.atomsContainsOpaque
+        if (element.dataset.atmosContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE) {
+          delete element.dataset.atmosContainsOpaque
         }
       }
 
@@ -214,7 +214,7 @@ export function createGlassController(root: HTMLElement): GlassController {
       managedOpaqueContainerElements.clear()
       root.style.removeProperty(CONTENT_OPACITY_VARIABLE)
       root.style.removeProperty(SURFACE_OPACITY_VARIABLE)
-      delete root.dataset.atomsTransparency
+      delete root.dataset.atmosTransparency
     },
   }
 }

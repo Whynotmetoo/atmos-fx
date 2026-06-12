@@ -1,6 +1,6 @@
 # Release Checklist
 
-Use this checklist before publishing atoms-fx.
+Use this checklist before publishing atmos-fx.
 
 ## Before Versioning
 
@@ -30,22 +30,22 @@ npm pack --pack-destination "$tmpdir"
 mkdir "$tmpdir/consumer"
 cd "$tmpdir/consumer"
 npm init -y
-npm install ../atoms-fx-*.tgz react
+npm install ../atmos-fx-*.tgz react
 ```
 
 Validate that package imports resolve:
 
 ```bash
-node --input-type=module -e "const core = await import('atoms-fx'); const pkg = await import('atoms-fx/package.json', { with: { type: 'json' } }); console.log(typeof core.createAtmosphere, typeof core.AtmosFx, pkg.default.name)"
+node --input-type=module -e "const core = await import('atmos-fx'); const pkg = await import('atmos-fx/package.json', { with: { type: 'json' } }); console.log(typeof core.createAtmosphere, typeof core.AtmosFx, pkg.default.name)"
 ```
 
 Inspect the installed package:
 
 ```bash
-find node_modules/atoms-fx -maxdepth 3 -type f | sort
+find node_modules/atmos-fx -maxdepth 3 -type f | sort
 ```
 
-Expected package contents include `dist/index.js`, `dist/react.js`, type declarations, `dist/atoms-fx.css`, `README.md`, `LICENSE`, `CHANGELOG.md`, and `package.json`.
+Expected package contents include `dist/index.js`, `dist/react.js`, type declarations, `dist/atmos-fx.css`, `README.md`, `LICENSE`, `CHANGELOG.md`, and `package.json`.
 
 ## Publishing
 

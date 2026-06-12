@@ -42,50 +42,50 @@ function addReducedMotionListener(
 }
 
 const CSS_CONTENT = `
-[data-atoms-fx] {
-  --atoms-fx-content-opacity: 0.72;
-  --atoms-fx-surface-opacity: 0.14;
-  --atoms-fx-glass-background: rgb(255 255 255 / var(--atoms-fx-surface-opacity));
-  --atoms-fx-glass-border: rgb(255 255 255 / 0.2);
-  --atoms-fx-glass-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
+[data-atmos-fx] {
+  --atmos-fx-content-opacity: 0.72;
+  --atmos-fx-surface-opacity: 0.14;
+  --atmos-fx-glass-background: rgb(255 255 255 / var(--atmos-fx-surface-opacity));
+  --atmos-fx-glass-border: rgb(255 255 255 / 0.2);
+  --atmos-fx-glass-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
-[data-atoms-layer='weather-background'],
-[data-atoms-layer='weather-foreground'] {
+[data-atmos-layer='weather-background'],
+[data-atmos-layer='weather-foreground'] {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
-[data-atoms-layer='weather-background'] {
+[data-atmos-layer='weather-background'] {
   z-index: 0;
 }
-[data-atoms-layer='weather-foreground'] {
+[data-atmos-layer='weather-foreground'] {
   z-index: 3;
 }
-[data-atoms-fx] > :not([data-atoms-layer]) {
+[data-atmos-fx] > :not([data-atmos-layer]) {
   position: relative;
   z-index: 2;
 }
-[data-atoms-fx][data-atoms-transparency='glass'] > :not([data-atoms-layer], [data-atoms-opaque]),
-[data-atoms-fx][data-atoms-transparency='glass'] :where([data-atoms-glass]) {
+[data-atmos-fx][data-atmos-transparency='glass'] > :not([data-atmos-layer], [data-atmos-opaque]),
+[data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]) {
   background: rgb(255 255 255 / 0.14);
-  background: var(--atoms-fx-glass-background);
-  border-color: var(--atoms-fx-glass-border);
-  box-shadow: var(--atoms-fx-glass-shadow);
+  background: var(--atmos-fx-glass-background);
+  border-color: var(--atmos-fx-glass-border);
+  box-shadow: var(--atmos-fx-glass-shadow);
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
 }
-[data-atoms-fx][data-atoms-transparency='opacity'] > :not([data-atoms-layer], [data-atoms-opaque], [data-atoms-contains-opaque]) {
-  opacity: var(--atoms-fx-content-opacity);
+[data-atmos-fx][data-atmos-transparency='opacity'] > :not([data-atmos-layer], [data-atmos-opaque], [data-atmos-contains-opaque]) {
+  opacity: var(--atmos-fx-content-opacity);
 }
-[data-atoms-fx] :where([data-atoms-opacity]) {
-  opacity: var(--atoms-fx-opacity, 1);
+[data-atmos-fx] :where([data-atmos-opacity]) {
+  opacity: var(--atmos-fx-opacity, 1);
 }
-[data-atoms-fx] :where([data-atoms-opaque]) {
+[data-atmos-fx] :where([data-atmos-opaque]) {
   opacity: 1;
   box-shadow: none;
   backdrop-filter: none;
@@ -94,7 +94,7 @@ const CSS_CONTENT = `
 `
 
 function injectStyles(doc: Document, nonce?: string) {
-  const id = 'atoms-fx-styles'
+  const id = 'atmos-fx-styles'
   let style = doc.getElementById(id) as HTMLStyleElement | null
   if (!style) {
     style = doc.createElement('style')
@@ -163,11 +163,11 @@ export function createAtmosphere(
   }
 
   const syncDataset = () => {
-    element.dataset.atomsFxPreset = normalizedOptions.preset
-    element.dataset.atomsParticle = normalizedOptions.particle
+    element.dataset.atmosFxPreset = normalizedOptions.preset
+    element.dataset.atmosParticle = normalizedOptions.particle
 
     if (renderer) {
-      element.dataset.atomsRenderer = renderer.backend
+      element.dataset.atmosRenderer = renderer.backend
     }
 
     glassController.sync(normalizedOptions)
@@ -183,11 +183,11 @@ export function createAtmosphere(
     state = nextState
 
     if (nextState === 'destroyed') {
-      delete element.dataset.atomsFx
+      delete element.dataset.atmosFx
       return
     }
 
-    element.dataset.atomsFx = nextState
+    element.dataset.atmosFx = nextState
   }
 
   const ensureCanvasLayer = () => {
@@ -246,13 +246,13 @@ export function createAtmosphere(
         normalizedOptions,
       )
       rendererParticle = normalizedOptions.particle
-      element.dataset.atomsRenderer = renderer.backend
+      element.dataset.atmosRenderer = renderer.backend
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
       return
     }
 
     renderer.updateOptions(normalizedOptions)
-    element.dataset.atomsRenderer = renderer.backend
+    element.dataset.atmosRenderer = renderer.backend
     renderer.setCollisionTargets(collisionTargetManager.getTargets())
   }
 
@@ -421,9 +421,9 @@ export function createAtmosphere(
       canvasLayer?.destroy()
       canvasLayer = undefined
       setState('destroyed')
-      delete element.dataset.atomsFxPreset
-      delete element.dataset.atomsParticle
-      delete element.dataset.atomsRenderer
+      delete element.dataset.atmosFxPreset
+      delete element.dataset.atmosParticle
+      delete element.dataset.atmosRenderer
     },
   }
 

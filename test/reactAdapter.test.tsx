@@ -120,9 +120,9 @@ describe('Atmosphere React adapter', () => {
     })
     const cardEl = host.querySelector('.my-card')
     expect(cardEl).not.toBeNull()
-    expect(cardEl?.getAttribute('data-atoms-collision')).toBe('')
-    expect(cardEl?.getAttribute('data-atoms-liquid-dripping')).toBe('false')
-    expect(cardEl?.getAttribute('data-atoms-glass')).toBe('')
+    expect(cardEl?.getAttribute('data-atmos-collision')).toBe('')
+    expect(cardEl?.getAttribute('data-atmos-liquid-dripping')).toBe('false')
+    expect(cardEl?.getAttribute('data-atmos-glass')).toBe('')
     expect(cardEl?.querySelector('span')?.textContent).toBe('content')
 
     await act(async () => {
@@ -143,9 +143,9 @@ describe('Atmosphere React adapter', () => {
     })
     const buttonEl = host.querySelector('button')
     expect(buttonEl).not.toBeNull()
-    expect(buttonEl?.getAttribute('data-atoms-collision')).toBe('')
-    expect(buttonEl?.getAttribute('data-atoms-liquid-dripping')).toBe('true')
-    expect(buttonEl?.getAttribute('data-atoms-opaque')).toBe('')
+    expect(buttonEl?.getAttribute('data-atmos-collision')).toBe('')
+    expect(buttonEl?.getAttribute('data-atmos-liquid-dripping')).toBe('true')
+    expect(buttonEl?.getAttribute('data-atmos-opaque')).toBe('')
     expect(buttonEl?.className).toBe('base-class extra-class')
     expect(buttonEl?.style.color).toBe('red')
     expect(buttonEl?.style.background).toBe('blue')
@@ -157,7 +157,7 @@ describe('Atmosphere React adapter', () => {
   })
 
   it('supports disabling style injection', async () => {
-    const existing = document.getElementById('atoms-fx-styles')
+    const existing = document.getElementById('atmos-fx-styles')
     if (existing) {
       existing.remove()
     }
@@ -166,7 +166,7 @@ describe('Atmosphere React adapter', () => {
       reactRoot.render(<AtmosFx injectStyles={false} />)
     })
 
-    expect(document.getElementById('atoms-fx-styles')).toBeNull()
+    expect(document.getElementById('atmos-fx-styles')).toBeNull()
 
     await act(async () => {
       reactRoot.unmount()
@@ -174,7 +174,7 @@ describe('Atmosphere React adapter', () => {
   })
 
   it('supports injecting styles with a nonce', async () => {
-    const existing = document.getElementById('atoms-fx-styles')
+    const existing = document.getElementById('atmos-fx-styles')
     if (existing) {
       existing.remove()
     }
@@ -183,7 +183,7 @@ describe('Atmosphere React adapter', () => {
       reactRoot.render(<AtmosFx injectStyles={true} styleNonce="test-nonce" />)
     })
 
-    const styleEl = document.getElementById('atoms-fx-styles')
+    const styleEl = document.getElementById('atmos-fx-styles')
     expect(styleEl).not.toBeNull()
     expect(styleEl?.getAttribute('nonce')).toBe('test-nonce')
 

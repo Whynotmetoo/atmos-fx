@@ -123,8 +123,8 @@ function parseColorRGB(colorStr: string): { rgb: string; alpha: number } {
 export function createLiquidDripsController(root: HTMLElement): LiquidDripsController {
   const doc = root.ownerDocument
   const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.setAttribute('class', 'atoms-liquid-svg')
-  svg.setAttribute('data-atoms-layer', 'liquid')
+  svg.setAttribute('class', 'atmos-liquid-svg')
+  svg.setAttribute('data-atmos-layer', 'liquid')
   svg.style.position = 'absolute'
   svg.style.inset = '0'
   svg.style.width = '100%'
@@ -133,7 +133,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
   svg.style.zIndex = '1'
 
   const defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs')
-  const filterId = `atoms-liquid-goo-${Math.random().toString(36).substring(2, 9)}`
+  const filterId = `atmos-liquid-goo-${Math.random().toString(36).substring(2, 9)}`
   const filter = doc.createElementNS('http://www.w3.org/2000/svg', 'filter')
   filter.setAttribute('id', filterId)
 
@@ -165,7 +165,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
     const cardGroup = doc.createElementNS('http://www.w3.org/2000/svg', 'g')
     cardGroup.setAttribute('filter', `url(#${filterId})`)
 
-    const clipId = `atoms-liquid-clip-${index}-${Math.random().toString(36).substring(2, 9)}`
+    const clipId = `atmos-liquid-clip-${index}-${Math.random().toString(36).substring(2, 9)}`
     const clipPath = doc.createElementNS('http://www.w3.org/2000/svg', 'clipPath')
     clipPath.setAttribute('id', clipId)
 
@@ -181,14 +181,14 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
     cardGroup.setAttribute('clip-path', `url(#${clipId})`)
 
     const path = doc.createElementNS('http://www.w3.org/2000/svg', 'path')
-    path.setAttribute('class', 'atoms-liquid-element')
+    path.setAttribute('class', 'atmos-liquid-element')
 
     const bulge = doc.createElementNS('http://www.w3.org/2000/svg', 'circle')
-    bulge.setAttribute('class', 'atoms-liquid-element')
+    bulge.setAttribute('class', 'atmos-liquid-element')
     bulge.setAttribute('r', '0')
 
     const droplet = doc.createElementNS('http://www.w3.org/2000/svg', 'ellipse')
-    droplet.setAttribute('class', 'atoms-liquid-element')
+    droplet.setAttribute('class', 'atmos-liquid-element')
     droplet.setAttribute('rx', '0')
     droplet.setAttribute('ry', '0')
 
@@ -263,7 +263,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
         drip.dripX = drip.waveLeft + (drip.waveRight - drip.waveLeft) * 0.65
         drip.targetBottom = target.bottom
 
-        const cardLiquidDripping = target.element?.dataset.atomsLiquidDripping !== 'false'
+        const cardLiquidDripping = target.element?.dataset.atmosLiquidDripping !== 'false'
         drip.liquidDripping = cardLiquidDripping
         drip.group.style.display = cardLiquidDripping ? 'block' : 'none'
 

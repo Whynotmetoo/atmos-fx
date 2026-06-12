@@ -18,13 +18,13 @@ describe('createGlassController', () => {
     const controller = createGlassController(root)
 
     controller.sync(createOptions({ transparency: 'glass' }))
-    expect(root.dataset.atomsTransparency).toBe('glass')
+    expect(root.dataset.atmosTransparency).toBe('glass')
 
     controller.sync(createOptions({ transparency: 'opacity' }))
-    expect(root.dataset.atomsTransparency).toBe('opacity')
+    expect(root.dataset.atmosTransparency).toBe('opacity')
 
     controller.destroy()
-    expect(root.dataset.atomsTransparency).toBeUndefined()
+    expect(root.dataset.atmosTransparency).toBeUndefined()
   })
 
   it('syncs configurable root opacity CSS variables', () => {
@@ -33,35 +33,35 @@ describe('createGlassController', () => {
 
     controller.sync(createOptions({ contentOpacity: 0.48, surfaceOpacity: 0.2 }))
 
-    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('0.48')
-    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('0.2')
+    expect(root.style.getPropertyValue('--atmos-fx-content-opacity')).toBe('0.48')
+    expect(root.style.getPropertyValue('--atmos-fx-surface-opacity')).toBe('0.2')
 
     controller.destroy()
 
-    expect(root.style.getPropertyValue('--atoms-fx-content-opacity')).toBe('')
-    expect(root.style.getPropertyValue('--atoms-fx-surface-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atmos-fx-content-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atmos-fx-surface-opacity')).toBe('')
   })
 
-  it('maps data-atoms-opacity values into CSS variables', () => {
+  it('maps data-atmos-opacity values into CSS variables', () => {
     const root = document.createElement('section')
     const child = document.createElement('div')
-    child.dataset.atomsOpacity = '0.42'
+    child.dataset.atmosOpacity = '0.42'
     root.append(child)
 
     const controller = createGlassController(root)
     controller.sync(createOptions())
 
-    expect(child.style.getPropertyValue('--atoms-fx-opacity')).toBe('0.42')
+    expect(child.style.getPropertyValue('--atmos-fx-opacity')).toBe('0.42')
 
-    child.dataset.atomsOpacity = '2'
+    child.dataset.atmosOpacity = '2'
     controller.sync(createOptions())
 
-    expect(child.style.getPropertyValue('--atoms-fx-opacity')).toBe('1')
+    expect(child.style.getPropertyValue('--atmos-fx-opacity')).toBe('1')
 
-    delete child.dataset.atomsOpacity
+    delete child.dataset.atmosOpacity
     controller.sync(createOptions())
 
-    expect(child.style.getPropertyValue('--atoms-fx-opacity')).toBe('')
+    expect(child.style.getPropertyValue('--atmos-fx-opacity')).toBe('')
   })
 
   it('manages custom opaque selector attributes without removing user attributes', () => {
@@ -70,22 +70,22 @@ describe('createGlassController', () => {
     const explicit = document.createElement('div')
     managed.className = 'solid'
     explicit.className = 'solid'
-    explicit.dataset.atomsOpaque = ''
+    explicit.dataset.atmosOpaque = ''
     root.append(managed, explicit)
 
     const controller = createGlassController(root)
     controller.sync(createOptions({ opaqueSelector: '.solid' }))
 
-    expect(managed.dataset.atomsOpaque).toBe('managed')
-    expect(explicit.dataset.atomsOpaque).toBe('')
+    expect(managed.dataset.atmosOpaque).toBe('managed')
+    expect(explicit.dataset.atmosOpaque).toBe('')
 
     managed.className = ''
     controller.sync(createOptions({ opaqueSelector: '.solid' }))
 
-    expect(managed.dataset.atomsOpaque).toBeUndefined()
+    expect(managed.dataset.atmosOpaque).toBeUndefined()
 
     controller.destroy()
-    expect(explicit.dataset.atomsOpaque).toBe('')
+    expect(explicit.dataset.atmosOpaque).toBe('')
   })
 
   it('observes attribute changes used by custom opaque selectors', () => {
@@ -112,17 +112,17 @@ describe('createGlassController', () => {
     const controller = createGlassController(root)
     controller.sync(createOptions({ opaqueSelector: '[data-solid]' }))
 
-    expect(child.dataset.atomsOpaque).toBeUndefined()
+    expect(child.dataset.atmosOpaque).toBeUndefined()
 
     child.dataset.solid = ''
     observerCallback?.([], {} as MutationObserver)
 
-    expect(child.dataset.atomsOpaque).toBe('managed')
+    expect(child.dataset.atmosOpaque).toBe('managed')
 
     delete child.dataset.solid
     observerCallback?.([], {} as MutationObserver)
 
-    expect(child.dataset.atomsOpaque).toBeUndefined()
+    expect(child.dataset.atmosOpaque).toBeUndefined()
   })
 
   it('marks direct children that contain opaque descendants', () => {
@@ -135,18 +135,18 @@ describe('createGlassController', () => {
     const controller = createGlassController(root)
     controller.sync(createOptions({ opaqueSelector: 'button[disabled]' }))
 
-    expect(panel.dataset.atomsContainsOpaque).toBeUndefined()
+    expect(panel.dataset.atmosContainsOpaque).toBeUndefined()
 
     button.disabled = true
     controller.sync(createOptions({ opaqueSelector: 'button[disabled]' }))
 
-    expect(button.dataset.atomsOpaque).toBe('managed')
-    expect(panel.dataset.atomsContainsOpaque).toBe('managed')
+    expect(button.dataset.atmosOpaque).toBe('managed')
+    expect(panel.dataset.atmosContainsOpaque).toBe('managed')
 
     button.disabled = false
     controller.sync(createOptions({ opaqueSelector: 'button[disabled]' }))
 
-    expect(button.dataset.atomsOpaque).toBeUndefined()
-    expect(panel.dataset.atomsContainsOpaque).toBeUndefined()
+    expect(button.dataset.atmosOpaque).toBeUndefined()
+    expect(panel.dataset.atmosContainsOpaque).toBeUndefined()
   })
 })

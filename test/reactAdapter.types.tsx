@@ -26,8 +26,8 @@ export const reactAtmosFxProps: AtmosFxProps = {
 export function ReactAdapterTypeSmoke() {
   return (
     <AtmosFx ref={rootRef} {...reactAtmosFxProps}>
-      <section data-atoms-collision>
-        <button data-atoms-opaque>Action</button>
+      <section data-atmos-collision>
+        <button data-atmos-opaque>Action</button>
       </section>
       <AtmosFx ref={cleanupRef} preset="rain" />
     </AtmosFx>

@@ -35,15 +35,15 @@ describe('collision targets', () => {
     const target = document.createElement('article')
     const canvas = document.createElement('canvas')
     root.append(target, canvas)
-    target.dataset.atomsCollision = ''
-    canvas.dataset.atomsLayer = 'weather'
-    canvas.dataset.atomsCollision = ''
+    target.dataset.atmosCollision = ''
+    canvas.dataset.atmosLayer = 'weather'
+    canvas.dataset.atmosCollision = ''
 
     root.getBoundingClientRect = vi.fn(() => rect(100, 50, 320, 180))
     target.getBoundingClientRect = vi.fn(() => rect(136, 94, 120, 40))
     canvas.getBoundingClientRect = vi.fn(() => rect(100, 50, 320, 180))
 
-    expect(collectCollisionTargetRects(root, '[data-atoms-collision]')).toEqual([
+    expect(collectCollisionTargetRects(root, '[data-atmos-collision]')).toEqual([
       {
         element: target,
         x: 36,
@@ -61,7 +61,7 @@ describe('collision targets', () => {
     const firstTarget = document.createElement('article')
     const secondTarget = document.createElement('aside')
     root.append(firstTarget, secondTarget)
-    firstTarget.dataset.atomsCollision = ''
+    firstTarget.dataset.atmosCollision = ''
     secondTarget.className = 'surface'
 
     root.getBoundingClientRect = vi.fn(() => rect(10, 20, 300, 200))

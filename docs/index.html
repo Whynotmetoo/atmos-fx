@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>atoms-fx — DOM-Aware Atmosphere Engine</title>
-    <link rel="stylesheet" href="../dist/atoms-fx.css" />
+    <title>atmos-fx — DOM-Aware Atmosphere Engine</title>
+    <link rel="stylesheet" href="../dist/atmos-fx.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -129,8 +129,8 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      #weather-stage[data-atoms-transparency='none'] #collision-card,
-      #weather-stage[data-atoms-transparency='opacity'] #collision-card {
+      #weather-stage[data-atmos-transparency='none'] #collision-card,
+      #weather-stage[data-atmos-transparency='opacity'] #collision-card {
         background: #111a22;
       }
 
@@ -512,7 +512,7 @@
     <div class="container">
       <header>
         <span class="logo-icon">⛈️</span>
-        <h1>atoms-fx</h1>
+        <h1>atmos-fx</h1>
         <p class="description">A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.</p>
       </header>
 
@@ -522,7 +522,7 @@
         <div class="preview-column">
           <main id="weather-stage" data-playground-preset="rain">
             <!-- Simulated Interface Card to interact with collision and glass transparency -->
-            <div id="collision-card" data-atoms-collision data-atoms-glass>
+            <div id="collision-card" data-atmos-collision data-atmos-glass>
               <div class="weather-card-content">
                 <div class="card-header">
                   <div class="card-temp" id="forecast-temp">54</div>
@@ -659,7 +659,7 @@
         <div class="install-grid">
           <div>
             <p style="margin-bottom: 12px; color: var(--muted);">1. Install package via npm:</p>
-            <pre><code>npm install atoms-fx</code></pre>
+            <pre><code>npm install atmos-fx</code></pre>
           </div>
           <div>
             <p style="margin-bottom: 12px; color: var(--muted);">2. Import module and stylesheet:</p>
@@ -672,7 +672,7 @@
       <section class="docs-section">
         <h2 class="section-title">React Integration</h2>
         <p style="margin-bottom: 16px; color: var(--muted);">Use the modern, type-safe React components to seamlessly integrate weather effects and interactive cards into your React application:</p>
-        <pre><code>import { AtmosFx, AtmosCard } from 'atoms-fx'
+        <pre><code>import { AtmosFx, AtmosCard } from 'atmos-fx'
 
 export function WeatherPanel() {
   return (
@@ -777,12 +777,12 @@ export function WeatherPanel() {
               <tr>
                 <td><code>collisionSelector</code></td>
                 <td><code>string</code></td>
-                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atoms-collision]</code>.</td>
+                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.</td>
               </tr>
               <tr>
                 <td><code>opaqueSelector</code></td>
                 <td><code>string</code></td>
-                <td>Query selector for elements that skip transparency blurs. Defaults to <code>[data-atoms-opaque]</code>.</td>
+                <td>Query selector for elements that skip transparency blurs. Defaults to <code>[data-atmos-opaque]</code>.</td>
               </tr>
             </tbody>
           </table>
@@ -847,19 +847,19 @@ export function WeatherPanel() {
             </thead>
             <tbody>
               <tr>
-                <td><code>data-atoms-collision</code></td>
+                <td><code>data-atmos-collision</code></td>
                 <td>Marks the element as a top-edge landing surface for snow, rain splashes, and hail.</td>
               </tr>
               <tr>
-                <td><code>data-atoms-opaque</code></td>
+                <td><code>data-atmos-opaque</code></td>
                 <td>Instructs the glass controller to keep this element solid without translucent styling.</td>
               </tr>
               <tr>
-                <td><code>data-atoms-glass</code></td>
+                <td><code>data-atmos-glass</code></td>
                 <td>Explicitly opts nested panels/containers into receiving the default weather-blur visual filter.</td>
               </tr>
               <tr>
-                <td><code>data-atoms-opacity="0.65"</code></td>
+                <td><code>data-atmos-opacity="0.65"</code></td>
                 <td>Specifies an element-specific glass background opacity level.</td>
               </tr>
             </tbody>
@@ -868,7 +868,7 @@ export function WeatherPanel() {
       </section>
       
       <footer>
-        <p>Released under the MIT License. Built with WebGL for maximum performance. <a href="https://github.com/Whynotmetoo/atoms-fx" target="_blank">View GitHub</a></p>
+        <p>Released under the MIT License. Built with WebGL for maximum performance. <a href="https://github.com/Whynotmetoo/atmos-fx" target="_blank">View GitHub</a></p>
       </footer>
     </div>
 
@@ -978,7 +978,7 @@ export function WeatherPanel() {
           optionsCopy.hailBounce = state.hailBounce
         }
 
-        codeSample.textContent = `import { createAtmosphere } from 'atoms-fx'
+        codeSample.textContent = `import { createAtmosphere } from 'atmos-fx'
 
 const controller = createAtmosphere(
   document.querySelector('#container'),
