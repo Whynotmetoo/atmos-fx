@@ -11,6 +11,7 @@ export type DripParticle = {
   state: 'gathering' | 'dripping'
   relativeTargetX?: number
   detachProgress?: number
+  filmPhase: number
 }
 
 export class DripPool {
@@ -36,8 +37,9 @@ export class DripPool {
         maxSize: 0,
         target: null,
         state: 'gathering',
-        relativeTargetX: 0.75,
+        relativeTargetX: 0.65,
         detachProgress: 0,
+        filmPhase: Math.random() * Math.PI * 2,
       })
     }
     if (this.cursor >= this.maxSize) {
@@ -50,13 +52,13 @@ export class DripPool {
       return
     }
 
-    // Check if we already have a drip gathering very close to this x on the same target bottom
+    // One drop per target: find any existing gathering drip on this target
     const existing = this.particles.find(
-      (p) => p.active && p.target === target && Math.abs(p.x - x) < 8 && p.state === 'gathering',
+      (p) => p.active && p.target === target && p.state === 'gathering',
     )
     if (existing) {
-      // Grow the existing drip slightly
-      existing.size = Math.min(existing.maxSize, existing.size + 0.3)
+      // Feed the existing drop — slow, restrained growth
+      existing.size = Math.min(existing.maxSize, existing.size + 0.15)
       return
     }
 
@@ -65,14 +67,15 @@ export class DripPool {
     particle.x = x
     particle.y = y
     particle.vy = 0
-    particle.size = 0.5
-    // Larger maxSize for a big drop feel (2.4 to 4.6)
-    particle.maxSize = 2.4 + Math.random() * 2.2
+    particle.size = 0.2
+    // Larger max size for one big dramatic drop
+    particle.maxSize = 5.0 + Math.random() * 2.5
     particle.target = target
     particle.state = 'gathering'
-    // Slide towards right-quarter of the card bottom
-    particle.relativeTargetX = 0.7 + Math.random() * 0.15
+    // Gathering point varies along card bottom (center to right)
+    particle.relativeTargetX = 0.5 + Math.random() * 0.3
     particle.detachProgress = 0
+    particle.filmPhase = Math.random() * Math.PI * 2
 
     this.cursor = (this.cursor + 1) % this.maxSize
   }
@@ -90,7 +93,11 @@ export class DripPool {
       }
 
       if (p.state === 'gathering') {
-        p.size += (0.6 + Math.random() * 0.6) * deltaSeconds
+        // Very slow base accumulation (water flowing along edge)
+        p.size = Math.min(p.maxSize, p.size + 0.1 * deltaSeconds)
+
+        // Animate film waviness
+        p.filmPhase += 1.2 * deltaSeconds
 
         if (p.target) {
           // Find target in current collision targets to keep coordinate sync
@@ -104,11 +111,11 @@ export class DripPool {
             p.target = currentTarget
             p.y = currentTarget.bottom
 
-            // Slide towards right-quarter
+            // Slide toward gathering point slowly
             if (p.relativeTargetX !== undefined) {
               const targetX = currentTarget.x + currentTarget.width * p.relativeTargetX
               const dx = targetX - p.x
-              p.x += dx * 2.5 * deltaSeconds
+              p.x += dx * 0.8 * deltaSeconds
               p.x = Math.max(currentTarget.x + 2, Math.min(currentTarget.right - 2, p.x))
             }
           } else {
@@ -120,14 +127,14 @@ export class DripPool {
 
         if (p.size >= p.maxSize) {
           p.state = 'dripping'
-          p.vy = 4 + Math.random() * 6 // low initial speed to feel sticky
+          p.vy = 2 + Math.random() * 3 // low initial speed — sticky feel
           p.detachProgress = 0
         }
       } else {
         // Dripping (falling)
         if (p.detachProgress !== undefined && p.detachProgress < 1) {
-          p.detachProgress += 6 * deltaSeconds // snaps in ~0.16 seconds
-          p.vy += gravity * 0.2 * deltaSeconds // sticky slow drag-off acceleration
+          p.detachProgress += 4 * deltaSeconds // stretches over ~0.25s
+          p.vy += gravity * 0.15 * deltaSeconds // sticky slow drag-off
           p.y += p.vy * deltaSeconds
         } else {
           p.vy += gravity * deltaSeconds
