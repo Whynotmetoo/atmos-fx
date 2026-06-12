@@ -84,6 +84,82 @@ export function createCollisionTargetManager(
   let animationFrameId: number | undefined
   let timeoutId: number | undefined
 
+  const managedCollisionElements = new Set<HTMLElement>()
+  const MANAGED_COLLISION_VALUE = 'managed'
+  let observing = false
+
+  const startObserving = () => {
+    if (!mutationObserver || observing) {
+      return
+    }
+
+    mutationObserver.observe(root, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    })
+    observing = true
+  }
+
+  const stopObserving = () => {
+    if (!mutationObserver || !observing) {
+      return
+    }
+
+    mutationObserver.disconnect()
+    observing = false
+  }
+
+  const clearManagedCollisionElements = (nextElements = new Set<HTMLElement>()) => {
+    for (const element of managedCollisionElements) {
+      if (!nextElements.has(element) && element.dataset.atmosCollision === MANAGED_COLLISION_VALUE) {
+        delete element.dataset.atmosCollision
+      }
+    }
+
+    if (nextElements.size === 0) {
+      managedCollisionElements.clear()
+      return
+    }
+
+    for (const element of Array.from(managedCollisionElements)) {
+      if (!nextElements.has(element)) {
+        managedCollisionElements.delete(element)
+      }
+    }
+  }
+
+  const syncCollisionSelector = () => {
+    stopObserving()
+
+    for (const element of managedCollisionElements) {
+      if (element.dataset.atmosCollision === MANAGED_COLLISION_VALUE) {
+        delete element.dataset.atmosCollision
+      }
+    }
+
+    const nextElements = new Set<HTMLElement>()
+
+    for (const element of root.querySelectorAll(currentOptions.collisionSelector)) {
+      if (!(element instanceof HTMLElement) || element.dataset.atmosLayer !== undefined) {
+        continue
+      }
+
+      managedCollisionElements.add(element)
+
+      if (element.dataset.atmosCollision === undefined) {
+        element.dataset.atmosCollision = MANAGED_COLLISION_VALUE
+      }
+
+      if (element.dataset.atmosCollision === MANAGED_COLLISION_VALUE) {
+        nextElements.add(element)
+      }
+    }
+
+    clearManagedCollisionElements(nextElements)
+    startObserving()
+  }
+
   const notify = () => {
     onChange?.(targets)
   }
@@ -94,6 +170,7 @@ export function createCollisionTargetManager(
     }
 
     scheduled = false
+    syncCollisionSelector()
     targets = collectCollisionTargetRects(root, currentOptions.collisionSelector)
 
     if (resizeObserver) {
@@ -169,11 +246,7 @@ export function createCollisionTargetManager(
         })
 
   resizeObserver?.observe(root)
-  mutationObserver?.observe(root, {
-    attributes: true,
-    childList: true,
-    subtree: true,
-  })
+  startObserving()
 
   ownerWindow?.addEventListener('resize', scheduleRefresh)
   ownerWindow?.addEventListener('scroll', scheduleRefresh, true)
@@ -190,7 +263,7 @@ export function createCollisionTargetManager(
     destroy() {
       destroyed = true
       resizeObserver?.disconnect()
-      mutationObserver?.disconnect()
+      stopObserving()
       ownerWindow?.removeEventListener('resize', scheduleRefresh)
       ownerWindow?.removeEventListener('scroll', scheduleRefresh, true)
 
@@ -202,6 +275,7 @@ export function createCollisionTargetManager(
         ownerWindow?.clearTimeout(timeoutId)
       }
 
+      clearManagedCollisionElements()
       targets = []
       observedTargets.clear()
     },

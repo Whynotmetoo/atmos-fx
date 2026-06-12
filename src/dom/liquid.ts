@@ -130,7 +130,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
   svg.style.width = '100%'
   svg.style.height = '100%'
   svg.style.pointerEvents = 'none'
-  svg.style.zIndex = '1'
+  svg.style.zIndex = '4'
 
   const defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs')
   const filterId = `atmos-liquid-goo-${Math.random().toString(36).substring(2, 9)}`

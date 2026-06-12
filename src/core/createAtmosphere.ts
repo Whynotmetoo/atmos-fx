@@ -53,7 +53,8 @@ const CSS_CONTENT = `
   isolation: isolate;
 }
 [data-atmos-layer='weather-background'],
-[data-atmos-layer='weather-foreground'] {
+[data-atmos-layer='weather-foreground'],
+[data-atmos-layer='liquid'] {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -66,11 +67,13 @@ const CSS_CONTENT = `
 [data-atmos-layer='weather-foreground'] {
   z-index: 3;
 }
-[data-atmos-fx] > :not([data-atmos-layer]) {
+[data-atmos-layer='liquid'] {
+  z-index: 4;
+}
+[data-atmos-fx] :where([data-atmos-glass], [data-atmos-opaque], [data-atmos-opacity], [data-atmos-collision]) {
   position: relative;
   z-index: 2;
 }
-[data-atmos-fx][data-atmos-transparency='glass'] > :not([data-atmos-layer], [data-atmos-opaque]),
 [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]) {
   background: rgb(255 255 255 / 0.14);
   background: var(--atmos-fx-glass-background);
@@ -79,11 +82,8 @@ const CSS_CONTENT = `
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
 }
-[data-atmos-fx][data-atmos-transparency='opacity'] > :not([data-atmos-layer], [data-atmos-opaque], [data-atmos-contains-opaque]) {
-  opacity: var(--atmos-fx-content-opacity);
-}
 [data-atmos-fx] :where([data-atmos-opacity]) {
-  opacity: var(--atmos-fx-opacity, 1);
+  opacity: var(--atmos-fx-opacity, var(--atmos-fx-content-opacity));
 }
 [data-atmos-fx] :where([data-atmos-opaque]) {
   opacity: 1;

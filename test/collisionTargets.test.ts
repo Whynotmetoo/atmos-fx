@@ -91,4 +91,45 @@ describe('collision targets', () => {
     manager.destroy()
     expect(manager.getTargets()).toEqual([])
   })
+
+  it('manages data-atmos-collision="managed" attribute dynamically', () => {
+    const root = document.createElement('section')
+    const firstTarget = document.createElement('article')
+    const secondTarget = document.createElement('aside')
+    root.append(firstTarget, secondTarget)
+    firstTarget.dataset.atmosCollision = 'custom'
+    secondTarget.className = 'surface'
+
+    root.getBoundingClientRect = vi.fn(() => rect(10, 20, 300, 200))
+    firstTarget.getBoundingClientRect = vi.fn(() => rect(20, 30, 80, 30))
+    secondTarget.getBoundingClientRect = vi.fn(() => rect(40, 90, 110, 24))
+
+    const manager = createCollisionTargetManager(
+      root,
+      createOptions({ collisionSelector: '[data-atmos-collision], .surface' }),
+    )
+
+    // Initially refresh to trigger sync
+    manager.refresh()
+
+    // The element matching [data-atmos-collision] should keep its original attribute
+    expect(firstTarget.dataset.atmosCollision).toBe('custom')
+    // The element matching .surface should get "managed"
+    expect(secondTarget.dataset.atmosCollision).toBe('managed')
+
+    // Change options to only match the original selector
+    manager.updateOptions(createOptions({ collisionSelector: '[data-atmos-collision]' }))
+    // .surface element should lose the managed attribute
+    expect(secondTarget.dataset.atmosCollision).toBeUndefined()
+    expect(firstTarget.dataset.atmosCollision).toBe('custom')
+
+    // Add .surface back
+    manager.updateOptions(createOptions({ collisionSelector: '.surface' }))
+    expect(secondTarget.dataset.atmosCollision).toBe('managed')
+
+    // Destroy the manager
+    manager.destroy()
+    // It should clean up the managed attribute
+    expect(secondTarget.dataset.atmosCollision).toBeUndefined()
+  })
 })
