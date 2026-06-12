@@ -33,7 +33,6 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
     contentOpacity,
     surfaceOpacity,
     snowAccumulation,
-    rainDripping,
     hailBounce,
     bottomCollision,
     collisionSelector,
@@ -94,10 +93,6 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
         nextOptions.snowAccumulation = snowAccumulation
       }
 
-      if (rainDripping !== undefined) {
-        nextOptions.rainDripping = rainDripping
-      }
-
       if (hailBounce !== undefined) {
         nextOptions.hailBounce = hailBounce
       }
@@ -136,7 +131,6 @@ export const Atmosphere = forwardRef<HTMLDivElement, AtmosphereProps>(function A
       contentOpacity,
       surfaceOpacity,
       snowAccumulation,
-      rainDripping,
       hailBounce,
       bottomCollision,
       collisionSelector,

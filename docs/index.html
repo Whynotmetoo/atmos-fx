@@ -573,11 +573,7 @@
             <input type="range" id="snowAccumulation" min="0" max="1.0" step="0.05" value="0.55" />
           </div>
 
-          <!-- Slider Drip Level -->
-          <div class="control-group" id="rain-drip-control">
-            <div class="control-label">Rain Dripping <span class="val" id="rainDripping-val">0.50</span></div>
-            <input type="range" id="rainDripping" min="0" max="1.0" step="0.05" value="0.50" />
-          </div>
+
 
           <!-- Slider Hail Bounce -->
           <div class="control-group" id="hail-bounce-control" style="display: none;">
@@ -732,11 +728,7 @@
                 <td><code>0</code> to <code>1</code> <span class="api-badge">0.55</span></td>
                 <td>BUildup intensity of snow piles on top of collision targets.</td>
               </tr>
-              <tr>
-                <td><code>rainDripping</code></td>
-                <td><code>0</code> to <code>1</code> <span class="api-badge">0.5</span></td>
-                <td>Likelihood of dripping drops gathering along card bottom edges.</td>
-              </tr>
+
               <tr>
                 <td><code>hailBounce</code></td>
                 <td><code>0</code> to <code>1</code> <span class="api-badge">0.5</span></td>
@@ -865,7 +857,6 @@
         surfaceOpacity: 0.14,
         contentOpacity: 0.72,
         snowAccumulation: 0.55,
-        rainDripping: 0.50,
         hailBounce: 0.50,
         bottomCollision: false,
         color: 'rgba(220, 235, 255, 0.72)'
@@ -941,8 +932,6 @@
 
         if (state.preset === 'snow') {
           optionsCopy.snowAccumulation = state.snowAccumulation
-        } else if (state.preset === 'rain') {
-          optionsCopy.rainDripping = state.rainDripping
         } else if (state.preset === 'hail') {
           optionsCopy.hailBounce = state.hailBounce
         }
@@ -971,7 +960,6 @@ controller.start()`
 
         // Display correct controls depending on preset
         document.querySelector('#snow-accum-control').style.display = state.preset === 'snow' ? 'flex' : 'none'
-        document.querySelector('#rain-drip-control').style.display = state.preset === 'rain' ? 'flex' : 'none'
         document.querySelector('#hail-bounce-control').style.display = state.preset === 'hail' ? 'flex' : 'none'
 
         // Display correct opacity sliders
@@ -983,7 +971,6 @@ controller.start()`
         syncSliderValue('speed')
         syncSliderValue('wind')
         syncSliderValue('snowAccumulation')
-        syncSliderValue('rainDripping')
         syncSliderValue('hailBounce')
         syncSliderValue('surfaceOpacity')
         syncSliderValue('contentOpacity')
@@ -1016,7 +1003,6 @@ controller.start()`
           surfaceOpacity: state.surfaceOpacity,
           contentOpacity: state.contentOpacity,
           snowAccumulation: state.snowAccumulation,
-          rainDripping: state.rainDripping,
           hailBounce: state.hailBounce,
           bottomCollision: state.bottomCollision,
           color: state.color
@@ -1024,7 +1010,7 @@ controller.start()`
       }
 
       // Event Listeners for UI sliders
-      const sliders = ['density', 'speed', 'wind', 'snowAccumulation', 'rainDripping', 'hailBounce', 'surfaceOpacity', 'contentOpacity']
+      const sliders = ['density', 'speed', 'wind', 'snowAccumulation', 'hailBounce', 'surfaceOpacity', 'contentOpacity']
       sliders.forEach(id => {
         const input = document.querySelector(`#${id}`)
         if (input) {
