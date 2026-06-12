@@ -93,15 +93,20 @@ const CSS_CONTENT = `
 }
 `
 
-function injectStyles(doc: Document) {
+function injectStyles(doc: Document, nonce?: string) {
   const id = 'atoms-fx-styles'
-  if (doc.getElementById(id)) {
-    return
+  let style = doc.getElementById(id) as HTMLStyleElement | null
+  if (!style) {
+    style = doc.createElement('style')
+    style.id = id
+    style.textContent = CSS_CONTENT
+    if (nonce) {
+      style.setAttribute('nonce', nonce)
+    }
+    doc.head.appendChild(style)
+  } else if (nonce) {
+    style.setAttribute('nonce', nonce)
   }
-  const style = doc.createElement('style')
-  style.id = id
-  style.textContent = CSS_CONTENT
-  doc.head.appendChild(style)
 }
 
 export function createAtmosphere(
@@ -112,14 +117,16 @@ export function createAtmosphere(
     throw new TypeError('createAtmosphere requires an HTMLElement root.')
   }
 
+  let currentOptions: AtmosphereOptions = { ...options }
+  let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(currentOptions)
   const ownerDocument = element.ownerDocument
-  injectStyles(ownerDocument)
+  if (normalizedOptions.injectStyles) {
+    injectStyles(ownerDocument, normalizedOptions.styleNonce)
+  }
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   const glassController = createGlassController(element)
   const liquidDripsController = createLiquidDripsController(element)
-  let currentOptions: AtmosphereOptions = { ...options }
-  let normalizedOptions: NormalizedAtmosphereOptions = normalizeAtmosphereOptions(currentOptions)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
@@ -391,6 +398,9 @@ export function createAtmosphere(
         ...nextOptions,
       }
       normalizedOptions = normalizeAtmosphereOptions(currentOptions)
+      if (normalizedOptions.injectStyles) {
+        injectStyles(ownerDocument, normalizedOptions.styleNonce)
+      }
       syncDataset()
       syncCollisionTargets()
       ensureRenderer()

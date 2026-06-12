@@ -89,6 +89,8 @@ const options: NormalizedAtmosphereOptions = {
   pauseWhenHidden: true,
   respectReducedMotion: true,
   liquidDripping: true,
+  injectStyles: true,
+  styleNonce: '',
 }
 
 describe('WebGL renderer foundation', () => {

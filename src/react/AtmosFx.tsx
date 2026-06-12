@@ -43,6 +43,8 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
     pauseWhenHidden,
     respectReducedMotion,
     liquidDripping,
+    injectStyles,
+    styleNonce,
     ...elementProps
   },
   forwardedRef,
@@ -126,6 +128,14 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.liquidDripping = liquidDripping
       }
 
+      if (injectStyles !== undefined) {
+        nextOptions.injectStyles = injectStyles
+      }
+
+      if (styleNonce !== undefined) {
+        nextOptions.styleNonce = styleNonce
+      }
+
       return nextOptions
     },
     [
@@ -148,6 +158,8 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
       pauseWhenHidden,
       respectReducedMotion,
       liquidDripping,
+      injectStyles,
+      styleNonce,
     ],
   )
   const optionsRef = useRef(atmosphereOptions)
@@ -215,28 +227,74 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
     const child = Children.only(children)
     if (isValidElement(child)) {
       const childElement = child as React.ReactElement<any>
-      return cloneElement(childElement, {
-        ref: (node: any) => {
-          if (typeof ref === 'function') {
-            ref(node)
-          } else if (ref) {
-            (ref as any).current = node
+      const { className: childClassName, style: childStyle, ...childRestProps } = childElement.props
+      const { className: wrapperClassName, style: wrapperStyle, ...wrapperRestProps } = props
+      const childPropsTyped = childRestProps as Record<string, any>
+      const wrapperPropsTyped = wrapperRestProps as Record<string, any>
+
+      const mergedProps: Record<string, any> = { ...wrapperRestProps }
+
+      for (const key in childPropsTyped) {
+        if (Object.prototype.hasOwnProperty.call(childPropsTyped, key)) {
+          const childValue = childPropsTyped[key]
+          const wrapperValue = wrapperPropsTyped[key]
+
+          if (key.startsWith('on') && typeof childValue === 'function' && typeof wrapperValue === 'function') {
+            mergedProps[key] = (...args: any[]) => {
+              wrapperValue(...args)
+              childValue(...args)
+            }
+          } else {
+            mergedProps[key] = childValue
           }
-          const childRef = (childElement as any).ref
+        }
+      }
+
+      return cloneElement(childElement, {
+        ...mergedProps,
+        className: [childClassName, wrapperClassName].filter(Boolean).join(' ') || undefined,
+        style: { ...wrapperStyle, ...childStyle },
+        ref: (node: any) => {
+          let cleanup1: any
+          if (typeof ref === 'function') {
+            cleanup1 = ref(node)
+          } else if (ref) {
+            ref.current = node
+          }
+
+          const childRef = childElement.props?.ref ?? (childElement as any).ref
+          let cleanup2: any
           if (typeof childRef === 'function') {
-            childRef(node)
+            cleanup2 = childRef(node)
           } else if (childRef) {
             childRef.current = node
+          }
+
+          if (typeof cleanup1 === 'function' || typeof cleanup2 === 'function') {
+            return () => {
+              if (typeof cleanup1 === 'function') {
+                cleanup1()
+              } else if (typeof ref === 'function') {
+                ref(null)
+              } else if (ref) {
+                ref.current = null
+              }
+
+              if (typeof cleanup2 === 'function') {
+                cleanup2()
+              } else if (typeof childRef === 'function') {
+                childRef(null)
+              } else if (childRef) {
+                childRef.current = null
+              }
+            }
           }
         },
         'data-atoms-collision': '',
         'data-atoms-liquid-dripping': liquidDripping !== undefined ? String(liquidDripping) : undefined,
         'data-atoms-glass': transMode === 'glass' ? '' : undefined,
-        'data-atoms-opaque': transMode === 'solid' ? 'managed' : undefined,
+        'data-atoms-opaque': transMode === 'solid' ? '' : undefined,
         'data-atoms-opacity': transMode === 'opacity' ? String(opacity ?? 0.72) : undefined,
-        ...childElement.props,
-        className: [childElement.props.className, props.className].filter(Boolean).join(' ') || undefined,
-        style: { ...props.style, ...childElement.props.style },
       })
     }
   }
@@ -247,7 +305,7 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
       data-atoms-collision=""
       data-atoms-liquid-dripping={liquidDripping !== undefined ? String(liquidDripping) : undefined}
       data-atoms-glass={transMode === 'glass' ? '' : undefined}
-      data-atoms-opaque={transMode === 'solid' ? 'managed' : undefined}
+      data-atoms-opaque={transMode === 'solid' ? '' : undefined}
       data-atoms-opacity={transMode === 'opacity' ? String(opacity ?? 0.72) : undefined}
       {...props}
     >

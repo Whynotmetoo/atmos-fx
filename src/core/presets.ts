@@ -19,6 +19,8 @@ export const DEFAULT_OPTIONS = {
   pauseWhenHidden: true,
   respectReducedMotion: true,
   liquidDripping: true,
+  injectStyles: true,
+  styleNonce: '',
 } satisfies Required<AtmosphereOptions>
 
 export const PRESET_OPTIONS = {
