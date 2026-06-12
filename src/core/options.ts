@@ -27,7 +27,6 @@ export function normalizeAtmosphereOptions(
     contentOpacity: clamp01(merged.contentOpacity, DEFAULT_OPTIONS.contentOpacity),
     surfaceOpacity: clamp01(merged.surfaceOpacity, DEFAULT_OPTIONS.surfaceOpacity),
     snowAccumulation: clamp01(merged.snowAccumulation, DEFAULT_OPTIONS.snowAccumulation),
-    rainDripping: clamp01(merged.rainDripping, DEFAULT_OPTIONS.rainDripping),
     hailBounce: clamp01(merged.hailBounce, DEFAULT_OPTIONS.hailBounce),
     bottomCollision: merged.bottomCollision ?? DEFAULT_OPTIONS.bottomCollision,
     speed: Math.max(0, merged.speed ?? DEFAULT_OPTIONS.speed),

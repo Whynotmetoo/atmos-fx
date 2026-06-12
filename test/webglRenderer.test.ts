@@ -82,7 +82,6 @@ const options: NormalizedAtmosphereOptions = {
   contentOpacity: 0.72,
   surfaceOpacity: 0.14,
   snowAccumulation: 0.55,
-  rainDripping: 0.5,
   hailBounce: 0.5,
   bottomCollision: false,
   collisionSelector: '[data-atoms-collision]',

@@ -2,7 +2,6 @@ import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { findTopEdgeCollision } from '../canvas2d/collision'
-import { DripPool } from '../canvas2d/drips'
 import { calculateRainParticleBudget } from '../canvas2d/quality'
 import { SplashPool } from '../canvas2d/splash'
 import type { Canvas2DRenderer, RendererCanvases } from '../canvas2d/types'
@@ -250,7 +249,6 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private particles: RainParticle[] = []
   private collisionTargets: readonly CollisionTargetRect[] = []
   private readonly splashes = new SplashPool()
-  private readonly drips = new DripPool()
   private lastTime: number | undefined
   private contextLost = false
   private size: CanvasLayerSize
@@ -304,10 +302,6 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
   getActiveSplashCount() {
     return this.splashes.getActiveCount()
-  }
-
-  getActiveDripCount() {
-    return this.drips.getActiveCount()
   }
 
   getBackgroundParticleCount() {
@@ -366,11 +360,6 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
       if (collision) {
         this.splashes.spawn(collision.x, collision.y, particle.vx, particle.depth)
-        if (this.options.rainDripping > 0 && Math.random() < this.options.rainDripping) {
-          const target = collision.target
-          const dripX = Math.max(target.x, Math.min(target.right, collision.x))
-          this.drips.spawn(dripX, target.bottom, target)
-        }
         recycleParticle(particle, this.size, this.options)
         continue
       }
@@ -434,17 +423,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       foregroundVertexCount += this.writeSplash(this.foregroundLayer, foregroundVertexCount, splash, alpha)
     }
 
-    if (this.options.rainDripping > 0) {
-      const gravity = 250 * this.options.speed
-      this.drips.update(deltaSeconds, gravity, this.size.height, this.collisionTargets)
 
-      for (const drip of this.drips.particles) {
-        if (!drip.active) {
-          continue
-        }
-        foregroundVertexCount += this.writeDrip(this.foregroundLayer, foregroundVertexCount, drip)
-      }
-    }
 
     this.drawLayer(this.backgroundLayer, backgroundVertexCount)
     this.drawLayer(this.foregroundLayer, foregroundVertexCount)
@@ -452,7 +431,6 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
   clear() {
     this.splashes.clear()
-    this.drips.clear()
     this.clearLayer(this.backgroundLayer)
     this.clearLayer(this.foregroundLayer)
   }
@@ -547,170 +525,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     return VERTICES_PER_PARTICLE
   }
 
-  private writeSegment(
-    layer: WebGLLayer,
-    vertexOffset: number,
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    alpha: number,
-  ) {
-    const start = vertexOffset * VALUES_PER_VERTEX
-    if (start + 5 >= layer.vertices.length) {
-      return 0
-    }
-    layer.vertices[start] = x1
-    layer.vertices[start + 1] = y1
-    layer.vertices[start + 2] = alpha
-    layer.vertices[start + 3] = x2
-    layer.vertices[start + 4] = y2
-    layer.vertices[start + 5] = alpha
 
-    return VERTICES_PER_PARTICLE
-  }
-
-  private writeDrip(layer: WebGLLayer, vertexOffset: number, drip: any) {
-    let count = 0
-
-    if (drip.state === 'gathering' && drip.target) {
-      const target = drip.target
-      const fill = drip.size / (drip.maxSize || 1) // 0..1 accumulation progress
-
-      // --- Water film (meniscus) along card bottom edge ---
-      const filmAlpha = 0.2 + fill * 0.25
-      const filmStep = 2
-      const maxSag = 1.5 + fill * 4 // sag deepens as water accumulates
-
-      for (let fx = target.x + 1; fx < target.right; fx += filmStep) {
-        const distRatio = Math.abs(fx - drip.x) / (target.width * 0.5 || 1)
-        const proximity = Math.max(0, 1 - distRatio)
-
-        // Catenary-like sag toward gathering point + gentle wave
-        const sag =
-          maxSag * proximity * proximity +
-          0.4 * Math.sin(fx * 0.06 + (drip.filmPhase || 0))
-        const thickness = 0.8 + proximity * (0.8 + fill * 1.5)
-
-        count += this.writeSegment(
-          layer,
-          vertexOffset + count,
-          fx,
-          target.bottom,
-          fx,
-          target.bottom + Math.max(0.5, sag + thickness),
-          filmAlpha * (0.4 + proximity * 0.6),
-        )
-      }
-
-      // --- Single bulbous drop at gathering point ---
-      if (drip.size > 0.8) {
-        const dropScale = Math.min(1, (drip.size - 0.8) / ((drip.maxSize || 5) - 0.8))
-        const dropHeight = 4 + dropScale * 14
-        const dropMaxWidth = 2 + dropScale * 6
-        const dropAlpha = 0.5 + fill * 0.35
-        const neckY = target.bottom + maxSag * 0.7 // drop hangs from film sag
-        const dropStep = 0.5
-
-        for (let dy = 0; dy <= dropHeight; dy += dropStep) {
-          const t = dy / dropHeight
-          let w: number
-
-          if (t < 0.12) {
-            // Narrow neck connecting to film
-            w = dropMaxWidth * (0.12 + t * 0.9)
-          } else if (t < 0.7) {
-            // Bulbous body — elliptical
-            const bt = (t - 0.12) / 0.58
-            w = dropMaxWidth * (0.22 + 0.78 * Math.sin(bt * Math.PI))
-          } else {
-            // Round bottom taper
-            const tt = (t - 0.7) / 0.3
-            w = dropMaxWidth * 0.22 * Math.cos(tt * Math.PI * 0.5)
-          }
-
-          count += this.writeSegment(
-            layer,
-            vertexOffset + count,
-            drip.x - w,
-            neckY + dy,
-            drip.x + w,
-            neckY + dy,
-            dropAlpha,
-          )
-        }
-      }
-    } else if (drip.detachProgress !== undefined && drip.detachProgress < 1) {
-      // Stretching phase: thin neck from anchor + falling bulbous drop
-      const anchorY = drip.target ? drip.target.bottom : drip.y
-      const neckAlpha = 0.35 * (1 - (drip.detachProgress || 0))
-
-      // Thin stretching neck
-      count += this.writeSegment(layer, vertexOffset + count, drip.x, anchorY, drip.x, drip.y, neckAlpha)
-
-      // Falling drop body
-      const dropHeight = Math.min(drip.size * 1.8, 15)
-      const dropMaxWidth = Math.min(drip.size * 1.0, 7)
-      const dropStep = 0.5
-
-      for (let dy = 0; dy <= dropHeight; dy += dropStep) {
-        const t = dy / dropHeight
-        let w: number
-
-        if (t < 0.1) {
-          w = dropMaxWidth * 0.1
-        } else if (t < 0.7) {
-          const bt = (t - 0.1) / 0.6
-          w = dropMaxWidth * (0.1 + 0.9 * Math.sin(bt * Math.PI))
-        } else {
-          const tt = (t - 0.7) / 0.3
-          w = dropMaxWidth * 0.1 * Math.cos(tt * Math.PI * 0.5)
-        }
-
-        count += this.writeSegment(
-          layer,
-          vertexOffset + count,
-          drip.x - w,
-          drip.y + dy,
-          drip.x + w,
-          drip.y + dy,
-          0.75,
-        )
-      }
-    } else {
-      // Free fall: teardrop shape — tapered tail up, bulbous body down
-      const dropHeight = Math.min(drip.size * 1.6, 13)
-      const dropMaxWidth = Math.min(drip.size * 0.85, 6)
-      const dropStep = 0.5
-
-      for (let dy = 0; dy <= dropHeight; dy += dropStep) {
-        const t = dy / dropHeight
-        let w: number
-
-        if (t < 0.15) {
-          w = dropMaxWidth * 0.06 * (t / 0.15)
-        } else if (t < 0.7) {
-          const bt = (t - 0.15) / 0.55
-          w = dropMaxWidth * (0.06 + 0.94 * Math.sin(bt * Math.PI))
-        } else {
-          const tt = (t - 0.7) / 0.3
-          w = dropMaxWidth * 0.06 * Math.cos(tt * Math.PI * 0.5)
-        }
-
-        count += this.writeSegment(
-          layer,
-          vertexOffset + count,
-          drip.x - w,
-          drip.y - dropHeight + dy,
-          drip.x + w,
-          drip.y - dropHeight + dy,
-          0.8,
-        )
-      }
-    }
-
-    return count
-  }
 
   private drawLayer(layer: WebGLLayer, vertexCount: number) {
     const { gl } = layer

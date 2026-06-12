@@ -12,7 +12,6 @@ describe('normalizeAtmosphereOptions', () => {
       contentOpacity: 0.72,
       surfaceOpacity: 0.14,
       snowAccumulation: 0.55,
-      rainDripping: 0.5,
       hailBounce: 0.5,
       bottomCollision: false,
     })
@@ -48,7 +47,6 @@ describe('normalizeAtmosphereOptions', () => {
         contentOpacity: 2,
         surfaceOpacity: -1,
         snowAccumulation: 2,
-        rainDripping: 2,
         hailBounce: -1,
       }),
     ).toMatchObject({
@@ -56,7 +54,6 @@ describe('normalizeAtmosphereOptions', () => {
       contentOpacity: 1,
       surfaceOpacity: 0,
       snowAccumulation: 1,
-      rainDripping: 1,
       hailBounce: 0,
       speed: 0,
     })
@@ -70,7 +67,6 @@ describe('normalizeAtmosphereOptions', () => {
         contentOpacity: undefined,
         surfaceOpacity: undefined,
         snowAccumulation: undefined,
-        rainDripping: undefined,
         hailBounce: undefined,
       }),
     ).toMatchObject({
@@ -78,7 +74,6 @@ describe('normalizeAtmosphereOptions', () => {
       contentOpacity: 0.72,
       surfaceOpacity: 0.14,
       snowAccumulation: 0.55,
-      rainDripping: 0.5,
       hailBounce: 0.5,
       speed: 1,
     })

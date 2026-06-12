@@ -92,44 +92,6 @@ function createCanvasContext() {
   } as unknown as CanvasRenderingContext2D
 }
 
-function createWebGLContext() {
-  return {
-    VERTEX_SHADER: 0x8b31,
-    FRAGMENT_SHADER: 0x8b30,
-    COMPILE_STATUS: 0x8b81,
-    LINK_STATUS: 0x8b82,
-    ARRAY_BUFFER: 0x8892,
-    DYNAMIC_DRAW: 0x88e8,
-    FLOAT: 0x1406,
-    LINES: 0x0001,
-    COLOR_BUFFER_BIT: 0x4000,
-    createShader: vi.fn(() => ({})),
-    shaderSource: vi.fn(),
-    compileShader: vi.fn(),
-    getShaderParameter: vi.fn(() => true),
-    deleteShader: vi.fn(),
-    createProgram: vi.fn(() => ({})),
-    attachShader: vi.fn(),
-    linkProgram: vi.fn(),
-    getProgramParameter: vi.fn(() => true),
-    deleteProgram: vi.fn(),
-    createBuffer: vi.fn(() => ({})),
-    getAttribLocation: vi.fn((_program, name) => (name === 'a_position' ? 0 : 1)),
-    getUniformLocation: vi.fn(() => ({})),
-    viewport: vi.fn(),
-    clearColor: vi.fn(),
-    clear: vi.fn(),
-    useProgram: vi.fn(),
-    bindBuffer: vi.fn(),
-    bufferData: vi.fn(),
-    enableVertexAttribArray: vi.fn(),
-    vertexAttribPointer: vi.fn(),
-    uniform2f: vi.fn(),
-    uniform4f: vi.fn(),
-    drawArrays: vi.fn(),
-  } as unknown as WebGLRenderingContext
-}
-
 describe('createAtmosphere', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
