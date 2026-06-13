@@ -18,24 +18,24 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "showcase-deck-particle": "Particle",
     "showcase-deck-collision": "Collision",
     "showcase-deck-collision-val": "bottom + DOM",
-    "showcase-forecast-title": "Readable opacity surface",
-    "showcase-forecast-desc": "Uses a translucent treatment so precipitation remains visible across content-heavy UI.",
-    "showcase-ticket-title": "Impact shelf",
+    "showcase-forecast-title": "Translucent Layering",
+    "showcase-forecast-desc": "Background particles render underneath text content, preserving perfect readability.",
+    "showcase-ticket-title": "Collision Physics",
     "showcase-ticket-val-rain": "Splashing",
     "showcase-ticket-val-snow": "Accumulating",
     "showcase-ticket-val-hail": "Bouncing",
-    "showcase-tilt-title": "Angled collision plane",
-    "showcase-tilt-east": "east drift",
-    "showcase-tilt-west": "west drift",
-    "showcase-micro-1-title": "glass panel",
-    "showcase-micro-1-desc": "blur + top-edge collision",
-    "showcase-micro-2-title": "solid control",
-    "showcase-micro-2-desc": "opaque island in the same storm",
-    "showcase-micro-3-title": "opacity card",
-    "showcase-micro-3-desc": "text fades into particles",
-    "showcase-micro-4-title": "thin rail",
-    "showcase-micro-4-desc": "snow and hail landing ledge",
-    "playground-title": "Interactive Playground",
+    "showcase-tilt-title": "Wind Vector Force",
+    "showcase-tilt-east": "Drifting East",
+    "showcase-tilt-west": "Drifting West",
+    "showcase-micro-1-title": "Interactive Glass Card",
+    "showcase-micro-1-desc": "Generates dynamic backdrop blur and registers collision top-edges.",
+    "showcase-micro-2-title": "Solid Opaque Island",
+    "showcase-micro-2-desc": "Opaque cards block precipitation without any blur shaders.",
+    "showcase-micro-3-title": "Faded Opacity Card",
+    "showcase-micro-3-desc": "Fades particle density beneath text overlays dynamically.",
+    "showcase-micro-4-title": "Physical Ledge Rail",
+    "showcase-micro-4-desc": "Acts as a landing shelf for snow accumulation and hail bounces.",
+    "playground-title": "Playground",
     "playground-info-desc": "Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.",
     "form-placeholder": "Type here...",
     "form-submit": "Submit",
@@ -65,6 +65,7 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "quick-start-title": "Quick Start",
     "quick-start-step1": "1. Install package via npm:",
     "quick-start-step2": "2. Import and wrap your app with AtmosFx and AtmosCard:",
+    "quick-start-step3": "3. Or use Vanilla JavaScript directly:",
     "api-ref-title": "API Reference",
     "api-atmosfx-title": "AtmosFx Component Config / Props",
     "api-atmoscard-title": "AtmosCard Card Config / Props",
@@ -75,79 +76,122 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "methods-intro": "For direct vanilla JavaScript control, initialize the atmosphere and use the available methods:",
     "method-th-method": "Method",
     "method-th-desc": "Description",
+    "api-desc-preset": "Applies preset default physical and visual values.",
+    "api-desc-particle": "Overrides preset particle rendering without overwriting speed/wind presets.",
+    "api-desc-density": "Scales preallocated particle budget and spawn count.",
+    "api-desc-speed": "Scalar multiplier for gravity and vertical fall speed.",
+    "api-desc-wind": "Affects horizontal sway and particle drift.",
+    "api-desc-color": "CSS color representation for precipitation particles.",
+    "api-desc-quality": "Limits particle count and device pixel ratio density. Defaults to auto.",
+    "api-desc-bottomCollision": "Determines whether particles collide with the bottom edge of the container.",
+    "api-desc-collisionSelector": "Query selector for discovering top-edge landing surfaces. Defaults to [data-atmos-collision].",
+    "api-desc-opaqueSelector": "Query selector for elements that skip transparency blurs. Defaults to [data-atmos-opaque].",
+    "api-desc-transMode": "Specifies card transparent integration style. Glass mode triggers high-fidelity backdrop blurs.",
+    "api-desc-liquidDripping": "Toggles the water droplets condensation, bulging, and dripping animation (only in Rain mode).",
+    "api-desc-asChild": "Merges the AtmosCard properties directly onto the underlying child element instead of rendering a wrapper node.",
+    "api-desc-opacity": "Component-level custom backdrop opacity override (specifically used in opacity mode).",
+    "method-desc-start": "Initializes canvas layers, starts the requestAnimationFrame loop and rendering.",
+    "method-desc-stop": "Stops the animation loop and clears canvases. Does not remove layers.",
+    "method-desc-pause": "Pauses the animation execution while keeping the active frame buffer.",
+    "method-desc-resume": "Resumes execution from a paused state.",
+    "method-desc-resize": "Manually triggers context bounds measurement and canvas resizing.",
+    "method-desc-update": "Dynamically updates atmosphere parameters on the fly without resetting state.",
+    "method-desc-destroy": "Cleans up DOM nodes, listeners, context properties, and cancels loops.",
     "footer-text": "© 2026 Carson Ye. Built with passion and curiosity."
   },
-  zh: {
-    "nav-brand": "atmos-fx",
-    "intro-desc": "一款面向创意界面的高性能、可感知 DOM 布局的 WebGL 天气物理渲染引擎。",
-    "showcase-hero-eyebrow": "DOM 感知天气实验室",
-    "showcase-hero-title": "atmos-fx",
-    "showcase-hero-desc": "一款面向创意界面的高性能、可感知 DOM 布局的 WebGL 天气物理渲染引擎。",
-    "showcase-deck-title": "实时调试",
-    "showcase-deck-density": "密度",
-    "showcase-deck-wind": "风力",
-    "showcase-deck-transparency": "透明模式",
-    "showcase-deck-particle": "粒子类型",
-    "showcase-deck-collision": "碰撞效果",
-    "showcase-deck-collision-val": "底部 + DOM 阻挡",
-    "showcase-forecast-title": "高可读性半透明图层",
-    "showcase-forecast-desc": "利用半透明涂层处理，使天气粒子在文字密集的内容区域依然清晰且不失阅读性。",
-    "showcase-ticket-title": "阻挡搁板",
-    "showcase-ticket-val-rain": "水花四溅",
-    "showcase-ticket-val-snow": "积雪中",
-    "showcase-ticket-val-hail": "弹力跳跃",
-    "showcase-tilt-title": "倾斜碰撞斜面",
-    "showcase-tilt-east": "向东飘移",
-    "showcase-tilt-west": "向西飘移",
-    "showcase-micro-1-title": "毛玻璃面板",
-    "showcase-micro-1-desc": "模糊背景 + 顶部边缘碰撞",
-    "showcase-micro-2-title": "实体控件",
-    "showcase-micro-2-desc": "暴风雨中的不透明独立块",
-    "showcase-micro-3-title": "半透明卡片",
-    "showcase-micro-3-desc": "文字随粒子层淡入淡出",
-    "showcase-micro-4-title": "细窄轨道",
-    "showcase-micro-4-desc": "雪花与冰雹的落脚搁板",
-    "playground-title": "在线沙盒",
-    "playground-info-desc": "用于显示真实场景融合的文本区块，可完整响应右方的透明度与碰撞属性。",
-    "form-placeholder": "在这里输入内容...",
-    "form-submit": "提交",
-    "control-weather-preset": "天气预设",
-    "control-preset-rain": "下雨",
-    "control-preset-snow": "飘雪",
-    "control-preset-hail": "冰雹",
-    "control-density": "粒子密度",
-    "control-speed": "下落速度",
-    "control-wind": "风力风向",
-    "control-snow-accum": "积雪厚度",
-    "control-hail-bounce": "冰雹弹力",
-    "control-bottom-collision": "触底碰撞",
-    "control-liquid-dripping": "水滴凝结滴落",
-    "control-quality": "渲染画质",
-    "control-quality-auto": "自动 (响应式)",
-    "control-quality-high": "高画质",
-    "control-quality-medium": "中画质",
-    "control-quality-low": "低画质",
-    "control-transparency": "透明模式",
-    "control-transparency-glass": "磨砂玻璃 (高斯模糊)",
-    "control-transparency-opacity": "半透明 (纯透明度)",
-    "control-transparency-none": "无 (实体卡片)",
-    "control-surface-opacity": "磨砂玻璃基底不透明度",
-    "control-content-opacity": "文字内容不透明度",
-    "control-color": "降水粒子颜色",
-    "quick-start-title": "快速上手",
-    "quick-start-step1": "1. 通过 npm 安装依赖包：",
-    "quick-start-step2": "2. 引入组件并包裹您的应用（AtmosFx 与 AtmosCard）：",
-    "api-ref-title": "API 属性参考",
-    "api-atmosfx-title": "AtmosFx 容器组件参数 (Props)",
-    "api-atmoscard-title": "AtmosCard 卡片组件参数 (Props)",
-    "th-option": "参数名",
-    "th-type": "参数类型 / 可选值",
-    "th-desc": "功能描述",
-    "methods-title": "控制器方法",
-    "methods-intro": "对于原生 JavaScript 开发者，可以直接通过 createAtmosphere 初始化并调用以下控制器方法：",
-    "method-th-method": "方法名",
-    "method-th-desc": "方法描述",
-    "footer-text": "© 2026 Carson Ye. 倾注激情与好奇心打造。"
+zh: {
+  "nav-brand": "atmos-fx",
+  "intro-desc": "一个能感知页面结构的高性能 WebGL 氛围引擎，用于天气动画、卡片叠层与创意视觉效果。",
+  "showcase-hero-eyebrow": "DOM-aware 氛围实验室",
+  "showcase-hero-title": "atmos-fx",
+  "showcase-hero-desc": "一个能感知页面结构的高性能 WebGL 氛围引擎，用于天气动画、卡片叠层与创意视觉效果。",
+  "showcase-deck-title": "实时控制",
+  "showcase-deck-density": "密度",
+  "showcase-deck-wind": "风向",
+  "showcase-deck-transparency": "透明度",
+  "showcase-deck-particle": "粒子",
+  "showcase-deck-collision": "碰撞",
+  "showcase-deck-collision-val": "底部 + DOM",
+  "showcase-forecast-title": "半透明叠层",
+  "showcase-forecast-desc": "粒子在文字内容下方渲染，保留氛围感的同时不影响阅读。",
+  "showcase-ticket-title": "碰撞物理",
+  "showcase-ticket-val-rain": "溅落",
+  "showcase-ticket-val-snow": "堆积",
+  "showcase-ticket-val-hail": "回弹",
+  "showcase-tilt-title": "风向偏移",
+  "showcase-tilt-east": "向东飘移",
+  "showcase-tilt-west": "向西飘移",
+  "showcase-micro-1-title": "交互式玻璃卡片",
+  "showcase-micro-1-desc": "生成动态背景模糊，并将卡片顶边注册为碰撞表面。",
+  "showcase-micro-2-title": "不透明内容岛",
+  "showcase-micro-2-desc": "不透明卡片可以遮挡降水粒子，无需额外的模糊着色器。",
+  "showcase-micro-3-title": "半透明内容卡片",
+  "showcase-micro-3-desc": "在文字叠层下方动态降低粒子密度，提升内容可读性。",
+  "showcase-micro-4-title": "物理承载边缘",
+  "showcase-micro-4-desc": "作为粒子的落点，可承接积雪，也能触发冰雹回弹。",
+  "playground-title": "Playground",
+  "playground-info-desc": "展示实时状态读数与配置日志，并会根据透明度和碰撞选项即时更新。",
+  "form-placeholder": "输入一些内容...",
+  "form-submit": "提交",
+  "control-weather-preset": "天气预设",
+  "control-preset-rain": "雨",
+  "control-preset-snow": "雪",
+  "control-preset-hail": "冰雹",
+  "control-density": "密度",
+  "control-speed": "速度",
+  "control-wind": "风向",
+  "control-snow-accum": "积雪",
+  "control-hail-bounce": "冰雹回弹",
+  "control-bottom-collision": "底部碰撞",
+  "control-liquid-dripping": "液滴下落",
+  "control-quality": "渲染质量",
+  "control-quality-auto": "自动响应",
+  "control-quality-high": "高",
+  "control-quality-medium": "中",
+  "control-quality-low": "低",
+  "control-transparency": "透明模式",
+  "control-transparency-glass": "玻璃模式（标准模糊）",
+  "control-transparency-opacity": "透明度模式（半透明）",
+  "control-transparency-none": "关闭透明（实体卡片）",
+  "control-surface-opacity": "表面透明度",
+  "control-content-opacity": "内容透明度",
+  "control-color": "降水颜色",
+  "quick-start-title": "快速开始",
+  "quick-start-step1": "1. 使用 npm 安装：",
+  "quick-start-step2": "2. 引入 AtmosFx 和 AtmosCard，并包裹你的应用：",
+  "quick-start-step3": "3. 也可以直接使用原生 JavaScript：",
+  "api-ref-title": "API 参考",
+  "api-atmosfx-title": "AtmosFx 组件配置 / Props",
+  "api-atmoscard-title": "AtmosCard 卡片配置 / Props",
+  "th-option": "配置项",
+  "th-type": "类型 / 可选值",
+  "th-desc": "说明",
+  "methods-title": "控制器方法",
+  "methods-intro": "使用原生 JavaScript 时，可以先初始化 atmosphere，再调用以下控制器方法：",
+  "method-th-method": "方法",
+  "method-th-desc": "说明",
+  "api-desc-preset": "应用预设的默认物理和视觉效果参数。",
+  "api-desc-particle": "覆盖预设的粒子渲染类型，但不影响速度和风向的预设设置。",
+  "api-desc-density": "缩放预先分配的粒子预算与生成数量。",
+  "api-desc-speed": "重力和垂直下落速度的乘数因子。",
+  "api-desc-wind": "影响粒子的水平摇摆和飘移风向。",
+  "api-desc-color": "降水粒子的 CSS 颜色。",
+  "api-desc-quality": "限制粒子数量和设备像素比。默认为 auto。",
+  "api-desc-bottomCollision": "决定粒子是否与容器底部边缘发生碰撞。",
+  "api-desc-collisionSelector": "用于查找顶边碰撞落面的查询选择器。默认为 [data-atmos-collision]。",
+  "api-desc-opaqueSelector": "用于指定不进行背景模糊处理的元素的查询选择器。默认为 [data-atmos-opaque]。",
+  "api-desc-transMode": "指定卡片透明融合样式。玻璃模式（glass）会触发高精度背景模糊。",
+  "api-desc-liquidDripping": "控制水滴在卡片上冷凝、聚集并滴落的动画（仅在雨模式下有效）。",
+  "api-desc-asChild": "将 AtmosCard 的属性直接合并到其子元素上，而不是渲染一个包装 DOM 节点。",
+  "api-desc-opacity": "组件级别的自定义背景透明度覆盖（专门用于 opacity 模式）。",
+  "method-desc-start": "初始化 Canvas 图层，并启动 requestAnimationFrame 渲染循环。",
+  "method-desc-stop": "停止动画循环并清空 Canvas，但不移除 DOM 图层。",
+  "method-desc-pause": "暂停动画执行，同时保留当前帧画面。",
+  "method-desc-resume": "从暂停状态恢复动画执行。",
+  "method-desc-resize": "手动触发容器边界测量与 Canvas 尺寸重置。",
+  "method-desc-update": "在不重置状态的前提下，实时动态更新氛围参数。",
+  "method-desc-destroy": "清理 DOM 节点、监听器、上下文属性并取消动画循环。",
+  "footer-text": "© 2026 Carson Ye. Built with passion and curiosity."
   }
 }
 
@@ -285,7 +329,7 @@ const playgroundState: PlaygroundState = {
   contentOpacity: 0.72,
   snowAccumulation: 0.55,
   hailBounce: 0.50,
-  bottomCollision: false,
+  bottomCollision: true,
   liquidDripping: true,
   color: 'rgba(220, 235, 255, 0.72)'
 }
@@ -523,21 +567,56 @@ function setLanguage(lang: 'en' | 'zh') {
     }
   })
 
-  // Toggle button indicator
-  const toggleBtn = document.querySelector('#lang-toggle') as HTMLElement
-  if (toggleBtn) {
-    toggleBtn.textContent = lang === 'en' ? '中' : 'EN'
+  // Update dropdown checkmarks and button label
+  const currentLangLabel = document.querySelector('#current-lang-label')
+  if (currentLangLabel) {
+    currentLangLabel.textContent = lang.toUpperCase()
   }
+
+  document.querySelectorAll('.lang-dropdown-item').forEach(item => {
+    const itemLang = item.getAttribute('data-lang')
+    const checkmark = item.querySelector('.active-check') as HTMLElement
+    if (checkmark) {
+      checkmark.style.opacity = itemLang === lang ? '1' : '0'
+    }
+  })
 
   // Refresh readouts
   applyShowcase()
   applyPlayground()
 }
 
-// Bind language toggle button
-document.querySelector('#lang-toggle')?.addEventListener('click', () => {
-  const nextLang = currentLang === 'en' ? 'zh' : 'en'
-  setLanguage(nextLang)
+// Bind language dropdown toggle
+const dropdownBtn = document.querySelector('#lang-dropdown-btn')
+const dropdownMenu = document.querySelector('#lang-dropdown-menu') as HTMLElement
+
+dropdownBtn?.addEventListener('click', (e) => {
+  e.stopPropagation()
+  if (dropdownMenu) {
+    const isVisible = dropdownMenu.style.display === 'block'
+    dropdownMenu.style.display = isVisible ? 'none' : 'block'
+  }
+})
+
+// Hide dropdown when clicking outside
+document.addEventListener('click', () => {
+  if (dropdownMenu) {
+    dropdownMenu.style.display = 'none'
+  }
+})
+
+// Bind language dropdown item clicks
+document.querySelectorAll('.lang-dropdown-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const selectedLang = item.getAttribute('data-lang') as 'en' | 'zh'
+    if (selectedLang) {
+      setLanguage(selectedLang)
+    }
+    if (dropdownMenu) {
+      dropdownMenu.style.display = 'none'
+    }
+  })
 })
 
 // Initialize language based on browser preference
