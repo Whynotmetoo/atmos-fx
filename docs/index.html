@@ -462,18 +462,6 @@
         background: rgba(255,255,255,0.08);
       }
 
-      #playground-stage[data-atmos-transparency='none'] #playground-info-card,
-      #playground-stage[data-atmos-transparency='none'] #playground-input-card,
-      #playground-stage[data-atmos-transparency='opacity'] #playground-info-card,
-      #playground-stage[data-atmos-transparency='opacity'] #playground-input-card {
-        background: #111a22;
-      }
-
-      #playground-stage[data-atmos-transparency='glass'] #playground-info-card,
-      #playground-stage[data-atmos-transparency='glass'] #playground-input-card {
-        background: var(--atmos-fx-glass-background);
-      }
-
       /* Compact Controls Panel */
       .controls-panel {
         background: var(--bg-panel);
@@ -1104,8 +1092,8 @@
 
           <!-- Opacity Sliders (Conditional display) -->
           <div class="control-group" id="surface-opacity-control">
-            <div class="control-label"><span data-i18n-key="control-surface-opacity">Surface Opacity</span> <span class="val" id="surfaceOpacity-val">0.14</span></div>
-            <input type="range" id="surfaceOpacity" min="0" max="1" step="0.02" value="0.14" />
+            <div class="control-label"><span data-i18n-key="control-surface-opacity">Alpha</span> <span class="val" id="surfaceOpacity-val">48%</span></div>
+            <input type="range" id="surfaceOpacity" min="18" max="82" step="1" value="48" />
           </div>
 
           <div class="control-group" id="content-opacity-control" style="display: none;">

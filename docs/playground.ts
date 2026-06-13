@@ -59,7 +59,7 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "control-transparency-glass": "Glass (Standard Blurs)",
     "control-transparency-opacity": "Opacity (Translucent)",
     "control-transparency-none": "None (Solid Cards)",
-    "control-surface-opacity": "Surface Opacity",
+    "control-surface-opacity": "Alpha",
     "control-content-opacity": "Content Opacity",
     "control-color": "Precipitation Color",
     "quick-start-title": "Quick Start",
@@ -153,7 +153,7 @@ zh: {
   "control-transparency-glass": "玻璃模式（标准模糊）",
   "control-transparency-opacity": "透明度模式（半透明）",
   "control-transparency-none": "关闭透明（实体卡片）",
-  "control-surface-opacity": "表面透明度",
+  "control-surface-opacity": "通透度",
   "control-content-opacity": "内容透明度",
   "control-color": "降水颜色",
   "quick-start-title": "快速开始",
@@ -325,7 +325,7 @@ const playgroundState: PlaygroundState = {
   wind: -0.12,
   quality: 'high',
   transparency: 'glass',
-  surfaceOpacity: 0.14,
+  surfaceOpacity: 48,
   contentOpacity: 0.72,
   snowAccumulation: 0.55,
   hailBounce: 0.50,
@@ -336,6 +336,7 @@ const playgroundState: PlaygroundState = {
 
 const playgroundAtmosphere = createAtmosphere(playgroundRoot, {
   ...playgroundState,
+  surfaceOpacity: 0.3 - (playgroundState.surfaceOpacity / 100) * 0.22,
   pauseWhenHidden: false
 })
 playgroundAtmosphere.start()
@@ -343,7 +344,11 @@ playgroundAtmosphere.start()
 function syncSliderValue(id: string) {
   const valueElement = document.querySelector(`#${id}-val`)
   if (valueElement) {
-    valueElement.textContent = Number(playgroundState[id]).toFixed(2)
+    if (id === 'surfaceOpacity') {
+      valueElement.textContent = Number(playgroundState[id]).toFixed(0) + '%'
+    } else {
+      valueElement.textContent = Number(playgroundState[id]).toFixed(2)
+    }
   }
   const slider = document.querySelector(`#${id}`) as HTMLInputElement
   if (slider) {
@@ -383,6 +388,10 @@ function updateReactCodePreview() {
     props.push(`snowAccumulation={${p.snowAccumulation.toFixed(2)}}`)
   } else if (p.preset === 'hail') {
     props.push(`hailBounce={${p.hailBounce.toFixed(2)}}`)
+  }
+  if (p.transparency === 'glass') {
+    const mappedAlpha = 0.3 - (p.surfaceOpacity / 100) * 0.22
+    props.push(`surfaceOpacity={${mappedAlpha.toFixed(2)}}`)
   }
 
   const atmosFxPropsStr = props.join('\n' + indent)
@@ -479,7 +488,7 @@ function applyPlayground() {
     wind: playgroundState.wind,
     quality: playgroundState.quality,
     transparency: playgroundState.transparency,
-    surfaceOpacity: playgroundState.surfaceOpacity,
+    surfaceOpacity: 0.3 - (playgroundState.surfaceOpacity / 100) * 0.22,
     contentOpacity: playgroundState.contentOpacity,
     snowAccumulation: playgroundState.snowAccumulation,
     hailBounce: playgroundState.hailBounce,
