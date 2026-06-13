@@ -106,7 +106,7 @@
       .showcase-container {
         position: relative;
         width: 100%;
-        height: 720px;
+        height: 750px;
         border-bottom: 1px solid var(--line);
         background: #09100d;
         margin-bottom: 64px;
@@ -121,10 +121,10 @@
       .showcase-inner {
         position: relative;
         width: 100%;
-        max-width: 1200px;
+        max-width: 100%;
         height: 100%;
         margin: 0 auto;
-        padding: 0 24px;
+        padding: 40px;
       }
 
       .showcase-backdrop {
@@ -155,9 +155,33 @@
       .orbit-two {
         width: 500px;
         height: 160px;
-        left: -5%;
+        left: 10%;
         bottom: 15%;
         border-color: rgba(112, 217, 255, 0.1);
+      }
+
+      /* Showcase Intro Typography */
+      .showcase-intro {
+        position: absolute;
+        left: 40px;
+        top: 60px;
+        max-width: 500px;
+        z-index: 2;
+      }
+      .showcase-title {
+        font-size: 3.2rem;
+        font-family: Georgia, serif;
+        font-weight: 700;
+        margin-bottom: 16px;
+        line-height: 1.1;
+        background: linear-gradient(to right, #ffffff, #a9ddff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .showcase-desc {
+        font-size: 1.05rem;
+        color: rgba(244, 240, 230, 0.85);
+        line-height: 1.6;
       }
 
       /* Showcase Cards */
@@ -167,92 +191,12 @@
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
       }
 
-      .hero-module {
-        position: absolute;
-        left: 24px;
-        top: 40px;
-        width: 480px;
-        padding: 32px;
-        background: linear-gradient(135deg, rgba(19, 27, 25, 0.8), rgba(19, 27, 25, 0.45));
-      }
-      .hero-module h2 {
-        font-size: 2.5rem;
-        font-family: Georgia, serif;
-        margin-bottom: 12px;
-        line-height: 1.0;
-        background: linear-gradient(to right, #ffffff, #a9ddff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-      .hero-module p.eyebrow {
-        font-size: 0.7rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 10px;
-        letter-spacing: 0.05em;
-      }
-      .hero-module p.hero-copy {
-        font-size: 0.95rem;
-        color: rgba(244, 240, 230, 0.88);
-        line-height: 1.6;
-        margin-bottom: 20px;
-      }
-
-      .hero-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 14px;
-        border: 1px solid rgba(244, 240, 230, 0.1);
-        border-radius: 8px;
-        background: rgba(6, 11, 10, 0.84);
-      }
-      .showcase-preset-row {
-        display: flex;
-        gap: 6px;
-      }
-      .showcase-preset-row button {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: var(--muted);
-        padding: 6px 0;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      .showcase-preset-row button[aria-pressed="true"] {
-        background: var(--accent);
-        color: #0c120f;
-      }
-      .showcase-slider-row {
-        display: grid;
-        grid-template-columns: 60px 1fr 40px;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.78rem;
-      }
-      .showcase-slider-row span {
-        color: var(--muted);
-        font-weight: 600;
-      }
-      .showcase-slider-row strong {
-        text-align: right;
-        font-family: monospace;
-      }
-      .showcase-slider-row input[type="range"] {
-        accent-color: var(--accent);
-      }
-
       .control-deck {
         position: absolute;
-        right: 24px;
-        top: 40px;
-        width: 280px;
-        padding: 20px;
+        right: 40px;
+        top: 60px;
+        width: 320px;
+        padding: 24px;
         background: #eef0dd;
         color: #15201d;
         box-shadow: 8px 10px 0 rgba(215, 255, 84, 0.2), 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -260,6 +204,50 @@
       .control-deck h3 {
         font-size: 1.1rem;
         margin-bottom: 16px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .control-deck .showcase-preset-row {
+        display: flex;
+        gap: 6px;
+        background: rgba(21, 32, 29, 0.08);
+        padding: 4px;
+        border-radius: 6px;
+      }
+      .control-deck .showcase-preset-row button {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: rgba(21, 32, 29, 0.6);
+        padding: 6px 0;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .control-deck .showcase-preset-row button[aria-pressed="true"] {
+        background: #15201d;
+        color: #eef0dd;
+      }
+      .control-deck .showcase-slider-row {
+        display: grid;
+        grid-template-columns: 70px 1fr 40px;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.78rem;
+      }
+      .control-deck .showcase-slider-row span {
+        color: rgba(21, 32, 29, 0.7);
+        font-weight: 600;
+      }
+      .control-deck .showcase-slider-row strong {
+        text-align: right;
+        font-family: monospace;
+        color: #15201d;
+      }
+      .control-deck .showcase-slider-row input[type="range"] {
+        accent-color: #15201d;
       }
       .deck-grid {
         display: grid;
@@ -275,9 +263,9 @@
 
       .forecast-card {
         position: absolute;
-        right: 324px;
-        bottom: 120px;
-        width: 250px;
+        left: 40px;
+        bottom: 180px;
+        width: 280px;
         padding: 20px;
         background: rgba(15, 24, 22, 0.52);
       }
@@ -293,8 +281,8 @@
 
       .floating-ticket {
         position: absolute;
-        right: 24px;
-        bottom: 280px;
+        left: 360px;
+        bottom: 200px;
         width: 180px;
         padding: 16px;
         background: rgba(13, 19, 18, 0.6);
@@ -313,9 +301,9 @@
 
       .tilt-card {
         position: absolute;
-        left: 530px;
+        right: 400px;
         top: 220px;
-        width: 200px;
+        width: 220px;
         padding: 16px;
         background: rgba(63, 31, 22, 0.42);
         transform: rotate(-9deg);
@@ -332,12 +320,13 @@
 
       .micro-stack {
         position: absolute;
-        left: 24px;
+        left: 40px;
+        right: 40px;
         bottom: 40px;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        width: 580px;
+        gap: 24px;
+        width: calc(100% - 80px);
       }
       .micro-card {
         min-height: 110px;
@@ -385,8 +374,8 @@
         width: 140px;
       }
       .rail-bottom {
-        right: 24px;
-        bottom: 50px;
+        right: 40px;
+        bottom: 180px;
         width: 160px;
       }
 
@@ -428,11 +417,12 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 80px; /* Increased from 24px for water drop distance */
-        padding: 32px;
+        gap: 140px; /* Space for dripping drops */
+        padding: 40px;
       }
 
-      .playground-card {
+      #playground-info-card,
+      #playground-input-card {
         width: 340px;
         padding: 20px;
         border-radius: 16px;
@@ -443,24 +433,26 @@
         font-size: 0.9rem;
       }
       
-      input.playground-card {
+      #playground-input-card {
         background: rgba(255,255,255,0.04);
         color: var(--ink);
         outline: none;
         font-family: inherit;
         font-size: 0.95rem;
       }
-      input.playground-card::placeholder {
+      #playground-input-card::placeholder {
         color: var(--muted);
         opacity: 0.7;
       }
-      input.playground-card:focus {
+      #playground-input-card:focus {
         border-color: var(--accent);
         background: rgba(255,255,255,0.08);
       }
 
-      #playground-stage[data-atmos-transparency='none'] .playground-card,
-      #playground-stage[data-atmos-transparency='opacity'] .playground-card {
+      #playground-stage[data-atmos-transparency='none'] #playground-info-card,
+      #playground-stage[data-atmos-transparency='none'] #playground-input-card,
+      #playground-stage[data-atmos-transparency='opacity'] #playground-info-card,
+      #playground-stage[data-atmos-transparency='opacity'] #playground-input-card {
         background: #111a22;
       }
 
@@ -773,7 +765,14 @@
         .showcase-backdrop, .orbit, .collision-rail {
           display: none;
         }
-        .hero-module, .control-deck, .forecast-card, .floating-ticket, .tilt-card, .micro-stack {
+        .showcase-intro {
+          position: relative;
+          left: auto;
+          top: auto;
+          max-width: 100%;
+          margin-bottom: 24px;
+        }
+        .control-deck, .forecast-card, .floating-ticket, .tilt-card, .micro-stack {
           position: relative;
           inset: auto;
           width: 100%;
@@ -782,6 +781,10 @@
         }
         .micro-stack {
           grid-template-columns: repeat(2, 1fr);
+          width: 100%;
+          left: auto;
+          right: auto;
+          bottom: auto;
         }
       }
       @media (max-width: 968px) {
@@ -824,36 +827,37 @@
       <div class="orbit orbit-two"></div>
 
       <div class="showcase-inner">
-        <!-- 1. Hero Card -->
-        <div class="showcase-card hero-module" data-atmos-collision data-atmos-glass>
-          <p class="eyebrow" data-i18n-key="showcase-hero-eyebrow">DOM-aware atmosphere lab</p>
-          <h2 data-i18n-key="showcase-hero-title">atmos-fx</h2>
-          <p class="hero-copy" data-i18n-key="intro-desc">
+        <!-- 1. Integrated Title & Description -->
+        <div class="showcase-intro">
+          <h1 class="showcase-title" data-i18n-key="showcase-hero-title">atmos-fx</h1>
+          <p class="showcase-desc" data-i18n-key="intro-desc">
             A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.
           </p>
-          <div class="hero-actions" data-atmos-opaque>
-            <div class="showcase-preset-row" id="showcase-preset-row">
-              <button type="button" data-value="rain" aria-pressed="true" data-i18n-key="control-preset-rain">Rain</button>
-              <button type="button" data-value="snow" data-i18n-key="control-preset-snow">Snow</button>
-              <button type="button" data-value="hail" data-i18n-key="control-preset-hail">Hail</button>
-            </div>
-            <div class="showcase-slider-row">
-              <span data-i18n-key="showcase-deck-density">Density</span>
-              <input type="range" id="showcase-density" min="0.1" max="1.0" step="0.05" value="0.74" />
-              <strong id="showcase-density-val">0.74</strong>
-            </div>
-            <div class="showcase-slider-row">
-              <span data-i18n-key="showcase-deck-wind">Wind</span>
-              <input type="range" id="showcase-wind" min="-1.5" max="1.5" step="0.05" value="-0.22" />
-              <strong id="showcase-wind-val">-0.22</strong>
-            </div>
-          </div>
         </div>
 
-        <!-- 2. Stats Deck -->
+        <!-- 2. Integrated Control Deck -->
         <div class="showcase-card control-deck" data-atmos-opaque>
           <h3 data-i18n-key="showcase-deck-title">Live controls</h3>
-          <div class="deck-grid">
+          
+          <div class="showcase-preset-row" id="showcase-preset-row" style="margin-bottom: 16px;">
+            <button type="button" data-value="rain" aria-pressed="true" data-i18n-key="control-preset-rain">Rain</button>
+            <button type="button" data-value="snow" data-i18n-key="control-preset-snow">Snow</button>
+            <button type="button" data-value="hail" data-i18n-key="control-preset-hail">Hail</button>
+          </div>
+
+          <div class="showcase-slider-row" style="margin-bottom: 12px;">
+            <span data-i18n-key="showcase-deck-density">Density</span>
+            <input type="range" id="showcase-density" min="0.1" max="1.0" step="0.05" value="0.74" />
+            <strong id="showcase-density-val">0.74</strong>
+          </div>
+
+          <div class="showcase-slider-row" style="margin-bottom: 18px;">
+            <span data-i18n-key="showcase-deck-wind">Wind</span>
+            <input type="range" id="showcase-wind" min="-1.5" max="1.5" step="0.05" value="-0.22" />
+            <strong id="showcase-wind-val">-0.22</strong>
+          </div>
+
+          <div class="deck-grid" style="border-top: 1px solid rgba(21, 32, 29, 0.15); padding-top: 14px;">
             <span data-i18n-key="showcase-deck-transparency">Transparency</span>
             <strong data-i18n-key="control-transparency-glass">Glass</strong>
             <span data-i18n-key="showcase-deck-particle">Particle</span>
@@ -925,12 +929,12 @@
         <div class="preview-column">
           <div id="playground-stage" data-playground-preset="rain">
             <!-- 1. Text Container (Card A) -->
-            <div id="playground-info-card" class="playground-card" data-atmos-collision data-atmos-glass>
-              <div data-i18n-key="playground-info-desc">Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.</div>
+            <div id="playground-info-card" data-atmos-collision data-atmos-glass data-i18n-key="playground-info-desc">
+              Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.
             </div>
 
             <!-- 2. Simple Input (Card B) -->
-            <input id="playground-input-card" class="playground-card" data-atmos-collision data-atmos-glass type="text" placeholder="Type here..." data-i18n-attr="placeholder:form-placeholder" />
+            <input id="playground-input-card" data-atmos-collision data-atmos-glass type="text" placeholder="Type here..." data-i18n-attr="placeholder:form-placeholder" />
           </div>
         </div>
 
