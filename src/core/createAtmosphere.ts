@@ -46,9 +46,12 @@ const CSS_CONTENT = `
   [data-atmos-fx] {
     --atmos-fx-content-opacity: 0.72;
     --atmos-fx-surface-opacity: 0.14;
-    --atmos-fx-glass-background: rgb(255 255 255 / var(--atmos-fx-surface-opacity));
-    --atmos-fx-glass-border: rgb(255 255 255 / 0.2);
-    --atmos-fx-glass-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
+    --atmos-fx-glass-strong-opacity: calc(var(--atmos-fx-surface-opacity) + 0.08);
+    --atmos-fx-glass-strong: rgb(255 255 255 / var(--atmos-fx-glass-strong-opacity));
+    --atmos-fx-glass-base: rgb(255 255 255 / var(--atmos-fx-surface-opacity));
+    --atmos-fx-glass-background: linear-gradient(145deg, var(--atmos-fx-glass-strong), rgb(255 255 255 / calc(var(--atmos-fx-surface-opacity) * 0.58))), var(--atmos-fx-glass-base);
+    --atmos-fx-glass-border: rgb(255 255 255 / 0.24);
+    --atmos-fx-glass-shadow: 0 24px 60px rgb(14 22 32 / 0.34), inset 0 -48px 80px rgb(255 255 255 / 0.04);
     position: relative;
     overflow: hidden;
     isolation: isolate;
@@ -78,10 +81,11 @@ const CSS_CONTENT = `
   [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]) {
     background: rgb(255 255 255 / 0.14);
     background: var(--atmos-fx-glass-background);
-    border-color: var(--atmos-fx-glass-border);
+    border: 1px solid rgb(255 255 255 / 0.24);
+    border: 1px solid var(--atmos-fx-glass-border);
     box-shadow: var(--atmos-fx-glass-shadow);
-    backdrop-filter: blur(18px) saturate(1.15);
-    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    backdrop-filter: blur(8px) saturate(1.25);
+    -webkit-backdrop-filter: blur(8px) saturate(1.25);
   }
   [data-atmos-fx] :where([data-atmos-opacity]) {
     opacity: var(--atmos-fx-opacity, var(--atmos-fx-content-opacity));
@@ -430,7 +434,7 @@ export function createAtmosphere(
       delete element.dataset.atmosFxPreset
       delete element.dataset.atmosParticle
       delete element.dataset.atmosRenderer
-    },
+    }
   }
 
   return controller
