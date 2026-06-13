@@ -106,10 +106,10 @@
       .showcase-container {
         position: relative;
         width: 100%;
-        height: 750px;
+        height: 980px;
         border-bottom: 1px solid var(--line);
         background: #09100d;
-        margin-bottom: 64px;
+        margin-bottom: 34px;
         overflow: hidden;
         isolation: isolate;
         background:
@@ -168,6 +168,9 @@
         align-items: center;
         gap: 16px;
         z-index: 10;
+        padding: 8px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       /* Showcase Intro Typography Card */
@@ -175,13 +178,13 @@
         position: absolute;
         left: 40px;
         top: 90px;
-        width: 540px;
-        padding: 32px;
+        width: 560px;
+        padding: 18px;
         z-index: 2;
         background: rgba(15, 24, 22, 0.52);
       }
       .showcase-title {
-        font-size: 3.6rem;
+        font-size: 4rem;
         font-family: Georgia, serif;
         font-weight: 700;
         margin-bottom: 16px;
@@ -191,7 +194,7 @@
         -webkit-text-fill-color: transparent;
       }
       .showcase-desc {
-        font-size: 1.15rem;
+        font-size: 1.5rem;
         color: rgba(244, 240, 230, 0.85);
         line-height: 1.65;
       }
@@ -206,7 +209,7 @@
       .control-deck {
         position: absolute;
         right: 40px;
-        top: 90px;
+        top: 290px;
         width: 320px;
         padding: 24px;
         background: rgba(238, 240, 221, 0.88);
@@ -276,7 +279,7 @@
       .forecast-card {
         position: absolute;
         left: 40px;
-        bottom: 180px;
+        top: 480px;
         width: 280px;
         padding: 20px;
         background: rgba(15, 24, 22, 0.52);
@@ -293,8 +296,8 @@
 
       .floating-ticket {
         position: absolute;
-        left: 360px;
-        bottom: 200px;
+        left: 35vw;
+        bottom: 300px;
         width: 180px;
         padding: 16px;
         background: rgba(13, 19, 18, 0.6);
@@ -313,7 +316,7 @@
       .tilt-card {
         position: absolute;
         right: 400px;
-        top: 220px;
+        top: 380px;
         width: 220px;
         padding: 16px;
         background: rgba(63, 31, 22, 0.42);
@@ -332,7 +335,7 @@
         position: absolute;
         left: 40px;
         right: 40px;
-        bottom: 40px;
+        bottom: 100px;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 24px;
@@ -379,14 +382,14 @@
         box-shadow: 0 0 20px rgba(112, 217, 255, 0.15);
       }
       .rail-top {
-        left: 540px;
-        top: 150px;
+        right: 30vw;
+        top: 120px;
         width: 140px;
       }
       .rail-bottom {
-        right: 40px;
-        bottom: 180px;
-        width: 160px;
+        right: 420px;
+        bottom: 380px;
+        width: 180px;
       }
 
       /* Playground Layout */
@@ -402,8 +405,8 @@
       .playground {
         display: grid;
         grid-template-columns: 1fr 380px;
-        gap: 32px;
-        margin-bottom: 32px;
+        gap: 12px;
+        margin-bottom: 20px;
       }
 
       .preview-column {
@@ -411,7 +414,7 @@
         border-radius: 24px;
         border: 1px solid var(--line);
         background: rgba(10, 15, 20, 0.45);
-        min-height: 680px; /* Reduced playground height */
+        min-height: 500px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -812,12 +815,9 @@
   <body>
     <!-- Showcase Stage Section -->
     <section id="showcase-stage" class="showcase-container">
-      <div class="showcase-backdrop"></div>
-      <div class="orbit orbit-one"></div>
-      <div class="orbit orbit-two"></div>
 
       <!-- Top Right Navigation Actions -->
-      <div class="showcase-nav-actions">
+      <div class="showcase-nav-actions" data-atmos-collision data-atmos-glass data-atmos-liquid-dripping="true">
         <button id="lang-toggle" class="lang-btn">EN / 中</button>
         <a href="https://github.com/Whynotmetoo/atmos-fx" target="_blank" class="nav-link" aria-label="GitHub">
           <svg class="nav-icon" viewBox="0 0 16 16">
