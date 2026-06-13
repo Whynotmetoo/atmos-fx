@@ -295,9 +295,24 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   }
 
   updateOptions(options: NormalizedAtmosphereOptions) {
+    const shouldReseedMotion =
+      options.speed !== this.options.speed || options.wind !== this.options.wind
     this.options = options
     this.parsedColor = parseColor(options.color)
     this.syncParticleBudget(false)
+
+    if (shouldReseedMotion) {
+      const backgroundCount = Math.floor(this.particles.length * 0.42)
+      for (let index = 0; index < this.particles.length; index += 1) {
+        const particle = this.particles[index]
+        const isBackground = index < backgroundCount
+        const depth = particle.depth
+        particle.vy = options.speed * randomRange(520, 980) * depth
+        particle.vx = options.wind * randomRange(120, 260) * depth
+        const lengthScale = isBackground ? (0.4 + depth * 0.6) : depth
+        particle.length = randomRange(10, 26) * lengthScale * (0.8 + options.speed * 0.35)
+      }
+    }
   }
 
   setCollisionTargets(targets: readonly CollisionTargetRect[]) {
