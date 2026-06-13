@@ -11,16 +11,15 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg-root: #0b0f12;
-        --bg-panel: rgba(20, 28, 35, 0.72);
-        --bg-panel-solid: #141c23;
+        --bg-root: #080d10;
+        --bg-panel: rgba(15, 23, 30, 0.76);
+        --bg-panel-solid: #0f171e;
         --line: rgba(255, 255, 255, 0.08);
         --line-active: rgba(255, 255, 255, 0.16);
         --ink: #f8fafc;
         --muted: #94a3b8;
-        --accent: #f59e0b;
-        --accent-hover: #d97706;
-        --accent-glow: rgba(245, 158, 11, 0.15);
+        --accent: #d7ff54;
+        --accent-glow: rgba(215, 255, 84, 0.12);
         --success: #10b981;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
       }
@@ -32,7 +31,7 @@
       }
 
       body {
-        background: radial-gradient(circle at 50% 0%, #1a2530 0%, var(--bg-root) 70%);
+        background: radial-gradient(circle at 50% 0%, #172430 0%, var(--bg-root) 65%);
         color: var(--ink);
         line-height: 1.6;
         overflow-x: hidden;
@@ -40,183 +39,454 @@
 
       /* Container Layout */
       .container {
-        max-width: 1280px;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 40px 24px;
+        padding: 0 24px 64px 24px;
       }
 
-      /* Header */
-      header {
-        text-align: center;
-        margin-bottom: 48px;
+      /* Navigation Bar */
+      .nav-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px 0;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 0;
       }
 
-      .logo-icon {
-        font-size: 3rem;
-        margin-bottom: 12px;
-        display: inline-block;
-        animation: float 4s ease-in-out infinite;
-      }
-
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
-      }
-
-      h1 {
-        font-size: 2.8rem;
+      .nav-brand {
+        font-size: 1.45rem;
         font-weight: 700;
         letter-spacing: -0.03em;
-        margin-bottom: 8px;
         background: linear-gradient(to right, #ffffff, #94a3b8);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
 
-      .description {
-        font-size: 1.15rem;
-        color: var(--muted);
-        max-width: 600px;
-        margin: 0 auto;
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
 
-      /* Interactive Playground Split */
+      .lang-btn {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--line);
+        color: var(--ink);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .lang-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--line-active);
+      }
+
+      .nav-link {
+        color: var(--muted);
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-link:hover {
+        color: var(--ink);
+      }
+
+      .nav-icon {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+
+      .showcase-container {
+        position: relative;
+        width: 100%;
+        height: 720px;
+        border-bottom: 1px solid var(--line);
+        background: #09100d;
+        margin-bottom: 64px;
+        overflow: hidden;
+        isolation: isolate;
+        background:
+          radial-gradient(circle at 13% 18%, rgba(112, 217, 255, 0.14), transparent 28rem),
+          radial-gradient(circle at 88% 76%, rgba(255, 107, 74, 0.11), transparent 30rem),
+          linear-gradient(135deg, #07100e 0%, #141b18 52%, #1e1713 100%);
+      }
+
+      .showcase-inner {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        height: 100%;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      .showcase-backdrop {
+        position: absolute;
+        inset: 16px;
+        z-index: -2;
+        border: 1px solid rgba(244, 240, 230, 0.08);
+        background:
+          linear-gradient(90deg, rgba(244, 240, 230, 0.03) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(244, 240, 230, 0.03) 1px, transparent 1px);
+        background-size: 64px 64px, 64px 64px;
+        border-radius: 16px;
+      }
+
+      .orbit {
+        position: absolute;
+        z-index: -1;
+        border: 1px solid rgba(244, 240, 230, 0.08);
+        border-radius: 50%;
+        transform: rotate(-16deg);
+      }
+      .orbit-one {
+        width: 700px;
+        height: 220px;
+        left: 30%;
+        top: 15%;
+      }
+      .orbit-two {
+        width: 500px;
+        height: 160px;
+        left: -5%;
+        bottom: 15%;
+        border-color: rgba(112, 217, 255, 0.1);
+      }
+
+      /* Showcase Cards */
+      .showcase-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      }
+
+      .hero-module {
+        position: absolute;
+        left: 24px;
+        top: 40px;
+        width: 480px;
+        padding: 32px;
+        background: linear-gradient(135deg, rgba(19, 27, 25, 0.8), rgba(19, 27, 25, 0.45));
+      }
+      .hero-module h2 {
+        font-size: 2.5rem;
+        font-family: Georgia, serif;
+        margin-bottom: 12px;
+        line-height: 1.0;
+        background: linear-gradient(to right, #ffffff, #a9ddff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hero-module p.eyebrow {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 10px;
+        letter-spacing: 0.05em;
+      }
+      .hero-module p.hero-copy {
+        font-size: 0.95rem;
+        color: rgba(244, 240, 230, 0.88);
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid rgba(244, 240, 230, 0.1);
+        border-radius: 8px;
+        background: rgba(6, 11, 10, 0.84);
+      }
+      .showcase-preset-row {
+        display: flex;
+        gap: 6px;
+      }
+      .showcase-preset-row button {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        padding: 6px 0;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .showcase-preset-row button[aria-pressed="true"] {
+        background: var(--accent);
+        color: #0c120f;
+      }
+      .showcase-slider-row {
+        display: grid;
+        grid-template-columns: 60px 1fr 40px;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.78rem;
+      }
+      .showcase-slider-row span {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .showcase-slider-row strong {
+        text-align: right;
+        font-family: monospace;
+      }
+      .showcase-slider-row input[type="range"] {
+        accent-color: var(--accent);
+      }
+
+      .control-deck {
+        position: absolute;
+        right: 24px;
+        top: 40px;
+        width: 280px;
+        padding: 20px;
+        background: #eef0dd;
+        color: #15201d;
+        box-shadow: 8px 10px 0 rgba(215, 255, 84, 0.2), 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+      .control-deck h3 {
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+      }
+      .deck-grid {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: rgba(21, 32, 29, 0.75);
+      }
+      .deck-grid strong {
+        color: #15201d;
+        text-align: right;
+      }
+
+      .forecast-card {
+        position: absolute;
+        right: 324px;
+        bottom: 120px;
+        width: 250px;
+        padding: 20px;
+        background: rgba(15, 24, 22, 0.52);
+      }
+      .forecast-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+      .forecast-card p {
+        font-size: 0.82rem;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+
+      .floating-ticket {
+        position: absolute;
+        right: 24px;
+        bottom: 280px;
+        width: 180px;
+        padding: 16px;
+        background: rgba(13, 19, 18, 0.6);
+        transform: rotate(4deg);
+      }
+      .floating-ticket span {
+        display: block;
+        margin-bottom: 12px;
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+      .floating-ticket strong {
+        font-size: 1.2rem;
+      }
+
+      .tilt-card {
+        position: absolute;
+        left: 530px;
+        top: 220px;
+        width: 200px;
+        padding: 16px;
+        background: rgba(63, 31, 22, 0.42);
+        transform: rotate(-9deg);
+      }
+      .tilt-card p {
+        margin-bottom: 12px;
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+      .tilt-card strong {
+        font-size: 1.2rem;
+      }
+
+      .micro-stack {
+        position: absolute;
+        left: 24px;
+        bottom: 40px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        width: 580px;
+      }
+      .micro-card {
+        min-height: 110px;
+        padding: 12px;
+        background: rgba(14, 21, 19, 0.56);
+      }
+      .micro-card > span {
+        display: block;
+        margin-bottom: 14px;
+        color: var(--accent);
+        font-weight: 800;
+        font-size: 0.8rem;
+      }
+      .micro-card strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+      }
+      .micro-card p {
+        color: var(--muted);
+        font-size: 0.7rem;
+        line-height: 1.3;
+      }
+      .micro-2 {
+        background: #f3e8d0;
+        color: #17211e;
+      }
+      .micro-2 p, .micro-2 > span {
+        color: rgba(23, 33, 30, 0.65);
+      }
+      .micro-3 {
+        background: rgba(112, 217, 255, 0.12);
+      }
+
+      .collision-rail {
+        position: absolute;
+        height: 8px;
+        border-radius: 99px;
+        background: rgba(244, 240, 230, 0.35);
+        box-shadow: 0 0 20px rgba(112, 217, 255, 0.15);
+      }
+      .rail-top {
+        left: 540px;
+        top: 150px;
+        width: 140px;
+      }
+      .rail-bottom {
+        right: 24px;
+        bottom: 50px;
+        width: 160px;
+      }
+
+      /* Playground Layout */
+      .playground-title-wrapper {
+        margin-bottom: 24px;
+      }
+      .playground-title-wrapper h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
       .playground {
         display: grid;
         grid-template-columns: 1fr 380px;
         gap: 32px;
-        margin-bottom: 64px;
+        margin-bottom: 32px;
       }
 
-      @media (max-width: 968px) {
-        .playground {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      /* Stage Preview Card */
       .preview-column {
         position: relative;
         border-radius: 24px;
         border: 1px solid var(--line);
         background: rgba(10, 15, 20, 0.45);
-        min-height: 600px;
+        min-height: 660px; /* Increased from 540px */
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
       }
 
-      /* Target element in stage to test collisions and transparency */
-      #weather-stage {
+      #playground-stage {
         width: 100%;
         height: 100%;
         position: absolute;
         inset: 0;
         display: flex;
-        align-items: center;
+        flex-direction: column;
         justify-content: center;
-        padding: 40px;
-      }
-
-      #collision-card {
-        width: 320px;
+        align-items: center;
+        gap: 80px; /* Increased from 24px for water drop distance */
         padding: 32px;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        position: relative;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      #weather-stage[data-atmos-transparency='none'] #collision-card,
-      #weather-stage[data-atmos-transparency='opacity'] #collision-card {
+      .playground-card {
+        width: 340px;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+        background: var(--bg-panel);
+        font-size: 0.9rem;
+      }
+      
+      input.playground-card {
+        background: rgba(255,255,255,0.04);
+        color: var(--ink);
+        outline: none;
+        font-family: inherit;
+        font-size: 0.95rem;
+      }
+      input.playground-card::placeholder {
+        color: var(--muted);
+        opacity: 0.7;
+      }
+      input.playground-card:focus {
+        border-color: var(--accent);
+        background: rgba(255,255,255,0.08);
+      }
+
+      #playground-stage[data-atmos-transparency='none'] .playground-card,
+      #playground-stage[data-atmos-transparency='opacity'] .playground-card {
         background: #111a22;
       }
 
-      /* Weather Card Content */
-      .weather-card-content {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-
-      .card-temp {
-        font-size: 3.5rem;
-        font-weight: 300;
-        line-height: 1;
-        letter-spacing: -0.04em;
-      }
-
-      .card-temp::after {
-        content: '°';
-        font-size: 2rem;
-        vertical-align: super;
-      }
-
-      .card-preset-badge {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        background: rgba(255,255,255,0.1);
-        padding: 4px 10px;
-        border-radius: 99px;
-        color: var(--ink);
-      }
-
-      .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-      }
-
-      .card-summary {
-        font-size: 0.9rem;
-        color: var(--muted);
-        min-height: 54px;
-      }
-
-      .card-meta {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        border-top: 1px solid rgba(255,255,255,0.06);
-        padding-top: 12px;
-        display: flex;
-        justify-content: space-between;
-      }
-
-      /* Playground Controls Panel */
+      /* Compact Controls Panel */
       .controls-panel {
         background: var(--bg-panel);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--line);
         border-radius: 24px;
-        padding: 32px;
+        padding: 20px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
-        max-height: 720px;
-        overflow-y: auto;
+        gap: 14px;
+        max-height: none;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       }
 
       .control-group {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
       }
 
       .control-label {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -230,23 +500,22 @@
         font-family: monospace;
       }
 
-      /* Radio Buttons / Preset Selector Group */
       .preset-buttons {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        gap: 6px;
         background: rgba(255, 255, 255, 0.04);
         padding: 4px;
-        border-radius: 10px;
+        border-radius: 8px;
       }
 
       .preset-buttons button {
         background: transparent;
         border: none;
         color: var(--muted);
-        padding: 8px 0;
-        border-radius: 6px;
-        font-size: 0.85rem;
+        padding: 6px 0;
+        border-radius: 5px;
+        font-size: 0.82rem;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
@@ -255,13 +524,12 @@
       .preset-buttons button[aria-pressed="true"] {
         background: rgba(255, 255, 255, 0.1);
         color: var(--ink);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       }
 
-      /* Slider Styling */
       input[type="range"] {
         width: 100%;
-        height: 6px;
+        height: 5px;
         background: rgba(255,255,255,0.1);
         border-radius: 99px;
         outline: none;
@@ -270,8 +538,8 @@
 
       input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
         background: var(--ink);
         cursor: pointer;
@@ -279,29 +547,41 @@
       }
 
       input[type="range"]::-webkit-slider-thumb:hover {
-        transform: scale(1.2);
+        transform: scale(1.25);
         background: var(--accent);
       }
 
-      /* Checkbox Switch Styling */
+      .control-grid-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .checkbox-grid-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px;
+      }
+
       .switch-container {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--line);
+        padding: 4px 0;
       }
 
       .switch-label {
         font-weight: 500;
-        font-size: 0.95rem;
+        font-size: 0.88rem;
       }
 
       .switch {
         position: relative;
         display: inline-block;
-        width: 44px;
-        height: 24px;
+        width: 38px;
+        height: 20px;
       }
 
       .switch input {
@@ -316,14 +596,14 @@
         inset: 0;
         background-color: rgba(255,255,255,0.15);
         transition: .3s;
-        border-radius: 24px;
+        border-radius: 20px;
       }
 
       .slider:before {
         position: absolute;
         content: "";
-        height: 18px;
-        width: 18px;
+        height: 14px;
+        width: 14px;
         left: 3px;
         bottom: 3px;
         background-color: white;
@@ -336,29 +616,28 @@
       }
 
       input:checked + .slider:before {
-        transform: translateX(20px);
+        transform: translateX(18px);
       }
 
-      /* Transparency & Color selectors */
       .option-select {
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--line);
         color: var(--ink);
-        border-radius: 8px;
-        padding: 8px 12px;
-        font-size: 0.9rem;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
         outline: none;
         cursor: pointer;
       }
 
       .color-presets {
         display: flex;
-        gap: 8px;
+        gap: 6px;
       }
 
       .color-btn {
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         border: 2px solid transparent;
         cursor: pointer;
@@ -374,51 +653,36 @@
         transform: scale(1.1);
       }
 
-      /* Copy Config Button */
-      .copy-config-btn {
-        margin-top: 12px;
-        background: var(--ink);
-        color: #000;
-        border: none;
-        padding: 12px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: all 0.2s;
-      }
-
-      .copy-config-btn:hover {
-        background: var(--accent);
-      }
-
       /* Sections below */
       section.docs-section {
         border-top: 1px solid var(--line);
-        padding: 64px 0;
+        padding: 48px 0;
       }
 
       h2.section-title {
-        font-size: 1.8rem;
-        margin-bottom: 24px;
+        font-size: 1.6rem;
+        margin-bottom: 20px;
         font-weight: 700;
         letter-spacing: -0.02em;
       }
 
+      h3.section-subtitle {
+        font-size: 1.15rem;
+        margin: 24px 0 12px 0;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
       /* Code Block Styles */
       pre {
-        background: #090d10;
+        background: #06090c;
         border: 1px solid var(--line);
         border-radius: 12px;
-        padding: 24px;
+        padding: 20px;
         overflow-x: auto;
         color: #e2e8f0;
         font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-        font-size: 0.9rem;
+        font-size: 0.86rem;
         position: relative;
       }
 
@@ -427,7 +691,7 @@
         background: rgba(255,255,255,0.06);
         padding: 2px 6px;
         border-radius: 4px;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         color: #e2e8f0;
       }
 
@@ -438,17 +702,12 @@
         color: inherit;
       }
 
-      /* Installation Grid */
-      .install-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
+      .method-example-wrapper {
+        margin-bottom: 20px;
       }
-
-      @media (max-width: 768px) {
-        .install-grid {
-          grid-template-columns: 1fr;
-        }
+      .method-example-wrapper p {
+        margin-bottom: 12px;
+        color: var(--muted);
       }
 
       /* API Reference Table */
@@ -457,17 +716,18 @@
         border: 1px solid var(--line);
         border-radius: 12px;
         background: var(--bg-panel);
+        margin-bottom: 24px;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
         text-align: left;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
       }
 
       th, td {
-        padding: 16px 20px;
+        padding: 14px 18px;
         border-bottom: 1px solid var(--line);
       }
 
@@ -482,9 +742,9 @@
       }
 
       .api-badge {
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         background: rgba(255,255,255,0.08);
-        padding: 2px 6px;
+        padding: 2px 5px;
         border-radius: 4px;
         color: var(--muted);
       }
@@ -498,146 +758,277 @@
         font-size: 0.85rem;
       }
 
-      footer a {
-        color: var(--ink);
-        text-decoration: none;
+      /* Responsive Layouts */
+      @media (max-width: 1080px) {
+        .showcase-container {
+          height: auto;
+          min-height: auto;
+          width: 100%;
+          left: auto;
+          right: auto;
+          margin-left: 0;
+          margin-right: 0;
+          padding: 24px;
+        }
+        .showcase-backdrop, .orbit, .collision-rail {
+          display: none;
+        }
+        .hero-module, .control-deck, .forecast-card, .floating-ticket, .tilt-card, .micro-stack {
+          position: relative;
+          inset: auto;
+          width: 100%;
+          transform: none;
+          margin-bottom: 16px;
+        }
+        .micro-stack {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
-
-      footer a:hover {
-        color: var(--accent);
+      @media (max-width: 968px) {
+        .playground {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 620px) {
+        .micro-stack {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
+    <!-- Top Navigation Header -->
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+      <nav class="nav-bar">
+        <div class="nav-brand" data-i18n-key="nav-brand">atmos-fx</div>
+        <div class="nav-actions">
+          <button id="lang-toggle" class="lang-btn">EN / 中</button>
+          <a href="https://github.com/Whynotmetoo/atmos-fx" target="_blank" class="nav-link" aria-label="GitHub">
+            <svg class="nav-icon" viewBox="0 0 16 16">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+          </a>
+          <a href="https://x.com/_carsonye_" target="_blank" class="nav-link" aria-label="X">
+            <svg class="nav-icon" viewBox="0 0 16 16">
+              <path d="M9.599 6.268L15.17 0h-1.32L8.988 5.764 5.129 0H.667l5.845 8.137L.667 15h1.32l4.315-4.764L10.333 15h4.462L9.599 6.268zm-1.808 1.996l-.592-.81L2.467 1.033h2.028l3.661 5.019.592.81 4.966 6.81h-2.028l-3.916-5.388z"/>
+            </svg>
+          </a>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Showcase Stage Section -->
+    <section id="showcase-stage" class="showcase-container">
+      <div class="showcase-backdrop"></div>
+      <div class="orbit orbit-one"></div>
+      <div class="orbit orbit-two"></div>
+
+      <div class="showcase-inner">
+        <!-- 1. Hero Card -->
+        <div class="showcase-card hero-module" data-atmos-collision data-atmos-glass>
+          <p class="eyebrow" data-i18n-key="showcase-hero-eyebrow">DOM-aware atmosphere lab</p>
+          <h2 data-i18n-key="showcase-hero-title">atmos-fx</h2>
+          <p class="hero-copy" data-i18n-key="intro-desc">
+            A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.
+          </p>
+          <div class="hero-actions" data-atmos-opaque>
+            <div class="showcase-preset-row" id="showcase-preset-row">
+              <button type="button" data-value="rain" aria-pressed="true" data-i18n-key="control-preset-rain">Rain</button>
+              <button type="button" data-value="snow" data-i18n-key="control-preset-snow">Snow</button>
+              <button type="button" data-value="hail" data-i18n-key="control-preset-hail">Hail</button>
+            </div>
+            <div class="showcase-slider-row">
+              <span data-i18n-key="showcase-deck-density">Density</span>
+              <input type="range" id="showcase-density" min="0.1" max="1.0" step="0.05" value="0.74" />
+              <strong id="showcase-density-val">0.74</strong>
+            </div>
+            <div class="showcase-slider-row">
+              <span data-i18n-key="showcase-deck-wind">Wind</span>
+              <input type="range" id="showcase-wind" min="-1.5" max="1.5" step="0.05" value="-0.22" />
+              <strong id="showcase-wind-val">-0.22</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Stats Deck -->
+        <div class="showcase-card control-deck" data-atmos-opaque>
+          <h3 data-i18n-key="showcase-deck-title">Live controls</h3>
+          <div class="deck-grid">
+            <span data-i18n-key="showcase-deck-transparency">Transparency</span>
+            <strong data-i18n-key="control-transparency-glass">Glass</strong>
+            <span data-i18n-key="showcase-deck-particle">Particle</span>
+            <strong id="showcase-readout-particle">Rain</strong>
+            <span data-i18n-key="showcase-deck-collision">Collision</span>
+            <strong data-i18n-key="showcase-deck-collision-val">bottom + DOM</strong>
+          </div>
+        </div>
+
+        <!-- 3. Forecast Card -->
+        <div class="showcase-card forecast-card" data-atmos-opacity="0.48">
+          <span class="card-index" style="display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: #ff6b4a; color: #190c08; font-weight: 900; margin-bottom: 12px; font-size: 0.78rem;">A</span>
+          <h3 data-i18n-key="showcase-forecast-title">Readable opacity surface</h3>
+          <p data-i18n-key="showcase-forecast-desc">Uses a translucent treatment so precipitation remains visible across content-heavy UI.</p>
+        </div>
+
+        <!-- 4. Floating Ticket -->
+        <div class="showcase-card floating-ticket" data-atmos-collision data-atmos-glass>
+          <span data-i18n-key="showcase-ticket-title">Impact shelf</span>
+          <strong id="showcase-readout-action" data-i18n-key="showcase-ticket-val-rain">Splashing</strong>
+        </div>
+
+        <!-- 5. Angled Card -->
+        <div class="showcase-card tilt-card" data-atmos-collision data-atmos-glass>
+          <p data-i18n-key="showcase-tilt-title">Angled collision plane</p>
+          <strong id="showcase-readout-drift" data-i18n-key="showcase-tilt-west">west drift</strong>
+        </div>
+
+        <!-- 6. Micro Cards Stack -->
+        <div class="micro-stack">
+          <div class="showcase-card micro-card micro-1" data-atmos-collision data-atmos-glass>
+            <span>01</span>
+            <strong data-i18n-key="showcase-micro-1-title">glass panel</strong>
+            <p data-i18n-key="showcase-micro-1-desc">blur + top-edge collision</p>
+          </div>
+          <div class="showcase-card micro-card micro-2" data-atmos-collision data-atmos-opaque>
+            <span>02</span>
+            <strong data-i18n-key="showcase-micro-2-title">solid control</strong>
+            <p data-i18n-key="showcase-micro-2-desc">opaque island in the same storm</p>
+          </div>
+          <div class="showcase-card micro-card micro-3" data-atmos-collision data-atmos-opacity="0.5">
+            <span>03</span>
+            <strong data-i18n-key="showcase-micro-3-title">opacity card</strong>
+            <p data-i18n-key="showcase-micro-3-desc">text fades into particles</p>
+          </div>
+          <div class="showcase-card micro-card micro-4" data-atmos-collision data-atmos-glass>
+            <span>04</span>
+            <strong data-i18n-key="showcase-micro-4-title">thin rail</strong>
+            <p data-i18n-key="showcase-micro-4-desc">snow and hail landing ledge</p>
+          </div>
+        </div>
+
+        <!-- 7. Rails -->
+        <div class="collision-rail rail-top" data-atmos-collision></div>
+        <div class="collision-rail rail-bottom" data-atmos-collision></div>
+      </div>
+    </section>
+
+    <!-- Main Container -->
     <div class="container">
-      <header>
-        <span class="logo-icon">⛈️</span>
-        <h1>atmos-fx</h1>
-        <p class="description">A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.</p>
-      </header>
+      <!-- Playground Title -->
+      <div class="playground-title-wrapper">
+        <h2 data-i18n-key="playground-title">Interactive Playground</h2>
+      </div>
 
       <!-- Playground Section -->
       <div class="playground">
         <!-- Preview Visual Canvas -->
         <div class="preview-column">
-          <main id="weather-stage" data-playground-preset="rain">
-            <!-- Simulated Interface Card to interact with collision and glass transparency -->
-            <div id="collision-card" data-atmos-collision data-atmos-glass>
-              <div class="weather-card-content">
-                <div class="card-header">
-                  <div class="card-temp" id="forecast-temp">54</div>
-                  <div class="card-preset-badge" id="forecast-preset">Rain</div>
-                </div>
-                <div class="card-title" id="forecast-title">Rain Showers</div>
-                <div class="card-summary" id="forecast-summary">
-                  Layered rainfall tests glass readability, top-edge collision, and medium-density motion.
-                </div>
-                <div class="card-meta">
-                  <span id="forecast-wind">wind -0.12</span>
-                  <span id="forecast-density">Density 0.65</span>
-                </div>
-              </div>
+          <div id="playground-stage" data-playground-preset="rain">
+            <!-- 1. Text Container (Card A) -->
+            <div id="playground-info-card" class="playground-card" data-atmos-collision data-atmos-glass>
+              <div data-i18n-key="playground-info-desc">Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.</div>
             </div>
-          </main>
+
+            <!-- 2. Simple Input (Card B) -->
+            <input id="playground-input-card" class="playground-card" data-atmos-collision data-atmos-glass type="text" placeholder="Type here..." data-i18n-attr="placeholder:form-placeholder" />
+          </div>
         </div>
 
         <!-- Right Side Panel Control Panel -->
         <div class="controls-panel">
           <!-- Preset selector -->
           <div class="control-group">
-            <div class="control-label">Weather Preset</div>
+            <div class="control-label" data-i18n-key="control-weather-preset">Weather Preset</div>
             <div class="preset-buttons" data-control="preset">
-              <button type="button" data-value="rain" aria-pressed="true">Rain</button>
-              <button type="button" data-value="snow">Snow</button>
-              <button type="button" data-value="hail">Hail</button>
+              <button type="button" data-value="rain" aria-pressed="true" data-i18n-key="control-preset-rain">Rain</button>
+              <button type="button" data-value="snow" data-i18n-key="control-preset-snow">Snow</button>
+              <button type="button" data-value="hail" data-i18n-key="control-preset-hail">Hail</button>
             </div>
           </div>
 
           <!-- Slider Density -->
           <div class="control-group">
-            <div class="control-label">Density <span class="val" id="density-val">0.65</span></div>
+            <div class="control-label"><span data-i18n-key="control-density">Density</span> <span class="val" id="density-val">0.65</span></div>
             <input type="range" id="density" min="0.1" max="1.0" step="0.05" value="0.65" />
           </div>
 
           <!-- Slider Speed -->
           <div class="control-group">
-            <div class="control-label">Speed <span class="val" id="speed-val">1.00</span></div>
+            <div class="control-label"><span data-i18n-key="control-speed">Speed</span> <span class="val" id="speed-val">1.00</span></div>
             <input type="range" id="speed" min="0" max="3" step="0.05" value="1.00" />
           </div>
 
           <!-- Slider Wind -->
           <div class="control-group">
-            <div class="control-label">Wind <span class="val" id="wind-val">-0.12</span></div>
+            <div class="control-label"><span data-i18n-key="control-wind">Wind</span> <span class="val" id="wind-val">-0.12</span></div>
             <input type="range" id="wind" min="-1.5" max="1.5" step="0.05" value="-0.12" />
           </div>
 
           <!-- Slider Snow Accumulation -->
           <div class="control-group" id="snow-accum-control" style="display: none;">
-            <div class="control-label">Snow Accumulation <span class="val" id="snowAccumulation-val">0.55</span></div>
+            <div class="control-label"><span data-i18n-key="control-snow-accum">Snow Accumulation</span> <span class="val" id="snowAccumulation-val">0.55</span></div>
             <input type="range" id="snowAccumulation" min="0" max="1.0" step="0.05" value="0.55" />
           </div>
 
-
-
           <!-- Slider Hail Bounce -->
           <div class="control-group" id="hail-bounce-control" style="display: none;">
-            <div class="control-label">Hail Bounce <span class="val" id="hailBounce-val">0.50</span></div>
+            <div class="control-label"><span data-i18n-key="control-hail-bounce">Hail Bounce</span> <span class="val" id="hailBounce-val">0.50</span></div>
             <input type="range" id="hailBounce" min="0" max="1.0" step="0.05" value="0.50" />
           </div>
 
-          <!-- Switch Bottom Collision -->
-          <div class="switch-container">
-            <div class="switch-label">Bottom Collision</div>
-            <label class="switch">
-              <input type="checkbox" id="bottomCollision" />
-              <span class="slider"></span>
-            </label>
+          <!-- Checkbox switches in a compact row -->
+          <div class="checkbox-grid-row">
+            <div class="switch-container">
+              <div class="switch-label" style="font-size: 0.82rem;" data-i18n-key="control-bottom-collision">Bottom Collision</div>
+              <label class="switch">
+                <input type="checkbox" id="bottomCollision" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="switch-container" id="liquid-dripping-container">
+              <div class="switch-label" style="font-size: 0.82rem;" data-i18n-key="control-liquid-dripping">Liquid Dripping</div>
+              <label class="switch">
+                <input type="checkbox" id="liquidDripping" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
 
-          <!-- Switch Liquid Dripping -->
-          <div class="switch-container" id="liquid-dripping-container">
-            <div class="switch-label">Liquid Dripping</div>
-            <label class="switch">
-              <input type="checkbox" id="liquidDripping" checked />
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <!-- Dropdown Quality -->
-          <div class="control-group">
-            <div class="control-label">Quality</div>
-            <select class="option-select" id="quality">
-              <option value="auto">Auto (Responsive)</option>
-              <option value="high">High</option>
-              <option value="medium" selected>Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          <!-- Dropdown Transparency -->
-          <div class="control-group">
-            <div class="control-label">Transparency Mode</div>
-            <select class="option-select" id="transparency">
-              <option value="glass" selected>Glass (Standard Blurs)</option>
-              <option value="opacity">Opacity (Translucent)</option>
-              <option value="none">None (Solid Cards)</option>
-            </select>
+          <!-- Quality and Transparency selectors in a single row -->
+          <div class="control-grid-row">
+            <div class="control-group">
+              <div class="control-label" data-i18n-key="control-quality">Quality</div>
+              <select class="option-select" id="quality">
+                <option value="auto" data-i18n-key="control-quality-auto">Auto (Responsive)</option>
+                <option value="high" data-i18n-key="control-quality-high">High</option>
+                <option value="medium" selected data-i18n-key="control-quality-medium">Medium</option>
+                <option value="low" data-i18n-key="control-quality-low">Low</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <div class="control-label" data-i18n-key="control-transparency">Transparency Mode</div>
+              <select class="option-select" id="transparency">
+                <option value="glass" selected data-i18n-key="control-transparency-glass">Glass (Standard Blurs)</option>
+                <option value="opacity" data-i18n-key="control-transparency-opacity">Opacity (Translucent)</option>
+                <option value="none" data-i18n-key="control-transparency-none">None (Solid Cards)</option>
+              </select>
+            </div>
           </div>
 
           <!-- Opacity Sliders (Conditional display) -->
           <div class="control-group" id="surface-opacity-control">
-            <div class="control-label">Surface Opacity <span class="val" id="surfaceOpacity-val">0.14</span></div>
+            <div class="control-label"><span data-i18n-key="control-surface-opacity">Surface Opacity</span> <span class="val" id="surfaceOpacity-val">0.14</span></div>
             <input type="range" id="surfaceOpacity" min="0" max="1" step="0.02" value="0.14" />
           </div>
 
           <div class="control-group" id="content-opacity-control" style="display: none;">
-            <div class="control-label">Content Opacity <span class="val" id="contentOpacity-val">0.72</span></div>
+            <div class="control-label"><span data-i18n-key="control-content-opacity">Content Opacity</span> <span class="val" id="contentOpacity-val">0.72</span></div>
             <input type="range" id="contentOpacity" min="0" max="1" step="0.02" value="0.72" />
           </div>
 
           <!-- Color presets selector -->
           <div class="control-group">
-            <div class="control-label">Precipitation Color</div>
+            <div class="control-label" data-i18n-key="control-color">Precipitation Color</div>
             <div class="color-presets" id="color-selector">
               <button class="color-btn" style="background: rgba(220, 235, 255, 0.72);" data-value="rgba(220, 235, 255, 0.72)" aria-pressed="true" title="Default Ice Blue"></button>
               <button class="color-btn" style="background: rgba(255, 255, 255, 0.72);" data-value="rgba(255, 255, 255, 0.72)" title="Pure Snow White"></button>
@@ -645,66 +1036,53 @@
               <button class="color-btn" style="background: rgba(200, 255, 220, 0.65);" data-value="rgba(200, 255, 220, 0.65)" title="Toxic Green Flare"></button>
             </div>
           </div>
-
-          <!-- Copy Config Button -->
-          <button class="copy-config-btn" id="copy-config-btn">
-            <span>📋</span> Copy Configuration
-          </button>
         </div>
       </div>
 
-      <!-- Installation Section -->
+      <!-- Playground Code Preview (No Title) -->
+      <pre style="margin-top: -16px; margin-bottom: 48px;"><code id="core-code-display"></code></pre>
+
+      <!-- Installation Section (Quick Start) -->
       <section class="docs-section">
-        <h2 class="section-title">Quick Start</h2>
-        <div class="install-grid">
+        <h2 class="section-title" data-i18n-key="quick-start-title">Quick Start</h2>
+        <div style="display: flex; flex-direction: column; gap: 24px;">
           <div>
-            <p style="margin-bottom: 12px; color: var(--muted);">1. Install package via npm:</p>
+            <p style="margin-bottom: 8px; color: var(--muted);" data-i18n-key="quick-start-step1">1. Install package via npm:</p>
             <pre><code>npm i atmos-fx</code></pre>
           </div>
           <div>
-            <p style="margin-bottom: 12px; color: var(--muted);">2. Import module and stylesheet:</p>
-            <pre><code id="code-sample">// Playground active config will sync here</code></pre>
+            <p style="margin-bottom: 8px; color: var(--muted);" data-i18n-key="quick-start-step2">2. Import and wrap your app with AtmosFx and AtmosCard:</p>
+            <pre><code>import { AtmosFx, AtmosCard } from 'atmos-fx'
+import 'atmos-fx/styles.css'
+
+export function App() {
+  return (
+    &lt;AtmosFx preset="rain" density={0.65} wind={-0.12} bottomCollision={true}&gt;
+      &lt;div className="layout"&gt;
+        &lt;AtmosCard transMode="glass" liquidDripping={true}&gt;
+          &lt;h1&gt;Interactive Opaque Shelf&lt;/h1&gt;
+          &lt;p&gt;Precipitation splashes here.&lt;/p&gt;
+        &lt;/AtmosCard&gt;
+      &lt;/div&gt;
+    &lt;/AtmosFx&gt;
+  )
+}</code></pre>
           </div>
         </div>
       </section>
 
-      <!-- React Integration Section -->
-      <section class="docs-section">
-        <h2 class="section-title">React Integration</h2>
-        <p style="margin-bottom: 16px; color: var(--muted);">Use the modern, type-safe React components to seamlessly integrate weather effects and interactive cards into your React application:</p>
-        <pre><code>import { AtmosFx, AtmosCard } from 'atmos-fx'
-
-export function WeatherPanel() {
-  return (
-    &lt;AtmosFx mode="rain" density={1.0}&gt;
-      {/* Normal elements inside the wrapper */}
-      &lt;button&gt;Upgrade to Pro&lt;/button&gt;
-      
-      {/* Interactive cards wrapped with AtmosCard */}
-      &lt;AtmosCard transMode="glass" liquidDripping={true}&gt;
-        &lt;div&gt;Glass card content&lt;/div&gt;
-      &lt;/AtmosCard&gt;
-      
-      {/* Use asChild to merge styling and attributes onto custom child elements directly */}
-      &lt;AtmosCard asChild transMode="solid"&gt;
-        &lt;button className="custom-btn"&gt;Opaque Action Button&lt;/button&gt;
-      &lt;/AtmosCard&gt;
-    &lt;/AtmosFx&gt;
-  )
-}</code></pre>
-      </section>
-
-
       <!-- API Reference Section -->
       <section class="docs-section">
-        <h2 class="section-title">API Reference</h2>
+        <h2 class="section-title" data-i18n-key="api-ref-title">API Reference</h2>
+        
+        <h3 class="section-subtitle" data-i18n-key="api-atmosfx-title">AtmosFx Component Config / Props</h3>
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Option</th>
-                <th>Type / Values</th>
-                <th>Description</th>
+                <th data-i18n-key="th-option">Option</th>
+                <th data-i18n-key="th-type">Type / Values</th>
+                <th data-i18n-key="th-desc">Description</th>
               </tr>
             </thead>
             <tbody>
@@ -720,22 +1098,22 @@ export function WeatherPanel() {
               </tr>
               <tr>
                 <td><code>density</code></td>
-                <td><code>0</code> to <code>1</code> <span class="api-badge">0.65</span></td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.65</span></td>
                 <td>Scales preallocated particle budget and spawn count.</td>
               </tr>
               <tr>
                 <td><code>speed</code></td>
-                <td><code>0</code> to <code>10</code> <span class="api-badge">1</span></td>
+                <td><code>number</code> (0 to 10) <span class="api-badge">1.0</span></td>
                 <td>Scalar multiplier for gravity and vertical fall speed.</td>
               </tr>
               <tr>
                 <td><code>wind</code></td>
-                <td><code>-1.5</code> to <code>1.5</code> <span class="api-badge">-0.12</span></td>
+                <td><code>number</code> (-1.5 to 1.5) <span class="api-badge">-0.12</span></td>
                 <td>Affects horizontal sway and particle drift.</td>
               </tr>
               <tr>
                 <td><code>color</code></td>
-                <td><code>string</code> <span class="api-badge">Ice Blue</span></td>
+                <td><code>string</code> <span class="api-badge">#dcebffb7</span></td>
                 <td>CSS color representation for precipitation particles.</td>
               </tr>
               <tr>
@@ -749,35 +1127,9 @@ export function WeatherPanel() {
                 <td>Determines whether particles collide with the bottom edge of the container.</td>
               </tr>
               <tr>
-                <td><code>transparency</code></td>
-                <td><code>'glass' | 'opacity' | 'none'</code></td>
-                <td>Integrates elements with the weather background via CSS blur or opacity filter.</td>
-              </tr>
-              <tr>
-                <td><code>surfaceOpacity</code></td>
-                <td><code>0</code> to <code>1</code> <span class="api-badge">0.14</span></td>
-                <td>Backdrop opacity multiplier used in <code>glass</code> transparency mode.</td>
-              </tr>
-              <tr>
-                <td><code>contentOpacity</code></td>
-                <td><code>0</code> to <code>1</code> <span class="api-badge">0.72</span></td>
-                <td>Foreground text readability fading used in <code>opacity</code> transparency mode.</td>
-              </tr>
-              <tr>
-                <td><code>snowAccumulation</code></td>
-                <td><code>0</code> to <code>1</code> <span class="api-badge">0.55</span></td>
-                <td>BUildup intensity of snow piles on top of collision targets.</td>
-              </tr>
-
-              <tr>
-                <td><code>hailBounce</code></td>
-                <td><code>0</code> to <code>1</code> <span class="api-badge">0.5</span></td>
-                <td>Coefficient of restitution for bouncing hail pellets.</td>
-              </tr>
-              <tr>
                 <td><code>collisionSelector</code></td>
                 <td><code>string</code></td>
-                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.<br/><small style="opacity: 0.7;">Note: Rotated elements (e.g. <code>transform: rotate(...)</code>) calculate collisions against their axis-aligned bounding box (AABB) rather than the rotated visual boundary.</small></td>
+                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.</td>
               </tr>
               <tr>
                 <td><code>opaqueSelector</code></td>
@@ -787,17 +1139,72 @@ export function WeatherPanel() {
             </tbody>
           </table>
         </div>
-      </section>
 
-      <!-- Controller Methods -->
-      <section class="docs-section">
-        <h2 class="section-title">Controller Methods</h2>
+        <h3 class="section-subtitle" data-i18n-key="api-atmoscard-title">AtmosCard Card Config / Props</h3>
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Method</th>
-                <th>Description</th>
+                <th data-i18n-key="th-option">Option</th>
+                <th data-i18n-key="th-type">Type / Values</th>
+                <th data-i18n-key="th-desc">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>transMode</code></td>
+                <td><code>'glass' | 'opacity' | 'solid'</code></td>
+                <td>Specifies card transparent integration style. Glass mode triggers high-fidelity backdrop blurs.</td>
+              </tr>
+              <tr>
+                <td><code>liquidDripping</code></td>
+                <td><code>boolean</code> <span class="api-badge">true</span></td>
+                <td>Toggles the water droplets condensation, bulging, and dripping animation (only in Rain mode).</td>
+              </tr>
+              <tr>
+                <td><code>asChild</code></td>
+                <td><code>boolean</code> <span class="api-badge">false</span></td>
+                <td>Merges the AtmosCard properties directly onto the underlying child element instead of rendering a wrapper node.</td>
+              </tr>
+              <tr>
+                <td><code>opacity</code></td>
+                <td><code>number</code> (0 to 1)</td>
+                <td>Component-level custom backdrop opacity override (specifically used in opacity mode).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Controller Methods -->
+      <section class="docs-section">
+        <h2 class="section-title" data-i18n-key="methods-title">Controller Methods</h2>
+        <div class="method-example-wrapper">
+          <p data-i18n-key="methods-intro">For direct vanilla JavaScript control, initialize the atmosphere and use the available methods:</p>
+          <pre><code>import { createAtmosphere } from 'atmos-fx'
+
+const controller = createAtmosphere(document.querySelector('#container'), {
+  preset: 'rain',
+  density: 0.8,
+  bottomCollision: true
+})
+
+// Start rendering
+controller.start()
+
+// Update parameters dynamically
+controller.update({ wind: 0.5, speed: 1.5 })
+
+// Stop and destroy when leaving the page
+controller.destroy()</code></pre>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n-key="method-th-method">Method</th>
+                <th data-i18n-key="method-th-desc">Description</th>
               </tr>
             </thead>
             <tbody>
@@ -833,42 +1240,10 @@ export function WeatherPanel() {
           </table>
         </div>
       </section>
-
-      <!-- DOM Attributes Section -->
-      <section class="docs-section">
-        <h2 class="section-title">DOM Attributes</h2>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Attribute</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>data-atmos-collision</code></td>
-                <td>Marks the element as a top-edge landing surface for snow, rain splashes, and hail.<br/><small style="opacity: 0.7;">Note: Rotated elements calculate collisions against their outer bounding box rather than the rotated edge.</small></td>
-              </tr>
-              <tr>
-                <td><code>data-atmos-opaque</code></td>
-                <td>Instructs the glass controller to keep this element solid without translucent styling.</td>
-              </tr>
-              <tr>
-                <td><code>data-atmos-glass</code></td>
-                <td>Explicitly opts nested panels/containers into receiving the default weather-blur visual filter.</td>
-              </tr>
-              <tr>
-                <td><code>data-atmos-opacity="0.65"</code></td>
-                <td>Specifies an element-specific glass background opacity level.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
       
+      <!-- Footer -->
       <footer>
-        <p>Released under the MIT License. Built with WebGL for maximum performance. <a href="https://github.com/Whynotmetoo/atmos-fx" target="_blank">View GitHub</a></p>
+        <p id="footer-text">© 2026 Carson Ye. Built with passion and curiosity.</p>
       </footer>
     </div>
 
