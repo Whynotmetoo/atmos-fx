@@ -230,6 +230,33 @@ describe('WebGL renderer foundation', () => {
     renderer.destroy()
   })
 
+  it('updates existing rain particles velocities when speed or wind options change', () => {
+    const context = createWebGLContext()
+    const renderer = createWebGLRainRenderer(createCanvases(context), size, options)
+    expect(renderer).toBeDefined()
+
+    const webglRenderer = renderer as any
+    const firstParticle = webglRenderer.particles[0]
+    expect(firstParticle).toBeDefined()
+
+    // Force known initial values for velocity to assert changes reliably
+    firstParticle.vy = 500
+    firstParticle.vx = 50
+
+    // Change speed and wind
+    renderer?.updateOptions({
+      ...options,
+      speed: 0.1,
+      wind: 2.0,
+    })
+
+    // Velocities should have changed
+    expect(firstParticle.vy).not.toBe(500)
+    expect(firstParticle.vx).not.toBe(50)
+
+    renderer?.destroy()
+  })
+
   it('spawns accumulation when WebGL snow lands on collision targets', () => {
     const context = createWebGLContext()
     const renderer = createRenderer(createCanvases(context), size, {

@@ -258,8 +258,8 @@ export function createLiquidDripsController(
 
       svg.style.display = 'block'
       const parsedColor = parseColorRGB(options.color)
-      // Make liquid color slightly semi-transparent, around 20% transparent (80% opacity)
-      svg.style.opacity = String(parsedColor.alpha * 0.8)
+      // Make liquid color slightly semi-transparent
+      svg.style.opacity = String(parsedColor.alpha * 0.25)
 
       // Sync count
       while (drips.length < targets.length) {
