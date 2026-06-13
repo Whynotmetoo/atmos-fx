@@ -144,7 +144,6 @@
         z-index: -1;
         border: 1px solid rgba(244, 240, 230, 0.08);
         border-radius: 50%;
-        transform: rotate(-16deg);
       }
       .orbit-one {
         width: 700px;
@@ -160,16 +159,29 @@
         border-color: rgba(112, 217, 255, 0.1);
       }
 
-      /* Showcase Intro Typography */
+      /* Showcase Top Right Actions */
+      .showcase-nav-actions {
+        position: absolute;
+        right: 40px;
+        top: 30px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        z-index: 10;
+      }
+
+      /* Showcase Intro Typography Card */
       .showcase-intro {
         position: absolute;
         left: 40px;
-        top: 60px;
-        max-width: 500px;
+        top: 90px;
+        width: 540px;
+        padding: 32px;
         z-index: 2;
+        background: rgba(15, 24, 22, 0.52);
       }
       .showcase-title {
-        font-size: 3.2rem;
+        font-size: 3.6rem;
         font-family: Georgia, serif;
         font-weight: 700;
         margin-bottom: 16px;
@@ -179,9 +191,9 @@
         -webkit-text-fill-color: transparent;
       }
       .showcase-desc {
-        font-size: 1.05rem;
+        font-size: 1.15rem;
         color: rgba(244, 240, 230, 0.85);
-        line-height: 1.6;
+        line-height: 1.65;
       }
 
       /* Showcase Cards */
@@ -194,12 +206,12 @@
       .control-deck {
         position: absolute;
         right: 40px;
-        top: 60px;
+        top: 90px;
         width: 320px;
         padding: 24px;
-        background: #eef0dd;
+        background: rgba(238, 240, 221, 0.88);
         color: #15201d;
-        box-shadow: 8px 10px 0 rgba(215, 255, 84, 0.2), 0 20px 40px rgba(0, 0, 0, 0.3);
+        box-shadow: none;
       }
       .control-deck h3 {
         font-size: 1.1rem;
@@ -286,7 +298,6 @@
         width: 180px;
         padding: 16px;
         background: rgba(13, 19, 18, 0.6);
-        transform: rotate(4deg);
       }
       .floating-ticket span {
         display: block;
@@ -306,7 +317,6 @@
         width: 220px;
         padding: 16px;
         background: rgba(63, 31, 22, 0.42);
-        transform: rotate(-9deg);
       }
       .tilt-card p {
         margin-bottom: 12px;
@@ -401,7 +411,7 @@
         border-radius: 24px;
         border: 1px solid var(--line);
         background: rgba(10, 15, 20, 0.45);
-        min-height: 660px; /* Increased from 540px */
+        min-height: 680px; /* Reduced playground height */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -800,35 +810,30 @@
     </style>
   </head>
   <body>
-    <!-- Top Navigation Header -->
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
-      <nav class="nav-bar">
-        <div class="nav-brand" data-i18n-key="nav-brand">atmos-fx</div>
-        <div class="nav-actions">
-          <button id="lang-toggle" class="lang-btn">EN / 中</button>
-          <a href="https://github.com/Whynotmetoo/atmos-fx" target="_blank" class="nav-link" aria-label="GitHub">
-            <svg class="nav-icon" viewBox="0 0 16 16">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-            </svg>
-          </a>
-          <a href="https://x.com/_carsonye_" target="_blank" class="nav-link" aria-label="X">
-            <svg class="nav-icon" viewBox="0 0 16 16">
-              <path d="M9.599 6.268L15.17 0h-1.32L8.988 5.764 5.129 0H.667l5.845 8.137L.667 15h1.32l4.315-4.764L10.333 15h4.462L9.599 6.268zm-1.808 1.996l-.592-.81L2.467 1.033h2.028l3.661 5.019.592.81 4.966 6.81h-2.028l-3.916-5.388z"/>
-            </svg>
-          </a>
-        </div>
-      </nav>
-    </div>
-
     <!-- Showcase Stage Section -->
     <section id="showcase-stage" class="showcase-container">
       <div class="showcase-backdrop"></div>
       <div class="orbit orbit-one"></div>
       <div class="orbit orbit-two"></div>
 
+      <!-- Top Right Navigation Actions -->
+      <div class="showcase-nav-actions">
+        <button id="lang-toggle" class="lang-btn">EN / 中</button>
+        <a href="https://github.com/Whynotmetoo/atmos-fx" target="_blank" class="nav-link" aria-label="GitHub">
+          <svg class="nav-icon" viewBox="0 0 16 16">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </a>
+        <a href="https://x.com/_carsonye_" target="_blank" class="nav-link" aria-label="X">
+          <svg class="nav-icon" viewBox="0 0 16 16">
+            <path d="M9.599 6.268L15.17 0h-1.32L8.988 5.764 5.129 0H.667l5.845 8.137L.667 15h1.32l4.315-4.764L10.333 15h4.462L9.599 6.268zm-1.808 1.996l-.592-.81L2.467 1.033h2.028l3.661 5.019.592.81 4.966 6.81h-2.028l-3.916-5.388z"/>
+          </svg>
+        </a>
+      </div>
+
       <div class="showcase-inner">
-        <!-- 1. Integrated Title & Description -->
-        <div class="showcase-intro">
+        <!-- 1. Integrated Title & Description Card -->
+        <div class="showcase-card showcase-intro" data-atmos-collision data-atmos-glass>
           <h1 class="showcase-title" data-i18n-key="showcase-hero-title">atmos-fx</h1>
           <p class="showcase-desc" data-i18n-key="intro-desc">
             A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.
@@ -836,7 +841,7 @@
         </div>
 
         <!-- 2. Integrated Control Deck -->
-        <div class="showcase-card control-deck" data-atmos-opaque>
+        <div class="showcase-card control-deck" data-atmos-collision data-atmos-glass>
           <h3 data-i18n-key="showcase-deck-title">Live controls</h3>
           
           <div class="showcase-preset-row" id="showcase-preset-row" style="margin-bottom: 16px;">
@@ -868,7 +873,7 @@
         </div>
 
         <!-- 3. Forecast Card -->
-        <div class="showcase-card forecast-card" data-atmos-opacity="0.48">
+        <div class="showcase-card forecast-card" data-atmos-collision data-atmos-glass>
           <span class="card-index" style="display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: #ff6b4a; color: #190c08; font-weight: 900; margin-bottom: 12px; font-size: 0.78rem;">A</span>
           <h3 data-i18n-key="showcase-forecast-title">Readable opacity surface</h3>
           <p data-i18n-key="showcase-forecast-desc">Uses a translucent treatment so precipitation remains visible across content-heavy UI.</p>
@@ -893,12 +898,12 @@
             <strong data-i18n-key="showcase-micro-1-title">glass panel</strong>
             <p data-i18n-key="showcase-micro-1-desc">blur + top-edge collision</p>
           </div>
-          <div class="showcase-card micro-card micro-2" data-atmos-collision data-atmos-opaque>
+          <div class="showcase-card micro-card micro-2" data-atmos-collision data-atmos-glass>
             <span>02</span>
             <strong data-i18n-key="showcase-micro-2-title">solid control</strong>
             <p data-i18n-key="showcase-micro-2-desc">opaque island in the same storm</p>
           </div>
-          <div class="showcase-card micro-card micro-3" data-atmos-collision data-atmos-opacity="0.5">
+          <div class="showcase-card micro-card micro-3" data-atmos-collision data-atmos-glass>
             <span>03</span>
             <strong data-i18n-key="showcase-micro-3-title">opacity card</strong>
             <p data-i18n-key="showcase-micro-3-desc">text fades into particles</p>
@@ -1004,8 +1009,8 @@
               <div class="control-label" data-i18n-key="control-quality">Quality</div>
               <select class="option-select" id="quality">
                 <option value="auto" data-i18n-key="control-quality-auto">Auto (Responsive)</option>
-                <option value="high" data-i18n-key="control-quality-high">High</option>
-                <option value="medium" selected data-i18n-key="control-quality-medium">Medium</option>
+                <option value="high" selected data-i18n-key="control-quality-high">High</option>
+                <option value="medium" data-i18n-key="control-quality-medium">Medium</option>
                 <option value="low" data-i18n-key="control-quality-low">Low</option>
               </select>
             </div>
