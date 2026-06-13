@@ -126,7 +126,11 @@ export function createAtmosphere(
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   const glassController = createGlassController(element)
-  const liquidDripsController = createLiquidDripsController(element)
+  const liquidDripsController = createLiquidDripsController(element, (x, y, vx, scale) => {
+    if (renderer && typeof renderer.spawnSplash === 'function') {
+      renderer.spawnSplash(x, y, vx, scale)
+    }
+  })
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined

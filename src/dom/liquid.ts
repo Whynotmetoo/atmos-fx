@@ -9,6 +9,9 @@ type LiquidDrip = {
   dripX: number
   targetBottom: number
   liquidDripping: boolean
+  scale: number
+  collisionY: number
+  hasSplashed: boolean
   
   // DOM Elements
   group: SVGGElement
@@ -17,6 +20,8 @@ type LiquidDrip = {
   droplet: SVGEllipseElement
   clipPath: SVGClipPathElement
   clipRect: SVGRectElement
+  filter: SVGFilterElement
+  blur: SVGFEGaussianBlurElement
 }
 
 export type LiquidDripsController = {
@@ -120,7 +125,10 @@ function parseColorRGB(colorStr: string): { rgb: string; alpha: number } {
   }
 }
 
-export function createLiquidDripsController(root: HTMLElement): LiquidDripsController {
+export function createLiquidDripsController(
+  root: HTMLElement,
+  onSplash?: (x: number, y: number, vx: number, scale: number) => void,
+): LiquidDripsController {
   const doc = root.ownerDocument
   const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute('class', 'atmos-liquid-svg')
@@ -133,24 +141,6 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
   svg.style.zIndex = '4'
 
   const defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs')
-  const filterId = `atmos-liquid-goo-${Math.random().toString(36).substring(2, 9)}`
-  const filter = doc.createElementNS('http://www.w3.org/2000/svg', 'filter')
-  filter.setAttribute('id', filterId)
-
-  const blur = doc.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur')
-  blur.setAttribute('in', 'SourceGraphic')
-  blur.setAttribute('stdDeviation', '6')
-  blur.setAttribute('result', 'blur')
-
-  const matrix = doc.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix')
-  matrix.setAttribute('in', 'blur')
-  matrix.setAttribute('mode', 'matrix')
-  matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9')
-  matrix.setAttribute('result', 'gooey')
-
-  filter.appendChild(blur)
-  filter.appendChild(matrix)
-  defs.appendChild(filter)
   svg.appendChild(defs)
 
   const group = doc.createElementNS('http://www.w3.org/2000/svg', 'g')
@@ -163,6 +153,26 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
 
   const createDrip = (index: number) => {
     const cardGroup = doc.createElementNS('http://www.w3.org/2000/svg', 'g')
+
+    const filterId = `atmos-liquid-goo-${index}-${Math.random().toString(36).substring(2, 9)}`
+    const filter = doc.createElementNS('http://www.w3.org/2000/svg', 'filter')
+    filter.setAttribute('id', filterId)
+
+    const blur = doc.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur')
+    blur.setAttribute('in', 'SourceGraphic')
+    blur.setAttribute('stdDeviation', '6')
+    blur.setAttribute('result', 'blur')
+
+    const matrix = doc.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix')
+    matrix.setAttribute('in', 'blur')
+    matrix.setAttribute('mode', 'matrix')
+    matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9')
+    matrix.setAttribute('result', 'gooey')
+
+    filter.appendChild(blur)
+    filter.appendChild(matrix)
+    defs.appendChild(filter)
+
     cardGroup.setAttribute('filter', `url(#${filterId})`)
 
     const clipId = `atmos-liquid-clip-${index}-${Math.random().toString(36).substring(2, 9)}`
@@ -205,12 +215,17 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
       dripX: 0,
       targetBottom: 0,
       liquidDripping: true,
+      scale: 1.0,
+      collisionY: 10000,
+      hasSplashed: false,
       group: cardGroup,
       path,
       bulge,
       droplet,
       clipPath,
       clipRect,
+      filter,
+      blur,
     })
   }
 
@@ -219,6 +234,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
     if (drip) {
       drip.group.remove()
       drip.clipPath.remove()
+      drip.filter.remove()
       drips.splice(index, 1)
     }
   }
@@ -242,7 +258,8 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
 
       svg.style.display = 'block'
       const parsedColor = parseColorRGB(options.color)
-      svg.style.opacity = String(parsedColor.alpha)
+      // Make liquid color slightly semi-transparent, around 20% transparent (80% opacity)
+      svg.style.opacity = String(parsedColor.alpha * 0.8)
 
       // Sync count
       while (drips.length < targets.length) {
@@ -262,6 +279,29 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
         drip.waveRight = target.right - indent
         drip.dripX = drip.waveLeft + (drip.waveRight - drip.waveLeft) * 0.65
         drip.targetBottom = target.bottom
+        // Scale factor: narrower card -> smaller waves, bulges, and falling droplet size (clamped to 0.6 to survive gooey blur)
+        drip.scale = Math.min(1.0, Math.max(0.6, target.width / 300))
+
+        // Update the blur standard deviation based on scale to preserve gooey shape visibility
+        drip.blur.setAttribute('stdDeviation', (6 * drip.scale).toFixed(2))
+
+        // Find the highest collision target directly below this drip point
+        let collisionY = 10000
+        if (options.bottomCollision) {
+          collisionY = root.clientHeight || 10000
+        }
+        for (let j = 0; j < targets.length; j++) {
+          const t = targets[j]
+          if (t.element === target.element) {
+            continue
+          }
+          if (t.y >= target.bottom - 2 && drip.dripX >= t.x && drip.dripX <= t.right) {
+            if (t.y < collisionY) {
+              collisionY = t.y
+            }
+          }
+        }
+        drip.collisionY = collisionY
 
         const cardLiquidDripping = target.element?.dataset.atmosLiquidDripping !== 'false'
         drip.liquidDripping = cardLiquidDripping
@@ -313,6 +353,7 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
 
         const BULGE_BASE_Y_OFFSET = -2
         const DROPLET_BASE_Y_OFFSET = -2
+        const scale = drip.scale
 
         let bulgeR = 0
         let bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET
@@ -331,13 +372,14 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
           dropletRY = 0
           dropletCY = drip.targetBottom + DROPLET_BASE_Y_OFFSET
           baseAmp = 0.6
+          drip.hasSplashed = false
         } else if (t < 0.35) {
           // Phase 2: Bulging
           const phaseProgress = (t - 0.15) / 0.2
           const easedProgress = easeInOutQuad(phaseProgress)
 
-          bulgeR = easedProgress * 8.0
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + easedProgress * 4.0
+          bulgeR = easedProgress * 8.0 * scale
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + easedProgress * 4.0 * scale
 
           dropletRX = 0
           dropletRY = 0
@@ -349,12 +391,12 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
           const phaseProgress = (t - 0.35) / 0.2
           const easedProgress = easeInOutQuad(phaseProgress)
 
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale
           bulgeR = 0
 
           const p_s = (t - 0.35) / 0.23
-          dropletRX = 8.0 - p_s * 3.5
-          dropletRY = 8.0 + p_s * 10.0
+          dropletRX = (8.0 - p_s * 3.5) * scale
+          dropletRY = (8.0 + p_s * 10.0) * scale
           dropletCY = bulgeCY + Math.pow(p_s, 4) * 63.0
 
           baseAmp = 2.2 + easedProgress * 1.3
@@ -363,49 +405,73 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
           const phaseProgress = (t - 0.55) / 0.03
 
           bulgeR = 0
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 - phaseProgress * 2.0
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale - phaseProgress * 2.0 * scale
 
           const p_s = (t - 0.35) / 0.23
-          dropletRX = 8.0 - p_s * 3.5
-          dropletRY = 8.0 + p_s * 10.0
-          dropletCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 + Math.pow(p_s, 4) * 63.0
+          dropletRX = (8.0 - p_s * 3.5) * scale
+          dropletRY = (8.0 + p_s * 10.0) * scale
+          dropletCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + Math.pow(p_s, 4) * 63.0
 
           baseAmp = 3.5
         } else if (t < 0.85) {
           // Phase 5: Falling & Recoil
           const phaseProgress = (t - 0.58) / 0.27
 
-          dropletCY =
+          const fallY =
             drip.targetBottom +
             BULGE_BASE_Y_OFFSET +
-            4.0 +
-            65.0 +
+            4.0 * scale +
+            63.0 +
             295.8 * phaseProgress +
             109.2 * Math.pow(phaseProgress, 2)
-          dropletRX = 4.5
-          dropletRY = 18.0
+
+          // Check if droplet hits the collision level
+          if (fallY >= drip.collisionY) {
+            if (!drip.hasSplashed) {
+              drip.hasSplashed = true
+              onSplash?.(drip.dripX, drip.collisionY, 0, scale)
+            }
+            dropletRX = 0
+            dropletRY = 0
+            dropletCY = drip.collisionY
+          } else {
+            // Keep drawing the smooth, scalable SVG droplet while falling
+            dropletRX = 4.5 * scale
+            dropletRY = 18.0 * scale
+            dropletCY = fallY
+          }
 
           const wobbleProgress = (t - 0.58) / 0.27
           const wobbleTime = wobbleProgress * 12.0
           const decay = Math.exp(-wobbleProgress * 5.5)
-          const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay
+          const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
 
-          bulgeR = Math.max(0, 5.0 * decay)
+          bulgeR = Math.max(0, 5.0 * decay * scale)
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + wobbleOffset
 
           baseAmp = 0.6 + 2.9 * decay
         } else if (t < 0.92) {
           // Phase 6: Splash & Dissolve
+          // (It has already hit the platform and splashed during Phase 5, so keep SVG droplet hidden)
           dropletRX = 0
           dropletRY = 0
-          dropletCY = drip.targetBottom + 610.0
+          dropletCY = drip.collisionY
 
-          const wobbleProgress = (t - 0.58) / 0.27
+          // In case it fell very fast and didn't trigger splash in Phase 5
+          if (!drip.hasSplashed) {
+            drip.hasSplashed = true
+            const maxFallY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + 63.0 + 295.8 + 109.2
+            if (drip.collisionY <= maxFallY) {
+              onSplash?.(drip.dripX, drip.collisionY, 0, scale)
+            }
+          }
+
+          const wobbleProgress = (t - 0.58) / 0.34
           const wobbleTime = wobbleProgress * 12.0
           const decay = Math.exp(-wobbleProgress * 5.5)
-          const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay
+          const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
 
-          bulgeR = Math.max(0, 5.0 * decay)
+          bulgeR = Math.max(0, 5.0 * decay * scale)
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + wobbleOffset
 
           baseAmp = 0.6 + 2.9 * decay
@@ -420,11 +486,12 @@ export function createLiquidDripsController(root: HTMLElement): LiquidDripsContr
         }
 
         // Wave control points heights
-        const ly1 = getWaveY(drip.waveLeft + leftSpan * 0.25, t, baseAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ly2 = getWaveY(drip.waveLeft + leftSpan * 0.5, t, baseAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ly3 = getWaveY(drip.waveLeft + leftSpan * 0.75, t, baseAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ly4 = getWaveY(drip.dripX, t, baseAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ry1 = getWaveY(drip.dripX + rightSpan * 0.5, t, baseAmp, drip.waveLeft, drip.waveRight, drip.dripX)
+        const scaledAmp = baseAmp * scale
+        const ly1 = getWaveY(drip.waveLeft + leftSpan * 0.25, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
+        const ly2 = getWaveY(drip.waveLeft + leftSpan * 0.5, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
+        const ly3 = getWaveY(drip.waveLeft + leftSpan * 0.75, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
+        const ly4 = getWaveY(drip.dripX, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
+        const ry1 = getWaveY(drip.dripX + rightSpan * 0.5, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
 
         const y1Val = drip.targetBottom + ly1
         const y2Val = drip.targetBottom + ly2
