@@ -340,6 +340,8 @@ const playgroundAtmosphere = createAtmosphere(playgroundRoot, {
   pauseWhenHidden: false
 })
 playgroundAtmosphere.start()
+;(window as any).playgroundAtmosphere = playgroundAtmosphere
+
 
 function syncSliderValue(id: string) {
   const valueElement = document.querySelector(`#${id}-val`)
@@ -457,6 +459,8 @@ function applyPlayground() {
     } else if (playgroundState.transparency === 'opacity') {
       card.setAttribute('data-atmos-opacity', String(playgroundState.contentOpacity))
       card.style.setProperty('--atmos-fx-opacity', String(playgroundState.contentOpacity))
+    } else if (playgroundState.transparency === 'none') {
+      card.setAttribute('data-atmos-opaque', '')
     }
 
     if (playgroundState.preset === 'rain') {

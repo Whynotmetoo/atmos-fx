@@ -381,19 +381,21 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
 
       if (!isBackground) {
         const collision =
-          this.options.snowAccumulation > 0 && particle.vy > 0
+          particle.vy > 0
             ? this.findSnowLanding(previousDrawX, previousY, drawX, particle.y)
             : undefined
 
         if (collision) {
-          this.accumulation.spawn(
-            collision.x,
-            collision.y,
-            particle.radius * randomRange(0.65, 1.2),
-            Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
-            particle.depth,
-            collision.target ?? null,
-          )
+          if (this.options.snowAccumulation > 0) {
+            this.accumulation.spawn(
+              collision.x,
+              collision.y,
+              particle.radius * randomRange(0.65, 1.2),
+              Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
+              particle.depth,
+              collision.target ?? null,
+            )
+          }
           recycleParticle(particle, this.size, this.options, false)
           continue
         }

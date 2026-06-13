@@ -51,7 +51,7 @@ const CSS_CONTENT = `
     --atmos-fx-glass-base: rgb(255 255 255 / var(--atmos-fx-surface-opacity));
     --atmos-fx-glass-background: linear-gradient(145deg, var(--atmos-fx-glass-strong), rgb(255 255 255 / calc(var(--atmos-fx-surface-opacity) * 0.58))), var(--atmos-fx-glass-base);
     --atmos-fx-glass-border: rgb(255 255 255 / 0.24);
-    --atmos-fx-glass-shadow: 0 24px 60px rgb(14 22 32 / 0.34), inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 -48px 80px rgb(255 255 255 / 0.04);
+    --atmos-fx-glass-shadow: 0 24px 60px rgb(14 22 32 / 0.34), inset 0 -48px 80px rgb(255 255 255 / 0.04);
     position: relative;
     overflow: hidden;
     isolation: isolate;
@@ -84,8 +84,8 @@ const CSS_CONTENT = `
     border: 1px solid rgb(255 255 255 / 0.24);
     border: 1px solid var(--atmos-fx-glass-border);
     box-shadow: var(--atmos-fx-glass-shadow);
-    backdrop-filter: blur(24px) saturate(1.25);
-    -webkit-backdrop-filter: blur(24px) saturate(1.25);
+    backdrop-filter: blur(8px) saturate(1.25);
+    -webkit-backdrop-filter: blur(8px) saturate(1.25);
   }
   [data-atmos-fx] :where([data-atmos-opacity]) {
     opacity: var(--atmos-fx-opacity, var(--atmos-fx-content-opacity));
@@ -434,7 +434,7 @@ export function createAtmosphere(
       delete element.dataset.atmosFxPreset
       delete element.dataset.atmosParticle
       delete element.dataset.atmosRenderer
-    },
+    }
   }
 
   return controller

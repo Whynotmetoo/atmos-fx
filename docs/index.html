@@ -108,14 +108,14 @@
         width: 100%;
         height: 980px;
         border-bottom: 1px solid var(--line);
-        background: #09100d;
+        background: #0d1613;
         margin-bottom: 34px;
         overflow: hidden;
         isolation: isolate;
         background:
-          radial-gradient(circle at 13% 18%, rgba(112, 217, 255, 0.14), transparent 28rem),
-          radial-gradient(circle at 88% 76%, rgba(255, 107, 74, 0.11), transparent 30rem),
-          linear-gradient(135deg, #07100e 0%, #141b18 52%, #1e1713 100%);
+          radial-gradient(circle at 13% 18%, rgba(112, 217, 255, 0.20), transparent 32rem),
+          radial-gradient(circle at 88% 76%, rgba(255, 107, 74, 0.16), transparent 34rem),
+          linear-gradient(135deg, #0c1815 0%, #1a2320 52%, #241c18 100%);
       }
 
       .showcase-inner {
@@ -413,12 +413,15 @@
         position: relative;
         border-radius: 24px;
         border: 1px solid var(--line);
-        background: rgba(10, 15, 20, 0.45);
-        min-height: 500px;
+        min-height: 516px;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(112, 217, 255, 0.18), transparent 18rem),
+          radial-gradient(circle at 80% 70%, rgba(255, 107, 74, 0.14), transparent 20rem),
+          linear-gradient(135deg, #0e171a 0%, #1b2226 50%, #211c18 100%);
       }
 
       #playground-stage {
@@ -434,24 +437,29 @@
         padding: 40px;
       }
 
+      #playground-info-card:not([data-atmos-glass]),
+      #playground-input-card:not([data-atmos-glass]) {
+        background: var(--bg-panel-solid);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      }
       #playground-info-card,
       #playground-input-card {
         width: 340px;
         padding: 20px;
         border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
-        background: var(--bg-panel);
         font-size: 0.9rem;
       }
       
       #playground-input-card {
-        background: rgba(255,255,255,0.04);
         color: var(--ink);
         outline: none;
         font-family: inherit;
         font-size: 0.95rem;
+      }
+      #playground-input-card:focus:not([data-atmos-glass]) {
+        background: #17222b;
       }
       #playground-input-card::placeholder {
         color: var(--muted);
@@ -459,7 +467,6 @@
       }
       #playground-input-card:focus {
         border-color: var(--accent);
-        background: rgba(255,255,255,0.08);
       }
 
       /* Compact Controls Panel */
@@ -783,7 +790,7 @@
       }
 
       /* Responsive Layouts */
-      @media (max-width: 1080px) {
+      @media (max-width: 1080px) {  
         .showcase-container {
           height: auto;
           min-height: auto;
@@ -810,7 +817,7 @@
           left: auto;
           top: auto;
           max-width: 100%;
-          margin-bottom: 24px;
+          margin-bottom: 60px;
         }
         .showcase-title {
           font-size: 2.5rem;
@@ -823,7 +830,7 @@
           inset: auto;
           width: 100%;
           transform: none;
-          margin-bottom: 16px;
+          margin-bottom: 60px;
         }
         .micro-stack {
           grid-template-columns: repeat(2, 1fr);
