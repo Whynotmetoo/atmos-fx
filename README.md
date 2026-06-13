@@ -96,6 +96,7 @@ React is a required peer dependency.
 - Keep `renderer: 'canvas2d'` for full feature parity; `renderer: 'webgl'` is the initial rain foundation with Canvas 2D fallback.
 - Transparent surfaces can reveal background-layer precipitation while foreground precipitation still collides with selected DOM surfaces.
 - Keep collision surfaces intentional; target rects refresh outside the animation frame loop.
+- Collision and dripping physics use the axis-aligned bounding box (AABB) of targeted elements. Rotated elements (e.g. using `transform: rotate()`) will have collisions calculated against their outer bounding rectangle rather than the rotated visual boundary.
 - Snow accumulation is bounded by quality, density, and the configured buildup intensity.
 - Leave `respectReducedMotion` enabled in production.
 - Use `controller.destroy()` when removing an atmosphere root outside React.
