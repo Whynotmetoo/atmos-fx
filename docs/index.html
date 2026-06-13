@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../src/styles/atmos-fx.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
         color-scheme: dark;
@@ -21,7 +21,7 @@
         --accent: #d7ff54;
         --accent-glow: rgba(215, 255, 84, 0.12);
         --success: #10b981;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
       }
 
       * {
@@ -210,8 +210,8 @@
         position: absolute;
         right: 40px;
         top: 290px;
-        width: 320px;
-        padding: 24px;
+        width: 360px;
+        padding: 30px;
         background: rgba(238, 240, 221, 0.88);
         color: #15201d;
         box-shadow: none;
@@ -315,7 +315,7 @@
 
       .tilt-card {
         position: absolute;
-        right: 400px;
+        right: 440px;
         top: 380px;
         width: 220px;
         padding: 16px;
@@ -338,7 +338,7 @@
         bottom: 100px;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 24px;
+        gap: 3rem;
         width: calc(100% - 80px);
       }
       .micro-card {
@@ -387,7 +387,7 @@
         width: 140px;
       }
       .rail-bottom {
-        right: 420px;
+        right: 460px;
         bottom: 380px;
         width: 180px;
       }
@@ -686,13 +686,13 @@
         padding: 20px;
         overflow-x: auto;
         color: #e2e8f0;
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        font-family: 'JetBrains Mono', monospace;
         font-size: 0.86rem;
         position: relative;
       }
 
       code {
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        font-family: 'JetBrains Mono', monospace;
         background: rgba(255,255,255,0.06);
         padding: 2px 6px;
         border-radius: 4px;
@@ -775,6 +775,14 @@
           margin-right: 0;
           padding: 24px;
         }
+        .showcase-inner {
+          height: auto;
+          padding: 0;
+        }
+        .showcase-nav-actions {
+          right: 24px;
+          top: 24px;
+        }
         .showcase-backdrop, .orbit, .collision-rail {
           display: none;
         }
@@ -785,7 +793,13 @@
           max-width: 100%;
           margin-bottom: 24px;
         }
-        .control-deck, .forecast-card, .floating-ticket, .tilt-card, .micro-stack {
+        .showcase-title {
+          font-size: 2.5rem;
+        }
+        .showcase-desc {
+          font-size: 1.15rem;
+        }
+        .control-deck, .forecast-card, .floating-ticket, .tilt-card, .micro-stack, .showcase-input {
           position: relative;
           inset: auto;
           width: 100%;
@@ -809,6 +823,46 @@
         .micro-stack {
           grid-template-columns: 1fr;
         }
+        .showcase-title {
+          font-size: 2rem;
+        }
+        .showcase-desc {
+          font-size: 1rem;
+        }
+        .showcase-nav-actions {
+          gap: 10px;
+          padding: 6px 12px;
+        }
+      }
+
+      .showcase-input {
+        position: absolute;
+        left: 40vw;
+        top: 350px;
+        width: 260px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 24, 22, 0.52);
+        color: var(--ink);
+        outline: none;
+        font-family: inherit;
+        font-size: 0.92rem;
+        z-index: 2;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+      }
+      .showcase-input::placeholder {
+        color: var(--muted);
+        opacity: 0.7;
+      }
+      .showcase-input:focus {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .lang-dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
       }
     </style>
   </head>
@@ -818,7 +872,23 @@
 
       <!-- Top Right Navigation Actions -->
       <div class="showcase-nav-actions" data-atmos-collision data-atmos-glass data-atmos-liquid-dripping="true">
-        <button id="lang-toggle" class="lang-btn">EN / 中</button>
+        <div class="lang-dropdown-container" style="position: relative; display: inline-block;">
+          <button id="lang-dropdown-btn" class="lang-btn" style="display: flex; align-items: center; gap: 4px; padding: 6px 10px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 15px; height: 15px; vertical-align: middle;">
+              <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+            </svg>
+            <span id="current-lang-label">EN</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px; opacity: 0.6;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div id="lang-dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 6px; background: var(--bg-panel-solid); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 100; min-width: 108px; overflow: hidden; backdrop-filter: blur(12px);">
+            <button class="lang-dropdown-item" data-lang="en" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+              English <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
+            </button>
+            <button class="lang-dropdown-item" data-lang="zh" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+              简体中文 <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
+            </button>
+          </div>
+        </div>
         <a href="https://github.com/Whynotmetoo/atmos-fx" target="_blank" class="nav-link" aria-label="GitHub">
           <svg class="nav-icon" viewBox="0 0 16 16">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -839,6 +909,8 @@
             A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.
           </p>
         </div>
+
+        <input class="showcase-card showcase-input" data-atmos-collision data-atmos-glass type="text" placeholder="Type here..." data-i18n-attr="placeholder:form-placeholder" />
 
         <!-- 2. Integrated Control Deck -->
         <div class="showcase-card control-deck" data-atmos-collision data-atmos-glass>
@@ -925,7 +997,7 @@
     <div class="container">
       <!-- Playground Title -->
       <div class="playground-title-wrapper">
-        <h2 data-i18n-key="playground-title">Interactive Playground</h2>
+        <h2 data-i18n-key="playground-title">Playground</h2>
       </div>
 
       <!-- Playground Section -->
@@ -1077,6 +1149,30 @@ export function App() {
   )
 }</code></pre>
           </div>
+          <div>
+            <p style="margin-bottom: 8px; color: var(--muted);" data-i18n-key="quick-start-step3">3. Or use Vanilla JavaScript directly:</p>
+            <pre><code>&lt;!-- 1. Define HTML with data attributes for inner cards --&gt;
+&lt;div id="container"&gt;
+  &lt;div data-atmos-collision data-atmos-glass data-atmos-liquid-dripping="true"&gt;
+    &lt;h1&gt;Interactive Opaque Shelf&lt;/h1&gt;
+    &lt;p&gt;Precipitation splashes here.&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 2. Initialize and start the atmosphere --&gt;
+import { createAtmosphere } from 'atmos-fx'
+import 'atmos-fx/styles.css'
+
+const container = document.querySelector('#container')
+const controller = createAtmosphere(container, {
+  preset: 'rain',
+  density: 0.65,
+  wind: -0.12,
+  bottomCollision: true
+})
+
+controller.start()</code></pre>
+          </div>
         </div>
       </section>
 
@@ -1098,52 +1194,52 @@ export function App() {
               <tr>
                 <td><code>preset</code></td>
                 <td><code>'rain' | 'snow' | 'hail'</code></td>
-                <td>Applies preset default physical and visual values.</td>
+                <td data-i18n-key="api-desc-preset">Applies preset default physical and visual values.</td>
               </tr>
               <tr>
                 <td><code>particle</code></td>
                 <td><code>'rain' | 'snow' | 'hail'</code></td>
-                <td>Overrides preset particle rendering without overwriting speed/wind presets.</td>
+                <td data-i18n-key="api-desc-particle">Overrides preset particle rendering without overwriting speed/wind presets.</td>
               </tr>
               <tr>
                 <td><code>density</code></td>
                 <td><code>number</code> (0 to 1) <span class="api-badge">0.65</span></td>
-                <td>Scales preallocated particle budget and spawn count.</td>
+                <td data-i18n-key="api-desc-density">Scales preallocated particle budget and spawn count.</td>
               </tr>
               <tr>
                 <td><code>speed</code></td>
                 <td><code>number</code> (0 to 10) <span class="api-badge">1.0</span></td>
-                <td>Scalar multiplier for gravity and vertical fall speed.</td>
+                <td data-i18n-key="api-desc-speed">Scalar multiplier for gravity and vertical fall speed.</td>
               </tr>
               <tr>
                 <td><code>wind</code></td>
                 <td><code>number</code> (-1.5 to 1.5) <span class="api-badge">-0.12</span></td>
-                <td>Affects horizontal sway and particle drift.</td>
+                <td data-i18n-key="api-desc-wind">Affects horizontal sway and particle drift.</td>
               </tr>
               <tr>
                 <td><code>color</code></td>
                 <td><code>string</code> <span class="api-badge">#dcebffb7</span></td>
-                <td>CSS color representation for precipitation particles.</td>
+                <td data-i18n-key="api-desc-color">CSS color representation for precipitation particles.</td>
               </tr>
               <tr>
                 <td><code>quality</code></td>
                 <td><code>'auto' | 'low' | 'medium' | 'high'</code></td>
-                <td>Limits particle count and device pixel ratio density. Defaults to <code>auto</code>.</td>
+                <td data-i18n-key="api-desc-quality">Limits particle count and device pixel ratio density. Defaults to <code>auto</code>.</td>
               </tr>
               <tr>
                 <td><code>bottomCollision</code></td>
                 <td><code>boolean</code> <span class="api-badge">false</span></td>
-                <td>Determines whether particles collide with the bottom edge of the container.</td>
+                <td data-i18n-key="api-desc-bottomCollision">Determines whether particles collide with the bottom edge of the container.</td>
               </tr>
               <tr>
                 <td><code>collisionSelector</code></td>
                 <td><code>string</code></td>
-                <td>Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.</td>
+                <td data-i18n-key="api-desc-collisionSelector">Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.</td>
               </tr>
               <tr>
                 <td><code>opaqueSelector</code></td>
                 <td><code>string</code></td>
-                <td>Query selector for elements that skip transparency blurs. Defaults to <code>[data-atmos-opaque]</code>.</td>
+                <td data-i18n-key="api-desc-opaqueSelector">Query selector for elements that skip transparency blurs. Defaults to <code>[data-atmos-opaque]</code>.</td>
               </tr>
             </tbody>
           </table>
@@ -1163,22 +1259,22 @@ export function App() {
               <tr>
                 <td><code>transMode</code></td>
                 <td><code>'glass' | 'opacity' | 'solid'</code></td>
-                <td>Specifies card transparent integration style. Glass mode triggers high-fidelity backdrop blurs.</td>
+                <td data-i18n-key="api-desc-transMode">Specifies card transparent integration style. Glass mode triggers high-fidelity backdrop blurs.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td>Toggles the water droplets condensation, bulging, and dripping animation (only in Rain mode).</td>
+                <td data-i18n-key="api-desc-liquidDripping">Toggles the water droplets condensation, bulging, and dripping animation (only in Rain mode).</td>
               </tr>
               <tr>
                 <td><code>asChild</code></td>
                 <td><code>boolean</code> <span class="api-badge">false</span></td>
-                <td>Merges the AtmosCard properties directly onto the underlying child element instead of rendering a wrapper node.</td>
+                <td data-i18n-key="api-desc-asChild">Merges the AtmosCard properties directly onto the underlying child element instead of rendering a wrapper node.</td>
               </tr>
               <tr>
                 <td><code>opacity</code></td>
                 <td><code>number</code> (0 to 1)</td>
-                <td>Component-level custom backdrop opacity override (specifically used in opacity mode).</td>
+                <td data-i18n-key="api-desc-opacity">Component-level custom backdrop opacity override (specifically used in opacity mode).</td>
               </tr>
             </tbody>
           </table>
@@ -1219,31 +1315,31 @@ controller.destroy()</code></pre>
             <tbody>
               <tr>
                 <td><code>start()</code></td>
-                <td>Initializes canvas layers, starts the requestAnimationFrame loop and rendering.</td>
+                <td data-i18n-key="method-desc-start">Initializes canvas layers, starts the requestAnimationFrame loop and rendering.</td>
               </tr>
               <tr>
                 <td><code>stop()</code></td>
-                <td>Stops the animation loop and clears canvases. Does not remove layers.</td>
+                <td data-i18n-key="method-desc-stop">Stops the animation loop and clears canvases. Does not remove layers.</td>
               </tr>
               <tr>
                 <td><code>pause()</code></td>
-                <td>Pauses the animation execution while keeping the active frame buffer.</td>
+                <td data-i18n-key="method-desc-pause">Pauses the animation execution while keeping the active frame buffer.</td>
               </tr>
               <tr>
                 <td><code>resume()</code></td>
-                <td>Resumes execution from a paused state.</td>
+                <td data-i18n-key="method-desc-resume">Resumes execution from a paused state.</td>
               </tr>
               <tr>
                 <td><code>resize()</code></td>
-                <td>Manually triggers context bounds measurement and canvas resizing.</td>
+                <td data-i18n-key="method-desc-resize">Manually triggers context bounds measurement and canvas resizing.</td>
               </tr>
               <tr>
                 <td><code>update(options)</code></td>
-                <td>Dynamically updates atmosphere parameters on the fly without resetting state.</td>
+                <td data-i18n-key="method-desc-update">Dynamically updates atmosphere parameters on the fly without resetting state.</td>
               </tr>
               <tr>
                 <td><code>destroy()</code></td>
-                <td>Cleans up DOM nodes, listeners, context properties, and cancels loops.</td>
+                <td data-i18n-key="method-desc-destroy">Cleans up DOM nodes, listeners, context properties, and cancels loops.</td>
               </tr>
             </tbody>
           </table>
