@@ -763,6 +763,32 @@
         font-size: 0.85rem;
       }
 
+      .showcase-input {
+        position: absolute;
+        left: 40vw;
+        top: 350px;
+        width: 260px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 24, 22, 0.52);
+        color: var(--ink);
+        outline: none;
+        font-family: inherit;
+        font-size: 0.92rem;
+        z-index: 2;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+      }
+      .showcase-input::placeholder {
+        color: var(--muted);
+        opacity: 0.7;
+      }
+      .showcase-input:focus {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
       /* Responsive Layouts */
       @media (max-width: 1080px) {
         .showcase-container {
@@ -835,31 +861,6 @@
         }
       }
 
-      .showcase-input {
-        position: absolute;
-        left: 40vw;
-        top: 350px;
-        width: 260px;
-        padding: 14px 20px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(15, 24, 22, 0.52);
-        color: var(--ink);
-        outline: none;
-        font-family: inherit;
-        font-size: 0.92rem;
-        z-index: 2;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
-      }
-      .showcase-input::placeholder {
-        color: var(--muted);
-        opacity: 0.7;
-      }
-      .showcase-input:focus {
-        border-color: var(--accent);
-        background: rgba(255, 255, 255, 0.08);
-      }
 
       .lang-dropdown-item:hover {
         background: rgba(255, 255, 255, 0.08) !important;
