@@ -47,8 +47,8 @@ const CSS_CONTENT = `
     --atmos-fx-content-opacity: 0.72;
     --atmos-fx-surface-opacity: 0.14;
     --atmos-fx-glass-background: rgb(255 255 255 / var(--atmos-fx-surface-opacity));
-    --atmos-fx-glass-border: rgb(255 255 255 / 0.2);
-    --atmos-fx-glass-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
+    --atmos-fx-glass-border: rgb(255 255 255 / 0.15);
+    --atmos-fx-glass-shadow: 0 8px 32px rgb(0 0 0 / 0.08);
     position: relative;
     overflow: hidden;
     isolation: isolate;
@@ -78,10 +78,11 @@ const CSS_CONTENT = `
   [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]) {
     background: rgb(255 255 255 / 0.14);
     background: var(--atmos-fx-glass-background);
-    border-color: var(--atmos-fx-glass-border);
+    border: 1px solid rgb(255 255 255 / 0.15);
+    border: 1px solid var(--atmos-fx-glass-border);
     box-shadow: var(--atmos-fx-glass-shadow);
-    backdrop-filter: blur(18px) saturate(1.15);
-    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    backdrop-filter: blur(20px) saturate(1.15);
+    -webkit-backdrop-filter: blur(20px) saturate(1.15);
   }
   [data-atmos-fx] :where([data-atmos-opacity]) {
     opacity: var(--atmos-fx-opacity, var(--atmos-fx-content-opacity));
