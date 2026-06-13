@@ -343,14 +343,16 @@ function updateReactCodePreview() {
 
   const atmosFxPropsStr = props.join('\n' + indent)
 
+  const cardOpacityProp = p.transparency === 'opacity' ? ` opacity={${p.contentOpacity.toFixed(2)}}` : ''
+
   const code = `<AtmosFx
   ${atmosFxPropsStr}
 >
-  <AtmosCard transMode="${p.transparency}"${p.preset === 'rain' ? ` liquidDripping={${p.liquidDripping}}` : ''}>
+  <AtmosCard transMode="${p.transparency}"${cardOpacityProp}${p.preset === 'rain' ? ` liquidDripping={${p.liquidDripping}}` : ''}>
     <div>A high-performance DOM-aware WebGL atmosphere engine.</div>
   </AtmosCard>
 
-  <AtmosCard transMode="${p.transparency}">
+  <AtmosCard transMode="${p.transparency}"${cardOpacityProp}>
     <input type="text" placeholder="Type here..." />
   </AtmosCard>
 </AtmosFx>`
