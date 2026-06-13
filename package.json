@@ -8,6 +8,7 @@
     "type": "git",
     "url": "git+ssh://git@github.com/Whynotmetoo/atmos-fx.git"
   },
+  "homepage": "https://atmosfx.carsonye.com",
   "keywords": [
     "atmosphere",
     "canvas",
