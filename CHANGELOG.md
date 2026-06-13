@@ -4,9 +4,17 @@ All notable changes to atmos-fx will be documented in this file.
 
 The project follows semantic versioning once published.
 
-## [0.1.2] - 2026-06-12
+## [0.1.2] - 2026-06-13
 
-- Fixed release checklist references and document formatting.
+- Upgraded the default frosted glass styling to a premium glassmorphic aesthetic with a linear gradient background, refined borders, and updated box-shadows.
+- Reduced default backdrop blur from `24px` to `8px` for better rendering performance and visual clarity.
+- Introduced `bottomCollision` toggle option to control container bottom boundary collision across all weather modes.
+- Added `liquidDripping` option and implemented rainwater gathering along card bottoms with tension-stretching snapping dripping physics.
+- Added support for dynamically setting card opacity and `data-atmos-opaque` attribute in playground transparency modes.
+- Resolved a double-line border rendering artifact on glass card top borders by removing the redundant top highlight inset shadow.
+- Prevented snow landing logic from spawning accumulation when `snowAccumulation` is set to 0.
+- Supported custom surface opacity values dynamically in the React adapter and playground code generation.
+- Fixed release checklist references, local project documentation, and formatting.
 
 ## [0.1.1] - 2026-06-12
 
