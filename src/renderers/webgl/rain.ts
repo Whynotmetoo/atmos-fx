@@ -304,6 +304,10 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     this.collisionTargets = targets
   }
 
+  spawnSplash(x: number, y: number, vx: number, depth = 1.0) {
+    this.splashes.spawn(x, y, vx, depth)
+  }
+
   getActiveSplashCount() {
     return this.splashes.getActiveCount()
   }

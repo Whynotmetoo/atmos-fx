@@ -23,4 +23,5 @@ export type Canvas2DRenderer = {
   clear(): void
   destroy(): void
   getStats(): RendererStats
+  spawnSplash?(x: number, y: number, vx: number, depth?: number): void
 }
