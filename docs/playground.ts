@@ -594,6 +594,12 @@ function setLanguage(lang: 'en' | 'zh') {
     }
   })
 
+  // Show/hide Xiaohongshu icon based on language (only for Chinese 'zh')
+  const xhsLink = document.querySelector('#xhs-link') as HTMLElement
+  if (xhsLink) {
+    xhsLink.style.display = lang === 'zh' ? 'flex' : 'none'
+  }
+
   // Refresh readouts
   applyShowcase()
   applyPlayground()
