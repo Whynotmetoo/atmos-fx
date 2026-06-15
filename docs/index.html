@@ -1266,7 +1266,7 @@ controller.start()</code></pre>
               <tr>
                 <td><code>transMode</code></td>
                 <td><code>'glass' | 'opacity' | 'solid'</code></td>
-                <td data-i18n-key="api-desc-transMode">Specifies card transparent integration style. Glass mode triggers high-fidelity backdrop blurs.</td>
+                <td data-i18n-key="api-desc-transMode">Specifies card integration style. glass: default frosted glass effect; opacity: translucent mode; solid: default element style without transparency, fully customizable.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
@@ -1285,6 +1285,19 @@ controller.start()</code></pre>
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Design Best Practices -->
+      <section class="docs-section">
+        <h2 class="section-title" data-i18n-key="best-practices-title">Design & UI Best Practices</h2>
+        <div class="method-example-wrapper">
+          <p data-i18n-key="bp-intro" style="margin-bottom: 16px;">To ensure visually realistic atmosphere effects, keep the following guidelines in mind when designing with <code>AtmosCard</code>:</p>
+          <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; display: flex; flex-direction: column; gap: 12px;">
+            <li data-i18n-key="bp-dripping"><strong>Particle Layering & Dripping:</strong> Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable <code>AtmosCard</code> elements. If <code>liquidDripping</code> is enabled, accumulated rainwater will drip down and correctly collide with any collidable cards positioned below it.</li>
+            <li data-i18n-key="bp-blocking"><strong>Avoid Wide Blocking Cards:</strong> A very wide collidable <code>AtmosCard</code> will act like an umbrella, blocking most foreground rain. This prevents rain from reaching elements below, significantly reducing their splash animations. Unless this is intended, avoid overly wide collision surfaces.</li>
+            <li data-i18n-key="bp-nesting"><strong>Avoid Nesting Cards:</strong> Unless you have a highly specific visual effect in mind, avoid nesting an <code>AtmosCard</code> inside another <code>AtmosCard</code>. This can cause conflicting collision bounds and visual behaviors that defy natural physics.</li>
+          </ul>
         </div>
       </section>
 
