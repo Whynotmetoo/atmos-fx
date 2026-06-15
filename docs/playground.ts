@@ -86,7 +86,7 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "api-desc-bottomCollision": "Determines whether particles collide with the bottom edge of the container.",
     "api-desc-collisionSelector": "Query selector for discovering top-edge landing surfaces. Defaults to [data-atmos-collision].",
     "api-desc-opaqueSelector": "Query selector for elements that skip transparency blurs. Defaults to [data-atmos-opaque].",
-    "api-desc-transMode": "Specifies card transparent integration style. Glass mode triggers high-fidelity backdrop blurs.",
+    "api-desc-transMode": "Specifies card integration style. glass: default frosted glass effect; opacity: translucent mode; solid: default element style without transparency, fully customizable.",
     "api-desc-liquidDripping": "Toggles the water droplets condensation, bulging, and dripping animation (only in Rain mode).",
     "api-desc-asChild": "Merges the AtmosCard properties directly onto the underlying child element instead of rendering a wrapper node.",
     "api-desc-opacity": "Component-level custom backdrop opacity override (specifically used in opacity mode).",
@@ -97,6 +97,11 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "method-desc-resize": "Manually triggers context bounds measurement and canvas resizing.",
     "method-desc-update": "Dynamically updates atmosphere parameters on the fly without resetting state.",
     "method-desc-destroy": "Cleans up DOM nodes, listeners, context properties, and cancels loops.",
+    "best-practices-title": "Design & UI Guidelines",
+    "bp-intro": "To ensure visually realistic atmosphere effects, keep the following guidelines in mind when designing with AtmosCard:",
+    "bp-dripping": "Particle Layering & Dripping: Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable AtmosCard elements. If liquidDripping is enabled, accumulated rainwater will drip down and correctly collide with any collidable cards positioned below it.",
+    "bp-blocking": "Avoid Wide Blocking Cards: A very wide collidable AtmosCard will act like an umbrella, blocking most foreground rain. This prevents rain from reaching elements below, significantly reducing their splash animations. Unless this is intended, avoid overly wide collision surfaces.",
+    "bp-nesting": "Avoid Nesting Cards: Unless you have a highly specific visual effect in mind, avoid nesting an AtmosCard inside another AtmosCard. This can cause conflicting collision bounds and visual behaviors that defy natural physics.",
     "footer-text": "© 2026 Carson Ye. Built with passion and curiosity."
   },
 zh: {
@@ -180,7 +185,7 @@ zh: {
   "api-desc-bottomCollision": "决定粒子是否与容器底部边缘发生碰撞。",
   "api-desc-collisionSelector": "用于查找顶边碰撞落面的查询选择器。默认为 [data-atmos-collision]。",
   "api-desc-opaqueSelector": "用于指定不进行背景模糊处理的元素的查询选择器。默认为 [data-atmos-opaque]。",
-  "api-desc-transMode": "指定卡片透明融合样式。玻璃模式（glass）会触发高精度背景模糊。",
+  "api-desc-transMode": "指定卡片透明融合样式。glass：默认毛玻璃效果；opacity：半透明模式；solid：保持元素默认样式（无透明处理），用户可完全自定义。",
   "api-desc-liquidDripping": "控制水滴在卡片上冷凝、聚集并滴落的动画（仅在雨模式下有效）。",
   "api-desc-asChild": "将 AtmosCard 的属性直接合并到其子元素上，而不是渲染一个包装 DOM 节点。",
   "api-desc-opacity": "组件级别的自定义背景透明度覆盖（专门用于 opacity 模式）。",
@@ -191,6 +196,11 @@ zh: {
   "method-desc-resize": "手动触发容器边界测量与 Canvas 尺寸重置。",
   "method-desc-update": "在不重置状态的前提下，实时动态更新氛围参数。",
   "method-desc-destroy": "清理 DOM 节点、监听器、上下文属性并取消动画循环。",
+  "best-practices-title": "设计与 UI 最佳实践",
+  "bp-intro": "为确保最佳的视觉效果，在使用 AtmosCard 时请遵循以下指南：",
+  "bp-dripping": "粒子分层与滴落：粒子分为前景和背景渲染。前景粒子会被可碰撞的 AtmosCard 阻挡。如果开启了 liquidDripping（液滴下落），积聚的雨水会向下滴落，并继续与下方任何可碰撞的卡片发生物理碰撞。",
+  "bp-blocking": "避免过宽的遮挡卡片：如果设置了一个非常宽的可碰撞 AtmosCard，它会像伞一样挡住大部分前景雨水。这会导致下方的元素无法接触到雨水，其表面的雨水溅落动画会大幅减少。除非出于特定的视觉设计意图，否则尽量避免设置过宽的碰撞表面。",
+  "bp-nesting": "避免卡片嵌套：除非有特意设计的视觉效果，否则尽量避免出现 AtmosCard 包裹 AtmosCard 的情况。这会导致冲突的碰撞边界与不符合自然物理常识的动画效果。",
   "footer-text": "© 2026 Carson Ye. Built with passion and curiosity."
   }
 }

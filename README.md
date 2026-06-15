@@ -94,6 +94,18 @@ React is available directly from `atmos-fx`:
 
 React is a required peer dependency.
 
+## Design & UI Guidelines
+
+To ensure visually realistic atmosphere effects, here are some guidelines to follow when designing with `AtmosCard`:
+
+- **Particle Layering & Dripping**: Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable `AtmosCard` elements. If `liquidDripping` is enabled on a card, the accumulated rainwater will drip down and correctly collide with any collidable `AtmosCard`s positioned below it.
+- **Avoid Wide Blocking Cards**: A very wide collidable `AtmosCard` will act like an umbrella, blocking most of the foreground rain. This prevents rain from reaching the elements below it, significantly reducing their rain splash animations. Unless this "umbrella" effect is specifically intended, avoid overly wide collision surfaces.
+- **Avoid Nesting Cards**: Unless you have a highly specific visual effect in mind, avoid nesting an `AtmosCard` directly inside another `AtmosCard`. This can cause conflicting collision bounds and visual behaviors that defy natural physics.
+- **Card Modes (`transMode`)**:
+  - `glass`: The default frosted glass effect, triggering high-fidelity backdrop blurs.
+  - `opacity`: A translucent mode where the card relies on standard CSS opacity to blend with the weather background.
+  - `solid`: Leaves the element with its default opaque style, allowing you to fully customize its appearance without library-applied transparency.
+
 ## Performance Notes
 
 - Prefer `quality: 'auto'` for responsive pages.
