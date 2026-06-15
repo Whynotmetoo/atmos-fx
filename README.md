@@ -88,11 +88,11 @@ controller.start()
 | `color` | `string` | `'#ffffff'` | Canvas particle color. |
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Rendering fidelity and particle count. |
 | `transMode` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | The root integration mode for children components. |
-| `surfaceOpacity` | `number` | `0.12` | Glass surface opacity base. |
-| `contentOpacity` | `number` | `0.2` | Controls opacity-mode content fade. |
-| `snowAccumulation` | `number` | `0` | Controls snow buildup intensity (0 to 1). |
-| `hailBounce` | `number` | `0.85` | Controls hail bounce restitution scalar (0 to 1). |
-| `bottomCollision` | `boolean` | `true` | Controls container bottom boundary collision. |
+| `surfaceOpacity` | `number` | `0.14` | Glass surface opacity base. |
+| `contentOpacity` | `number` | `0.72` | Controls opacity-mode content fade. |
+| `snowAccumulation` | `number` | `0.55` | Controls snow buildup intensity (0 to 1). |
+| `hailBounce` | `number` | `0.5` | Controls hail bounce restitution scalar (0 to 1). |
+| `bottomCollision` | `boolean` | `false` | Controls container bottom boundary collision. |
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden. |
 | `respectReducedMotion`| `boolean` | `true` | Honors OS `prefers-reduced-motion` settings. |
 | `injectStyles` | `boolean` | `true` | Whether default stylesheet rules are automatically injected. |
