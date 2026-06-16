@@ -13,7 +13,7 @@ export const DEFAULT_OPTIONS = {
   surfaceOpacity: 0.14,
   snowAccumulation: 0.55,
   hailBounce: 0.5,
-  bottomCollision: false,
+  bottomCollision: true,
   collisionSelector: '[data-atmos-collision]',
   opaqueSelector: '[data-atmos-opaque]',
   pauseWhenHidden: true,

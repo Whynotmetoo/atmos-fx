@@ -95,7 +95,7 @@ controller.start()
 | `contentOpacity`       | `number`                                | `0.72`      | 控制 opacity 模式下内容的淡化程度。             |
 | `snowAccumulation`     | `number`                                | `0.55`      | 控制积雪强度，范围为 0 到 1。                  |
 | `hailBounce`           | `number`                                | `0.5`       | 控制冰雹反弹恢复系数，范围为 0 到 1。              |
-| `bottomCollision`      | `boolean`                               | `false`     | 控制容器底部边界碰撞。                        |
+| `bottomCollision`      | `boolean`                               | `true`      | 控制容器底部边界碰撞。                        |
 | `pauseWhenHidden`      | `boolean`                               | `true`      | 当 document 不可见时自动暂停动画。             |
 | `respectReducedMotion` | `boolean`                               | `true`      | 遵循系统的 `prefers-reduced-motion` 设置。 |
 | `injectStyles`         | `boolean`                               | `true`      | 是否自动注入默认样式规则。                      |

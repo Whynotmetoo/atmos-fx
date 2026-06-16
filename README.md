@@ -92,7 +92,7 @@ controller.start()
 | `contentOpacity` | `number` | `0.72` | Controls opacity-mode content fade. |
 | `snowAccumulation` | `number` | `0.55` | Controls snow buildup intensity (0 to 1). |
 | `hailBounce` | `number` | `0.5` | Controls hail bounce restitution scalar (0 to 1). |
-| `bottomCollision` | `boolean` | `false` | Controls container bottom boundary collision. |
+| `bottomCollision` | `boolean` | `true` | Controls container bottom boundary collision. |
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden. |
 | `respectReducedMotion`| `boolean` | `true` | Honors OS `prefers-reduced-motion` settings. |
 | `injectStyles` | `boolean` | `true` | Whether default stylesheet rules are automatically injected. |
