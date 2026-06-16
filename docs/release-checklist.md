@@ -6,7 +6,6 @@ Use this checklist before publishing atmos-fx.
 
 - Confirm the intended release scope is represented in `CHANGELOG.md`.
 - Confirm `README.md` examples match the current public API.
-- Confirm `docs/accessibility.md` covers motion and readability guidance for any new effect.
 - Confirm package exports in `package.json` are intentional.
 - Confirm optional adapters are represented as optional peer dependencies if the core entrypoint does not require them (Note: React is currently a required peer dependency since the root entrypoint exports React components directly).
 - Confirm no local-only files such as `AGENTS.md` or `docs_local/` are staged.

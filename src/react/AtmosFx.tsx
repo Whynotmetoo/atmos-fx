@@ -220,7 +220,7 @@ export interface AtmosCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function AtmosCard(
-  { liquidDripping, transMode, opacity, asChild, children, ...props },
+  { liquidDripping = true, transMode = 'glass', opacity, asChild, children, ...props },
   ref,
 ) {
   if (asChild) {
