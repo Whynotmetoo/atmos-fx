@@ -3,10 +3,8 @@
 <div>
     <a href="README.md">English</a> · <b>简体中文</b>
 </div>
-
-面向创意界面的 DOM 感知氛围特效。
-
-atmos-fx 是一个早期阶段的 TypeScript 库，用来把类似天气的视觉效果真正融入 DOM，而不是只作为一个脱离内容的背景层。当前首个目标效果是受 Apple Weather 启发的降水效果：子级 UI 可以呈现玻璃质感、保持不透明，或作为粒子的碰撞表面。
+<br>
+atmos-fx是一个面向创意界面的 DOM 感知氛围特效 TypeScript 库，用来把类似天气的视觉效果真正融入 DOM，而不是只作为一个脱离内容的背景层。当前首个目标效果是受 Apple Weather 启发的降水效果：子级 UI 可以呈现玻璃质感、保持不透明，或作为粒子的碰撞表面。
 
 ![demo-high](https://atmosfx.carsonye.com/assets/demo-high.gif)
 

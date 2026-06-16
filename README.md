@@ -2,10 +2,8 @@
 <div>
     <b>English</b> · <a href="README_zh.md">简体中文</a>
 </div>
-
-DOM-aware atmosphere effects for creative interfaces.
-
-atmos-fx is an early-stage TypeScript library for making weather-like visual effects part of the DOM instead of a detached background. The first target effect is Apple Weather-inspired precipitation where child UI can become glass, stay opaque, or act as collision surfaces.
+<br>
+atmos-fx is a DOM-aware atmosphere effects library for making weather-like visual effects part of the DOM instead of a detached background. The first target effect is Apple Weather-inspired precipitation where child UI can become glass, stay opaque, or act as collision surfaces.
 
 ![demo-high](https://atmosfx.carsonye.com/assets/demo-high.gif)
 
