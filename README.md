@@ -24,14 +24,11 @@ npm i atmos-fx
 React is a required peer dependency for the wrapper components.
 
 ```tsx
-import { useRef } from 'react'
 import { AtmosFx, AtmosCard } from 'atmos-fx'
 
 export function FunctionalDemo() {
-  const rootRef = useRef<HTMLDivElement>(null)
-
   return (
-    <AtmosFx ref={rootRef} mode="rain" density={0.7} className="functional-demo">
+    <AtmosFx mode="rain" density={0.7} className="functional-demo">
       <AtmosCard transMode="glass">
         <div>Rain can land on this surface and splash from the top edge.</div>
       </AtmosCard>
@@ -49,12 +46,24 @@ export function FunctionalDemo() {
 }
 ```
 
+### CDN
+```javascript
+import { createAtmosphere } from 'https://esm.sh/atmos-fx'
+```
 ### Vanilla JS
+```html
+<div id="container">
+  <div data-atmos-collision data-atmos-glass data-atmos-liquid-dripping="true">
+    <h1>Interactive Opaque Shelf</h1>
+    <p>Precipitation splashes here.</p>
+  </div>
+</div>
+```
 
-```ts
+```javascript
 import { createAtmosphere } from 'atmos-fx'
 
-const controller = createAtmosphere(document.querySelector('#hero')!, {
+const controller = createAtmosphere(document.querySelector('#container'), {
   preset: 'rain',
   density: 0.7,
   wind: -0.15,
@@ -66,31 +75,67 @@ controller.start()
 // When removing the atmosphere root outside React, make sure to destroy it:
 // controller.destroy()
 ```
+### Vue Example
 
-**Define HTML with data attributes for inner cards**:
-- `data-atmos-opaque` keeps an element out of automatic glass or opacity treatment.
-- `data-atmos-opacity="0.64"` applies a per-element opacity value.
-- `data-atmos-glass` opts nested elements into the glass surface style.
-- `data-atmos-collision` makes the element's top edge a precipitation collision surface.
-- `transparency: 'glass' | 'opacity' | 'none'` controls the root integration mode.
+```html
+<template>
+  <div ref="containerRef" id="container">
+    <!-- Use data attributes to define collision and glass surfaces -->
+    <div data-atmos-collision data-atmos-glass>
+      <h1>Interactive Opaque Shelf</h1>
+      <p>Precipitation splashes here.</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import { createAtmosphere } from 'atmos-fx'
+
+const containerRef = ref(null)
+let controller = null
+
+onMounted(() => {
+  if (containerRef.value) {
+    controller = createAtmosphere(containerRef.value, {
+      preset: 'rain',
+      density: 0.7,
+      wind: -0.15,
+      surfaceOpacity: 0.16,
+    })
+    controller.start()
+  }
+})
+
+onUnmounted(() => {
+  if (controller) {
+    controller.destroy()
+  }
+})
+</script>
+```
 
 ## API Reference
 ### `AtmosFx` Props
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `mode` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | The weather preset. |
-| `density` | `number` | `0.5` | Intensity of the effect (0 to 1). |
-| `speed` | `number` | `1.0` | Non-negative motion scalar. |
-| `wind` | `number` | `0.0` | Horizontal motion scalar, usually -1 to 1. |
-| `color` | `string` | `'#ffffff'` | Canvas particle color. |
-| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Rendering fidelity and particle count. |
-| `transMode` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | The root integration mode for children components. |
-| `surfaceOpacity` | `number` | `0.14` | Glass surface opacity base. |
-| `contentOpacity` | `number` | `0.72` | Controls opacity-mode content fade. |
+| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Applies preset default physical and visual values. (Alias: `mode`) |
+| `particle` | `'rain' \| 'snow' \| 'hail'` | (Inherits preset) | Overrides preset particle rendering without overwriting speed/wind presets. |
+| `density` | `number` | `0.65` | Scales preallocated particle budget and spawn count (0 to 1). |
+| `speed` | `number` | `1.0` | Scalar multiplier for gravity and vertical fall speed. |
+| `wind` | `number` | `-0.12` | Affects horizontal sway and particle drift. |
+| `color` | `string` | `'#dcebffb7'` | CSS color representation for precipitation particles. |
+| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Limits particle count and device pixel ratio density. |
+| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | The root integration mode for children components. |
+| `surfaceOpacity` | `number` | `0.14` | Global glass surface opacity base for AtmosCards. |
+| `contentOpacity` | `number` | `0.72` | Global opacity-mode content fade for AtmosCards. |
 | `snowAccumulation` | `number` | `0.55` | Controls snow buildup intensity (0 to 1). |
 | `hailBounce` | `number` | `0.5` | Controls hail bounce restitution scalar (0 to 1). |
-| `bottomCollision` | `boolean` | `true` | Controls container bottom boundary collision. |
+| `bottomCollision` | `boolean` | `true` | Determines whether particles collide with the bottom edge of the container. |
+| `collisionSelector` | `string` | `[data-atmos-collision]` | Query selector for discovering top-edge landing surfaces. |
+| `opaqueSelector` | `string` | `[data-atmos-opaque]` | Query selector for elements that skip transparency blurs. |
+| `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden. |
 | `respectReducedMotion`| `boolean` | `true` | Honors OS `prefers-reduced-motion` settings. |
 | `injectStyles` | `boolean` | `true` | Whether default stylesheet rules are automatically injected. |
@@ -100,38 +145,24 @@ controller.start()
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | Transparency behavior applied to the card. |
-| `liquidDripping` | `boolean` | `true` | Toggles the water condensation and dripping animation (only in Rain mode). |
-| `asChild` | `boolean` | `false` | Merges properties onto the underlying child element. **You can also use asChild when you want to avoid rendering an extra wrapper element.** |
-| `opacity` | `number` | `undefined` | Custom backdrop opacity override (0 to 1). |
+| `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | Specifies card integration style. |
+| `liquidDripping` | `boolean` | `true` | Toggles the water condensation and dripping animation. |
+| `asChild` | `boolean` | `false` | Merges properties onto the underlying child element to avoid rendering an extra wrapper element. |
+| `opacity` | `number` | `undefined` | Component-level custom backdrop opacity override. |
 
-### `createAtmosphere` Options
+### Vanilla JS `createAtmosphere` Options
 
 `createAtmosphere(element, options)` returns a controller with `start()`, `stop()`, `pause()`, `resume()`, `resize()`, `update(options)`, and `destroy()`.
 
-The `options` object accepts similar properties to the React components:
+The `options` object accepts exactly the same parameters as the `AtmosFx` Props (excluding the `mode` alias).
 
-| Option | Type | Description |
-| --- | --- | --- |
-| `preset` | `'rain' \| 'snow' \| 'hail'` | The weather preset. |
-| `density` | `number` | `0` to `1` |
-| `speed` | `number` | non-negative motion scalar |
-| `wind` | `number` | horizontal motion scalar, usually `-1` to `1` |
-| `color` | `string` | Canvas color string |
-| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | Rendering fidelity |
-| `transparency` | `'glass' \| 'opacity' \| 'none'` | Controls the root integration mode. |
-| `surfaceOpacity` | `number` | `0` to `1`, controls glass surface opacity |
-| `contentOpacity` | `number` | `0` to `1`, controls opacity-mode content fade |
-| `snowAccumulation` | `number` | `0` to `1`, controls snow buildup intensity |
-| `hailBounce` | `number` | `0` to `1`, controls hail bounce restitution scalar |
-| `bottomCollision` | `boolean` | Controls container bottom boundary collision |
-| `liquidDripping` | `boolean` | Controls whether rainwater dripping effect is active along card bottoms |
-| `collisionSelector` | `string` | Selector for precipitation landing surfaces |
-| `opaqueSelector` | `string` | Selector for solid child controls |
-| `injectStyles` | `boolean` | Controls whether default stylesheet rules are automatically injected |
-| `styleNonce` | `string` | CSP nonce for the injected style tag |
-| `pauseWhenHidden` | `boolean` | Production performance toggle |
-| `respectReducedMotion`| `boolean` | Production accessibility toggle |
+#### Define HTML with data attributes for inner cards:
+
+- `data-atmos-opaque` keeps an element out of automatic glass or opacity treatment.
+- `data-atmos-opacity="0.64"` applies a per-element opacity value.
+- `data-atmos-glass` opts nested elements into the glass surface style.
+- `data-atmos-collision` makes the element's top edge a precipitation collision surface.
+- `data-atmos-liquid-dripping="true"` toggles the water condensation and dripping animation (only in Rain mode).
 
 ## Design & UI Guidelines
 
