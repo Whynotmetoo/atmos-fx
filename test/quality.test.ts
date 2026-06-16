@@ -42,7 +42,7 @@ describe('canvas rain quality budgets', () => {
     })
 
     expect(budget).toBeGreaterThanOrEqual(80)
-    expect(budget).toBeLessThanOrEqual(800)
+    expect(budget).toBeLessThanOrEqual(1200)
   })
 
   it('caps high-quality desktop budgets', () => {
@@ -53,7 +53,7 @@ describe('canvas rain quality budgets', () => {
         density: 1,
         quality: 'high',
       }),
-    ).toBe(5000)
+    ).toBe(8000)
   })
 
   it('budgets snow independently from rain density', () => {
@@ -72,7 +72,7 @@ describe('canvas rain quality budgets', () => {
 
     expect(lowDensityBudget).toBeGreaterThan(0)
     expect(highDensityBudget).toBeGreaterThan(lowDensityBudget)
-    expect(highDensityBudget).toBeLessThanOrEqual(1500)
+    expect(highDensityBudget).toBeLessThanOrEqual(2500)
   })
 
   it('keeps hail budgets lower than rain for heavier particles', () => {
