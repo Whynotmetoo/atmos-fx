@@ -28,21 +28,21 @@ const HAIL_QUALITY_BASE = {
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
 const QUALITY_LIMITS = {
-  low: { min: 40, max: 400 },
-  medium: { min: 80, max: 1000 },
-  high: { min: 120, max: 1600 },
+  low: { min: 40, max: 800 },
+  medium: { min: 80, max: 2000 },
+  high: { min: 120, max: 5000 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 const SNOW_QUALITY_LIMITS = {
-  low: { min: 32, max: 300 },
-  medium: { min: 72, max: 750 },
-  high: { min: 110, max: 1200 },
+  low: { min: 32, max: 600 },
+  medium: { min: 72, max: 1500 },
+  high: { min: 110, max: 4000 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 const HAIL_QUALITY_LIMITS = {
-  low: { min: 18, max: 150 },
-  medium: { min: 36, max: 350 },
-  high: { min: 54, max: 600 },
+  low: { min: 18, max: 300 },
+  medium: { min: 36, max: 800 },
+  high: { min: 54, max: 2000 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 const ACCUMULATION_QUALITY_LIMITS = {
