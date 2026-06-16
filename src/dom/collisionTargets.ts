@@ -65,7 +65,7 @@ export function collectCollisionTargetRects(
     targets.push(toRootRelativeRect(target, rootRect, targetRect))
   }
 
-  return targets
+  return targets.sort((a, b) => a.y - b.y)
 }
 
 export function createCollisionTargetManager(
