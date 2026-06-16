@@ -86,7 +86,7 @@ import { createAtmosphere } from 'atmos-fx'
 ```javascript
 import { createAtmosphere } from 'atmos-fx'
 
-const controller = createAtmosphere(document.querySelector('#container')!, {
+const controller = createAtmosphere(document.querySelector('#container'), {
   preset: 'rain',
   density: 0.7,
   wind: -0.15,
@@ -157,7 +157,7 @@ onUnmounted(() => {
 | `contentOpacity` | `number` | `0.72` | 全局透明模式下的内容淡化程度。 |
 | `snowAccumulation` | `number` | `0.55` | 控制积雪强度，范围为 0 到 1。 |
 | `hailBounce` | `number` | `0.5` | 控制冰雹反弹恢复系数，范围为 0 到 1。 |
-| `bottomCollision` | `boolean` | `false` | 控制粒子是否与容器底边发生碰撞。 |
+| `bottomCollision` | `boolean` | `true` | 决定粒子是否与容器底部边缘发生碰撞。 |
 | `collisionSelector` | `string` | `[data-atmos-collision]` | 用于查找顶部边缘着陆表面的 CSS 选择器。 |
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | 用于跳过透明度处理的不透明子级元素的 CSS 选择器。 |
 | `liquidDripping` | `boolean` | `true` | 全局开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。 |

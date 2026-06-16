@@ -63,7 +63,7 @@ import { createAtmosphere } from 'https://esm.sh/atmos-fx'
 ```javascript
 import { createAtmosphere } from 'atmos-fx'
 
-const controller = createAtmosphere(document.querySelector('#container')!, {
+const controller = createAtmosphere(document.querySelector('#container'), {
   preset: 'rain',
   density: 0.7,
   wind: -0.15,
@@ -132,7 +132,7 @@ onUnmounted(() => {
 | `contentOpacity` | `number` | `0.72` | Global opacity-mode content fade for AtmosCards. |
 | `snowAccumulation` | `number` | `0.55` | Controls snow buildup intensity (0 to 1). |
 | `hailBounce` | `number` | `0.5` | Controls hail bounce restitution scalar (0 to 1). |
-| `bottomCollision` | `boolean` | `false` | Determines whether particles collide with the bottom edge of the container. |
+| `bottomCollision` | `boolean` | `true` | Determines whether particles collide with the bottom edge of the container. |
 | `collisionSelector` | `string` | `[data-atmos-collision]` | Query selector for discovering top-edge landing surfaces. |
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | Query selector for elements that skip transparency blurs. |
 | `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
