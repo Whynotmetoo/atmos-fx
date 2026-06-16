@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
       :root {
         color-scheme: dark;
@@ -32,7 +33,12 @@
       }
 
       body {
-        background: radial-gradient(circle at 50% 0%, #172430 0%, var(--bg-root) 65%);
+        background: #080d10;
+        background-image: 
+          radial-gradient(ellipse at 15% 0%, rgba(35, 60, 80, 0.25) 0%, transparent 50%),
+          radial-gradient(ellipse at 85% 20%, rgba(80, 150, 120, 0.08) 0%, transparent 40%),
+          radial-gradient(ellipse at 50% 100%, rgba(20, 40, 50, 0.2) 0%, transparent 60%);
+        background-attachment: fixed;
         color: var(--ink);
         line-height: 1.6;
         overflow-x: hidden;
@@ -662,7 +668,7 @@
       /* Sections below */
       section.docs-section {
         border-top: 1px solid var(--line);
-        padding: 48px 0;
+        padding: 20px 0;
       }
 
       h2.section-title {
@@ -680,29 +686,30 @@
       }
 
       /* Code Block Styles */
-      pre {
-        background: #06090c;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 20px;
-        overflow-x: auto;
-        color: #e2e8f0;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.86rem;
-        position: relative;
+      pre[class*="language-"] {
+        background: rgba(6, 9, 12, 0.6) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 16px !important;
+        padding: 24px 24px !important;
+        margin-bottom: 12px !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 30px rgba(0, 0, 0, 0.25) !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.88rem !important;
       }
 
       code {
         font-family: 'JetBrains Mono', monospace;
-        background: rgba(255,255,255,0.06);
-        padding: 2px 6px;
-        border-radius: 4px;
+        background: rgba(255,255,255,0.08);
+        padding: 3px 6px;
+        border-radius: 6px;
         font-size: 0.82rem;
-        color: #e2e8f0;
+        color: #a9ddff;
       }
 
       pre code {
-        background: none;
+        background: none !important;
         padding: 0;
         border-radius: 0;
         color: inherit;
@@ -719,28 +726,42 @@
       /* API Reference Table */
       .table-wrapper {
         overflow-x: auto;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        background: var(--bg-panel);
-        margin-bottom: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        background: rgba(15, 23, 30, 0.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        margin-bottom: 32px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
         text-align: left;
-        font-size: 0.88rem;
+        font-size: 0.9rem;
       }
 
       th, td {
-        padding: 14px 18px;
-        border-bottom: 1px solid var(--line);
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       }
 
       th {
-        background: rgba(255,255,255,0.02);
+        background: rgba(255, 255, 255, 0.03);
         font-weight: 600;
-        color: var(--muted);
+        color: #94a3b8;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      tr {
+        transition: background-color 0.2s ease;
+      }
+
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
       }
 
       tr:last-child td {
@@ -1128,7 +1149,7 @@
       </div>
 
       <!-- Playground Code Preview (No Title) -->
-      <pre style="margin-top: -16px; margin-bottom: 48px;"><code id="core-code-display"></code></pre>
+      <pre style="margin-top: -8px; margin-bottom: 48px;"><code id="core-code-display" class="language-tsx"></code></pre>
 
       <!-- Installation Section (Quick Start) -->
       <section class="docs-section">
@@ -1136,12 +1157,11 @@
         <div style="display: flex; flex-direction: column; gap: 24px;">
           <div>
             <p style="margin-bottom: 8px; color: var(--muted);" data-i18n-key="quick-start-step1">1. Install package via npm:</p>
-            <pre><code>npm i atmos-fx</code></pre>
+            <pre><code class="language-bash">npm i atmos-fx</code></pre>
           </div>
           <div>
             <p style="margin-bottom: 8px; color: var(--muted);" data-i18n-key="quick-start-step2">2. Import and wrap your app with AtmosFx and AtmosCard:</p>
-            <pre><code>import { AtmosFx, AtmosCard } from 'atmos-fx'
-import 'atmos-fx/styles.css'
+            <pre><code class="language-tsx">import { AtmosFx, AtmosCard } from 'atmos-fx'
 
 export function App() {
   return (
@@ -1158,19 +1178,25 @@ export function App() {
           </div>
           <div>
             <p style="margin-bottom: 8px; color: var(--muted);" data-i18n-key="quick-start-step3">3. Or use Vanilla JavaScript directly:</p>
-            <pre><code>&lt;!-- 1. Define HTML with data attributes for inner cards --&gt;
-&lt;div id="container"&gt;
+            
+            <p style="margin-bottom: 8px; margin-top: 16px; font-size: 0.9em; color: var(--muted);"><strong>With a bundler (Vite, Webpack):</strong></p>
+            <pre><code class="language-tsx">import { createAtmosphere } from 'atmos-fx'</code></pre>
+
+            <p style="margin-bottom: 8px; margin-top: 16px; font-size: 0.9em; color: var(--muted);"><strong>Without a bundler (CDN):</strong></p>
+            <pre><code class="language-html">&lt;script type="module"&gt;
+  import { createAtmosphere } from 'https://esm.sh/atmos-fx'
+&lt;/script&gt;</code></pre>
+
+            <p style="margin-bottom: 8px; margin-top: 24px; color: var(--muted);" data-i18n-key="quick-start-step3-html">Define HTML with data attributes for inner cards:</p>
+            <pre><code class="language-html">&lt;div id="container"&gt;
   &lt;div data-atmos-collision data-atmos-glass data-atmos-liquid-dripping="true"&gt;
     &lt;h1&gt;Interactive Opaque Shelf&lt;/h1&gt;
     &lt;p&gt;Precipitation splashes here.&lt;/p&gt;
   &lt;/div&gt;
-&lt;/div&gt;
+&lt;/div&gt;</code></pre>
 
-&lt;!-- 2. Initialize and start the atmosphere --&gt;
-import { createAtmosphere } from 'atmos-fx'
-import 'atmos-fx/styles.css'
-
-const container = document.querySelector('#container')
+            <p style="margin-bottom: 8px; margin-top: 16px; color: var(--muted);" data-i18n-key="quick-start-step3-js">Initialize and start the atmosphere:</p>
+            <pre><code class="language-tsx">const container = document.querySelector('#container')
 const controller = createAtmosphere(container, {
   preset: 'rain',
   density: 0.65,
@@ -1179,6 +1205,44 @@ const controller = createAtmosphere(container, {
 })
 
 controller.start()</code></pre>
+          </div>
+          <div>
+            <p style="margin-bottom: 8px; color: var(--muted);" data-i18n-key="quick-start-step4">4. Vue Example:</p>
+            <pre><code class="language-html">&lt;template&gt;
+  &lt;div ref="containerRef" id="container"&gt;
+    &lt;!-- Use data attributes to define collision and glass surfaces --&gt;
+    &lt;div data-atmos-collision data-atmos-glass&gt;
+      &lt;h1&gt;Interactive Opaque Shelf&lt;/h1&gt;
+      &lt;p&gt;Precipitation splashes here.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+import { ref, onMounted, onUnmounted } from 'vue'
+import { createAtmosphere } from 'atmos-fx'
+
+const containerRef = ref(null)
+let controller = null
+
+onMounted(() => {
+  if (containerRef.value) {
+    controller = createAtmosphere(containerRef.value, {
+      preset: 'rain',
+      density: 0.7,
+      wind: -0.15,
+      surfaceOpacity: 0.16,
+    })
+    controller.start()
+  }
+})
+
+onUnmounted(() => {
+  if (controller) {
+    controller.destroy()
+  }
+})
+&lt;/script&gt;</code></pre>
           </div>
         </div>
       </section>
@@ -1234,6 +1298,31 @@ controller.start()</code></pre>
                 <td data-i18n-key="api-desc-quality">Limits particle count and device pixel ratio density. Defaults to <code>auto</code>.</td>
               </tr>
               <tr>
+                <td><code>transparency</code></td>
+                <td><code>'glass' | 'opacity' | 'none'</code></td>
+                <td data-i18n-key="api-desc-transparency">The root integration mode for children components.</td>
+              </tr>
+              <tr>
+                <td><code>surfaceOpacity</code></td>
+                <td><code>number</code> <span class="api-badge">0.14</span></td>
+                <td data-i18n-key="api-desc-surfaceOpacity">Global glass surface opacity base for AtmosCards.</td>
+              </tr>
+              <tr>
+                <td><code>contentOpacity</code></td>
+                <td><code>number</code> <span class="api-badge">0.72</span></td>
+                <td data-i18n-key="api-desc-contentOpacity">Global opacity-mode content fade for AtmosCards.</td>
+              </tr>
+              <tr>
+                <td><code>snowAccumulation</code></td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.55</span></td>
+                <td data-i18n-key="api-desc-snowAccumulation">Controls snow buildup intensity.</td>
+              </tr>
+              <tr>
+                <td><code>hailBounce</code></td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.5</span></td>
+                <td data-i18n-key="api-desc-hailBounce">Controls hail bounce restitution scalar.</td>
+              </tr>
+              <tr>
                 <td><code>bottomCollision</code></td>
                 <td><code>boolean</code> <span class="api-badge">false</span></td>
                 <td data-i18n-key="api-desc-bottomCollision">Determines whether particles collide with the bottom edge of the container.</td>
@@ -1247,6 +1336,31 @@ controller.start()</code></pre>
                 <td><code>opaqueSelector</code></td>
                 <td><code>string</code></td>
                 <td data-i18n-key="api-desc-opaqueSelector">Query selector for elements that skip transparency blurs. Defaults to <code>[data-atmos-opaque]</code>.</td>
+              </tr>
+              <tr>
+                <td><code>liquidDripping</code></td>
+                <td><code>boolean</code> <span class="api-badge">true</span></td>
+                <td data-i18n-key="api-desc-globalLiquidDripping">Globally toggles the water condensation and dripping animation (only in Rain mode).</td>
+              </tr>
+              <tr>
+                <td><code>pauseWhenHidden</code></td>
+                <td><code>boolean</code> <span class="api-badge">true</span></td>
+                <td data-i18n-key="api-desc-pauseWhenHidden">Automatically pause animation when document is hidden.</td>
+              </tr>
+              <tr>
+                <td><code>respectReducedMotion</code></td>
+                <td><code>boolean</code> <span class="api-badge">true</span></td>
+                <td data-i18n-key="api-desc-respectReducedMotion">Honors OS <code>prefers-reduced-motion</code> settings.</td>
+              </tr>
+              <tr>
+                <td><code>injectStyles</code></td>
+                <td><code>boolean</code> <span class="api-badge">true</span></td>
+                <td data-i18n-key="api-desc-injectStyles">Whether default stylesheet rules are automatically injected.</td>
+              </tr>
+              <tr>
+                <td><code>styleNonce</code></td>
+                <td><code>string</code></td>
+                <td data-i18n-key="api-desc-styleNonce">CSP nonce for the injected style tag.</td>
               </tr>
             </tbody>
           </table>
@@ -1286,27 +1400,25 @@ controller.start()</code></pre>
             </tbody>
           </table>
         </div>
-      </section>
 
-      <!-- Design Best Practices -->
-      <section class="docs-section">
-        <h2 class="section-title" data-i18n-key="best-practices-title">Design & UI Best Practices</h2>
-        <div class="method-example-wrapper">
-          <p data-i18n-key="bp-intro" style="margin-bottom: 16px;">To ensure visually realistic atmosphere effects, keep the following guidelines in mind when designing with <code>AtmosCard</code>:</p>
-          <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; display: flex; flex-direction: column; gap: 12px;">
-            <li data-i18n-key="bp-dripping"><strong>Particle Layering & Dripping:</strong> Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable <code>AtmosCard</code> elements. If <code>liquidDripping</code> is enabled, accumulated rainwater will drip down and correctly collide with any collidable cards positioned below it.</li>
-            <li data-i18n-key="bp-blocking"><strong>Avoid Wide Blocking Cards:</strong> A very wide collidable <code>AtmosCard</code> will act like an umbrella, blocking most foreground rain. This prevents rain from reaching elements below, significantly reducing their splash animations. Unless this is intended, avoid overly wide collision surfaces.</li>
-            <li data-i18n-key="bp-nesting"><strong>Avoid Nesting Cards:</strong> Unless you have a highly specific visual effect in mind, avoid nesting an <code>AtmosCard</code> inside another <code>AtmosCard</code>. This can cause conflicting collision bounds and visual behaviors that defy natural physics.</li>
-          </ul>
-        </div>
-      </section>
+        <h3 class="section-subtitle" data-i18n-key="api-vanilla-title" style="margin-top: 24px;">Vanilla JS createAtmosphere Options</h3>
+        <p data-i18n-key="api-vanilla-desc" style="margin-bottom: 16px; color: var(--muted); font-size: 0.95rem;">
+          <code>createAtmosphere(element, options)</code> returns a controller with methods to start, pause, resume, and destroy the atmosphere. The <code>options</code> object accepts exactly the same parameters as the <code>AtmosFx</code> Props (excluding the <code>mode</code> alias).
+        </p>
 
-      <!-- Controller Methods -->
-      <section class="docs-section">
-        <h2 class="section-title" data-i18n-key="methods-title">Controller Methods</h2>
+        <h4 data-i18n-key="api-vanilla-data-attr-title" style="font-size: 1rem; margin-bottom: 8px;">Define HTML with data attributes for inner cards:</h4>
+        <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; margin-bottom: 32px; display: flex; flex-direction: column; gap: 8px;">
+          <li><code>data-atmos-opaque</code> <span data-i18n-key="api-data-opaque">keeps an element out of automatic glass or opacity treatment.</span></li>
+          <li><code>data-atmos-opacity="0.64"</code> <span data-i18n-key="api-data-opacity">applies a per-element opacity value.</span></li>
+          <li><code>data-atmos-glass</code> <span data-i18n-key="api-data-glass">opts nested elements into the glass surface style.</span></li>
+          <li><code>data-atmos-collision</code> <span data-i18n-key="api-data-collision">makes the element's top edge a precipitation collision surface.</span></li>
+          <li><code>data-atmos-liquid-dripping="true"</code> <span data-i18n-key="api-data-liquid-dripping">toggles the water condensation and dripping animation (only in Rain mode).</span></li>
+        </ul>
+
+        <h3 class="section-subtitle" data-i18n-key="methods-title" style="margin-top: 24px;">Controller Methods</h2>
         <div class="method-example-wrapper">
           <p data-i18n-key="methods-intro">For direct vanilla JavaScript control, initialize the atmosphere and use the available methods:</p>
-          <pre><code>import { createAtmosphere } from 'atmos-fx'
+          <pre><code class="language-typescript">import { createAtmosphere } from 'atmos-fx'
 
 const controller = createAtmosphere(document.querySelector('#container'), {
   preset: 'rain',
@@ -1365,6 +1477,21 @@ controller.destroy()</code></pre>
           </table>
         </div>
       </section>
+
+      <!-- Design Best Practices -->
+      <section class="docs-section">
+        <h2 class="section-title" data-i18n-key="best-practices-title">Design & UI Best Practices</h2>
+        <div class="method-example-wrapper">
+          <p data-i18n-key="bp-intro" style="margin-bottom: 16px;">To ensure visually realistic atmosphere effects, keep the following guidelines in mind when designing with <code>AtmosCard</code>:</p>
+          <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; display: flex; flex-direction: column; gap: 12px;">
+            <li data-i18n-key="bp-dripping"><strong>Particle Layering & Dripping:</strong> Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable <code>AtmosCard</code> elements. If <code>liquidDripping</code> is enabled, accumulated rainwater will drip down and correctly collide with any collidable cards positioned below it.</li>
+            <li data-i18n-key="bp-blocking"><strong>Avoid Wide Blocking Cards:</strong> A very wide collidable <code>AtmosCard</code> will act like an umbrella, blocking most foreground rain. This prevents rain from reaching elements below, significantly reducing their splash animations. Unless this is intended, avoid overly wide collision surfaces.</li>
+            <li data-i18n-key="bp-nesting"><strong>Avoid Nesting Cards:</strong> Unless you have a highly specific visual effect in mind, avoid nesting an <code>AtmosCard</code> inside another <code>AtmosCard</code>. This can cause conflicting collision bounds and visual behaviors that defy natural physics.</li>
+          </ul>
+        </div>
+      </section>
+
+
       
       <!-- Footer -->
       <footer>
@@ -1372,6 +1499,11 @@ controller.destroy()</code></pre>
       </footer>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
     <script type="module" src="./playground.ts"></script>
   </body>
 </html>

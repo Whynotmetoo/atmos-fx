@@ -4,7 +4,7 @@
     <a href="README.md">English</a> · <b>简体中文</b>
 </div>
 <br>
-atmos-fx是一个面向创意界面的 DOM 感知氛围特效 TypeScript 库，用来把类似天气的视觉效果真正融入 DOM，而不是只作为一个脱离内容的背景层。当前首个目标效果是受 Apple Weather 启发的降水效果：子级 UI 可以呈现玻璃质感、保持不透明，或作为粒子的碰撞表面。
+atmos-fx是一个面向创意界面的 DOM 感知氛围特效 TypeScript 库，用来把类似天气的视觉效果真正融入 DOM，而不是只作为一个脱离内容的背景层。受 Apple Weather 启发：子级 UI 可以呈现玻璃质感、保持不透明，或作为粒子的碰撞表面。
 
 ![demo-high](https://atmosfx.carsonye.com/assets/demo-high.gif)
 
@@ -25,14 +25,11 @@ npm i atmos-fx
 React 是封装组件所需的 peer dependency。
 
 ```tsx
-import { useRef } from 'react'
 import { AtmosFx, AtmosCard } from 'atmos-fx'
 
 export function FunctionalDemo() {
-  const rootRef = useRef<HTMLDivElement>(null)
-
   return (
-    <AtmosFx ref={rootRef} mode="rain" density={0.7} className="functional-demo">
+    <AtmosFx preset="rain" density={0.7} className="functional-demo">
       <AtmosCard transMode="glass">
         <div>雨滴可以落在这个表面上，并从顶部边缘溅起。</div>
       </AtmosCard>
@@ -50,12 +47,46 @@ export function FunctionalDemo() {
 }
 ```
 
-### Vanilla JS
+### CDN
+
+**使用打包工具（Vite、Webpack 等）：**
+通过 `npm i atmos-fx` 安装并引入核心模块：
 
 ```ts
 import { createAtmosphere } from 'atmos-fx'
+```
 
-const controller = createAtmosphere(document.querySelector('#hero')!, {
+**使用 CDN（无构建步骤）：**
+如果你编写的是纯 HTML，没有打包工具，可以直接通过 ESM CDN 引入：
+
+```html
+<script type="module">
+  import { createAtmosphere } from 'https://esm.sh/atmos-fx'
+
+  const controller = createAtmosphere(document.querySelector('#container'), {
+    preset: 'rain',
+    density: 0.7
+  })
+  
+  controller.start()
+</script>
+```
+
+### Vanilla JS 示例
+
+```html
+<div id="container">
+  <div data-atmos-collision data-atmos-glass data-atmos-liquid-dripping="true">
+    <h1>交互式不透明卡片</h1>
+    <p>降水粒子会在这里溅起。</p>
+  </div>
+</div>
+```
+
+```javascript
+import { createAtmosphere } from 'atmos-fx'
+
+const controller = createAtmosphere(document.querySelector('#container')!, {
   preset: 'rain',
   density: 0.7,
   wind: -0.15,
@@ -68,73 +99,95 @@ controller.start()
 // controller.destroy()
 ```
 
-**使用 data attributes 为内部卡片定义行为**：
+### Vue 示例
 
-* `data-atmos-opaque` 让元素跳过自动玻璃化或透明度处理。
-* `data-atmos-opacity="0.64"` 为单个元素设置独立透明度。
-* `data-atmos-glass` 让嵌套元素启用玻璃表面样式。
-* `data-atmos-collision` 让元素顶部边缘成为降水粒子的碰撞表面。
-* `transparency: 'glass' | 'opacity' | 'none'` 控制根元素的融合模式。
+```html
+<template>
+  <div ref="containerRef" id="container">
+    <!-- 使用 data 属性定义碰撞和玻璃表面 -->
+    <div data-atmos-collision data-atmos-glass>
+      <h1>交互式不透明卡片</h1>
+      <p>降水粒子会在这里溅起。</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import { createAtmosphere } from 'atmos-fx'
+
+const containerRef = ref(null)
+let controller = null
+
+onMounted(() => {
+  if (containerRef.value) {
+    controller = createAtmosphere(containerRef.value, {
+      preset: 'rain',
+      density: 0.7,
+      wind: -0.15,
+      surfaceOpacity: 0.16,
+    })
+    controller.start()
+  }
+})
+
+onUnmounted(() => {
+  if (controller) {
+    controller.destroy()
+  }
+})
+</script>
+```
 
 ## API Reference
 
 ### `AtmosFx` Props
 
-| Prop                   | Type                                    | Default     | Description                        |
-| ---------------------- | --------------------------------------- | ----------- | ---------------------------------- |
-| `mode`                 | `'rain' \| 'snow' \| 'hail'`            | `'rain'`    | 天气预设。                              |
-| `density`              | `number`                                | `0.5`       | 效果强度，范围为 0 到 1。                    |
-| `speed`                | `number`                                | `1.0`       | 非负的运动速度系数。                         |
-| `wind`                 | `number`                                | `0.0`       | 水平方向运动系数，通常为 -1 到 1。               |
-| `color`                | `string`                                | `'#ffffff'` | Canvas 粒子颜色。                       |
-| `quality`              | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'`    | 渲染精度与粒子数量。                         |
-| `transMode`            | `'glass' \| 'opacity' \| 'none'`        | `'glass'`   | 子组件在根元素中的融合模式。                     |
-| `surfaceOpacity`       | `number`                                | `0.14`      | 玻璃表面透明度基准值。                        |
-| `contentOpacity`       | `number`                                | `0.72`      | 控制 opacity 模式下内容的淡化程度。             |
-| `snowAccumulation`     | `number`                                | `0.55`      | 控制积雪强度，范围为 0 到 1。                  |
-| `hailBounce`           | `number`                                | `0.5`       | 控制冰雹反弹恢复系数，范围为 0 到 1。              |
-| `bottomCollision`      | `boolean`                               | `true`      | 控制容器底部边界碰撞。                        |
-| `pauseWhenHidden`      | `boolean`                               | `true`      | 当 document 不可见时自动暂停动画。             |
-| `respectReducedMotion` | `boolean`                               | `true`      | 遵循系统的 `prefers-reduced-motion` 设置。 |
-| `injectStyles`         | `boolean`                               | `true`      | 是否自动注入默认样式规则。                      |
-| `styleNonce`           | `string`                                | `undefined` | 注入 style 标签时使用的 CSP nonce。         |
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | 应用预设的物理和视觉属性（别名：`mode`）。 |
+| `particle` | `'rain' \| 'snow' \| 'hail'` | （继承预设） | 在不改变风速等物理预设的情况下，覆盖粒子的视觉渲染。 |
+| `density` | `number` | `0.65` | 缩放预分配的粒子预算和生成数量，范围为 0 到 1。 |
+| `speed` | `number` | `1.0` | 非负的重力和垂直下落速度系数。 |
+| `wind` | `number` | `-0.12` | 影响水平方向摆动和粒子漂移的系数。 |
+| `color` | `string` | `'#dcebffb7'` | CSS 颜色字符串，代表降水粒子的颜色。 |
+| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | 限制粒子数量和设备像素比渲染精度。 |
+| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | 子组件在根容器中的集成模式。 |
+| `surfaceOpacity` | `number` | `0.14` | 全局玻璃表面透明度基准值。 |
+| `contentOpacity` | `number` | `0.72` | 全局透明模式下的内容淡化程度。 |
+| `snowAccumulation` | `number` | `0.55` | 控制积雪强度，范围为 0 到 1。 |
+| `hailBounce` | `number` | `0.5` | 控制冰雹反弹恢复系数，范围为 0 到 1。 |
+| `bottomCollision` | `boolean` | `false` | 控制粒子是否与容器底边发生碰撞。 |
+| `collisionSelector` | `string` | `[data-atmos-collision]` | 用于查找顶部边缘着陆表面的 CSS 选择器。 |
+| `opaqueSelector` | `string` | `[data-atmos-opaque]` | 用于跳过透明度处理的不透明子级元素的 CSS 选择器。 |
+| `liquidDripping` | `boolean` | `true` | 全局开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。 |
+| `pauseWhenHidden` | `boolean` | `true` | 当 document 不可见时自动暂停动画。 |
+| `respectReducedMotion`| `boolean` | `true` | 遵循操作系统的 `prefers-reduced-motion` 设置。 |
+| `injectStyles` | `boolean` | `true` | 是否自动注入默认样式规则。 |
+| `styleNonce` | `string` | `undefined` | 注入 style 标签时使用的 CSP nonce。 |
 
 ### `AtmosCard` Props
 
-| Prop             | Type                              | Default     | Description                                       |
-| ---------------- | --------------------------------- | ----------- | ------------------------------------------------- |
-| `transMode`      | `'glass' \| 'opacity' \| 'solid'` | `'glass'`   | 应用于卡片的透明行为。                                       |
-| `liquidDripping` | `boolean`                         | `true`      | 开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。                       |
-| `asChild`        | `boolean`                         | `false`     | 将属性合并到底层子元素上。**当你希望避免额外渲染一层包装元素时，也可以使用 asChild。** |
-| `opacity`        | `number`                          | `undefined` | 自定义背景透明度覆盖值，范围为 0 到 1。                            |
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | 应用于卡片的特定透明风格。 |
+| `liquidDripping` | `boolean` | `true` | 开关水汽凝结与滴落动画。 |
+| `asChild` | `boolean` | `false` | 将属性合并到底层子元素上以避免额外渲染一层包装元素。 |
+| `opacity` | `number` | `undefined` | 组件级别的自定义背景透明度覆盖值（0 到 1）。 |
 
-### `createAtmosphere` Options
+### Vanilla JS `createAtmosphere` Options
 
 `createAtmosphere(element, options)` 会返回一个 controller，包含 `start()`、`stop()`、`pause()`、`resume()`、`resize()`、`update(options)` 和 `destroy()`。
 
-`options` 对象接受的属性与 React 组件类似：
+`options` 对象接受与 `AtmosFx` Props 完全相同的参数（除了 `mode` 别名）。
 
-| Option                 | Type                                    | Description                     |
-| ---------------------- | --------------------------------------- | ------------------------------- |
-| `preset`               | `'rain' \| 'snow' \| 'hail'`            | 天气预设。                           |
-| `density`              | `number`                                | `0` 到 `1`                       |
-| `speed`                | `number`                                | 非负的运动速度系数                       |
-| `wind`                 | `number`                                | 水平方向运动系数，通常为 `-1` 到 `1`         |
-| `color`                | `string`                                | Canvas 颜色字符串                    |
-| `quality`              | `'auto' \| 'low' \| 'medium' \| 'high'` | 渲染精度                            |
-| `transparency`         | `'glass' \| 'opacity' \| 'none'`        | 控制根元素的融合模式。                     |
-| `surfaceOpacity`       | `number`                                | `0` 到 `1`，控制玻璃表面透明度             |
-| `contentOpacity`       | `number`                                | `0` 到 `1`，控制 opacity 模式下内容的淡化程度 |
-| `snowAccumulation`     | `number`                                | `0` 到 `1`，控制积雪强度                |
-| `hailBounce`           | `number`                                | `0` 到 `1`，控制冰雹反弹恢复系数            |
-| `bottomCollision`      | `boolean`                               | 控制容器底部边界碰撞                      |
-| `liquidDripping`       | `boolean`                               | 控制卡片底部的雨水滴落效果是否启用               |
-| `collisionSelector`    | `string`                                | 降水粒子落点表面的选择器                    |
-| `opaqueSelector`       | `string`                                | 不透明子级控件的选择器                     |
-| `injectStyles`         | `boolean`                               | 控制是否自动注入默认样式规则                  |
-| `styleNonce`           | `string`                                | 注入 style 标签时使用的 CSP nonce       |
-| `pauseWhenHidden`      | `boolean`                               | 生产环境性能开关                        |
-| `respectReducedMotion` | `boolean`                               | 生产环境可访问性开关                      |
+#### 使用 data attributes 为内部卡片定义 HTML：
+
+- `data-atmos-opaque` 让元素跳过自动玻璃化或透明度处理。
+- `data-atmos-opacity="0.64"` 为单个元素设置独立透明度。
+- `data-atmos-glass` 让嵌套元素启用玻璃表面样式。
+- `data-atmos-collision` 让元素顶部边缘成为降水粒子的碰撞表面。
+- `data-atmos-liquid-dripping="true"` 开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。
 
 ## Design & UI Guidelines
 

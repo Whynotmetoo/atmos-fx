@@ -10,39 +10,39 @@ export type ParticleBudgetInput = {
 const REFERENCE_AREA = 1280 * 720
 
 const QUALITY_BASE = {
-  low: 240,
-  medium: 560,
-  high: 950,
+  low: 300,
+  medium: 700,
+  high: 1200,
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
 const SNOW_QUALITY_BASE = {
-  low: 180,
-  medium: 460,
-  high: 820,
+  low: 200,
+  medium: 500,
+  high: 900,
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
 const HAIL_QUALITY_BASE = {
-  low: 86,
-  medium: 190,
-  high: 340,
+  low: 100,
+  medium: 220,
+  high: 400,
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
 const QUALITY_LIMITS = {
-  low: { min: 40, max: 300 },
-  medium: { min: 80, max: 800 },
-  high: { min: 120, max: 1200 },
+  low: { min: 40, max: 400 },
+  medium: { min: 80, max: 1000 },
+  high: { min: 120, max: 1600 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 const SNOW_QUALITY_LIMITS = {
-  low: { min: 32, max: 260 },
-  medium: { min: 72, max: 680 },
-  high: { min: 110, max: 980 },
+  low: { min: 32, max: 300 },
+  medium: { min: 72, max: 750 },
+  high: { min: 110, max: 1200 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 const HAIL_QUALITY_LIMITS = {
-  low: { min: 18, max: 120 },
-  medium: { min: 36, max: 260 },
-  high: { min: 54, max: 440 },
+  low: { min: 18, max: 150 },
+  medium: { min: 36, max: 350 },
+  high: { min: 54, max: 600 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 const ACCUMULATION_QUALITY_LIMITS = {
