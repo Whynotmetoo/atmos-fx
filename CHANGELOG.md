@@ -4,6 +4,15 @@ All notable changes to atmos-fx will be documented in this file.
 
 The project follows semantic versioning once published.
 
+## [0.1.3] - 2026-06-16
+
+- **Breaking Change:** Changed the default value of `bottomCollision` from `false` to `true`. Rain and snow now collide and accumulate on the bottom edge of the container by default.
+- Increased the default particle count budgets and maximum limits across all quality levels (low, medium, high) for denser precipitation rendering.
+- Fully translated `README.md` and API references into Chinese (`README_zh.md`).
+- Added AtmosCard design guidelines, rendering context (`asChild`), and integration examples to documentation.
+- Improved the interactive docs playground UI and added custom brand favicons.
+- Synced all API documentation and code snippet examples to ensure parity between the `README` and interactive playground.
+
 ## [0.1.2] - 2026-06-13
 
 - Upgraded the default frosted glass styling to a premium glassmorphic aesthetic with a linear gradient background, refined borders, and updated box-shadows.
