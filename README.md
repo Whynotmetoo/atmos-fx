@@ -1,4 +1,4 @@
-# atmos-fx
+# <img src="./docs/favicon.svg" width="36" height="36" align="center" alt="atmos-fx icon" /> atmos-fx
 <div>
     <b>English</b> · <a href="README_zh.md">简体中文</a>
 </div>
