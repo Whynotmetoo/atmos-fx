@@ -4,6 +4,12 @@ All notable changes to atmos-fx will be documented in this file.
 
 The project follows semantic versioning once published.
 
+## [0.1.4] - 2026-06-17
+
+- **Performance:** Optimized collision detection logic by sorting target rects and using binary search to dramatically reduce overhead when rendering high numbers of particles with many collision surfaces.
+- **Visuals:** Massively increased particle budget caps for WebGL rendering and bumped the high-quality mode limit to 8000.
+- **Documentation:** Consolidated favicon colors to better support dark mode and added the `atmos-fx` icon directly into the `README.md` and `README_zh.md` main titles.
+
 ## [0.1.3] - 2026-06-16
 
 - **Breaking Change:** Changed the default value of `bottomCollision` from `false` to `true`. Rain and snow now collide and accumulate on the bottom edge of the container by default.
