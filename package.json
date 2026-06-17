@@ -1,6 +1,6 @@
 {
   "name": "atmos-fx",
-  "version": "0.2.0",
+  "version": "0.1.4",
   "description": "DOM-aware atmosphere effects for creative interfaces.",
   "type": "module",
   "license": "MIT",
