@@ -10,6 +10,11 @@ type LiquidDrip = {
   targetBottom: number
   liquidDripping: boolean
   scale: number
+  dropMotionPower: number
+  dropMotionFactor: number
+  dropAccelerationDistance: number
+  dropTerminalVelocity: number
+  maxDropDistance: number
   collisionY: number
   hasSplashed: boolean
   
@@ -50,6 +55,28 @@ const STRETCH_END_T = 3600 / CYCLE_DURATION_MS
 const PINCH_END_T = 3720 / CYCLE_DURATION_MS
 const FALL_END_T = 4800 / CYCLE_DURATION_MS
 const SPLASH_END_T = 5080 / CYCLE_DURATION_MS
+
+// Droplet shape and gravity motion
+const DROPLET_START_RX = 8
+const DROPLET_END_RX = 4.5
+const DROPLET_START_RY = 8
+const DROPLET_END_RY = 18
+const DROPLET_LENGTH_SCALE = 1.3
+const DROP_MOTION_START_T = BULGE_END_T
+const TERMINAL_VELOCITY_START_PROGRESS = 0.75
+const BASE_DROP_MOTION_POWER = 3
+// Narrow cards scale the attached stretch but retain the existing long falling
+// range. A slightly higher power keeps their pinch-off position from dropping
+// too far while preserving the shared terminal-velocity handoff.
+const DROP_MOTION_SCALE_POWER_ADJUSTMENT = 1.25
+const ATTACHED_DROP_DISTANCE = 63
+const FALLING_DROP_DISTANCE = 295.8 + 109.2
+const DROP_MOTION_DURATION_SECONDS =
+  (FALL_END_T - DROP_MOTION_START_T) * CYCLE_DURATION_MS / 1000
+const ACCELERATION_DURATION_SECONDS =
+  DROP_MOTION_DURATION_SECONDS * TERMINAL_VELOCITY_START_PROGRESS
+const CONSTANT_SPEED_DURATION_SECONDS =
+  DROP_MOTION_DURATION_SECONDS - ACCELERATION_DURATION_SECONDS
 
 // Wave settings
 const WAVE_GATHER_END_T = BULGE_END_T
@@ -290,6 +317,11 @@ export function createLiquidDripsController(
       targetBottom: 0,
       liquidDripping: true,
       scale: 1.0,
+      dropMotionPower: BASE_DROP_MOTION_POWER,
+      dropMotionFactor: 0,
+      dropAccelerationDistance: 0,
+      dropTerminalVelocity: 0,
+      maxDropDistance: ATTACHED_DROP_DISTANCE + FALLING_DROP_DISTANCE,
       collisionY: 10000,
       hasSplashed: false,
       group: cardGroup,
@@ -355,6 +387,24 @@ export function createLiquidDripsController(
         drip.targetBottom = target.bottom
         // Scale factor: narrower card -> smaller waves, bulges, and falling droplet size (clamped to 0.6 to survive gooey blur)
         drip.scale = Math.min(1.0, Math.max(0.6, target.width / 300))
+        drip.dropMotionPower =
+          BASE_DROP_MOTION_POWER +
+          (1 - drip.scale) * DROP_MOTION_SCALE_POWER_ADJUSTMENT
+        drip.maxDropDistance =
+          ATTACHED_DROP_DISTANCE * drip.scale + FALLING_DROP_DISTANCE
+        drip.dropMotionFactor =
+          drip.maxDropDistance /
+          (Math.pow(ACCELERATION_DURATION_SECONDS, drip.dropMotionPower) +
+            drip.dropMotionPower *
+              Math.pow(ACCELERATION_DURATION_SECONDS, drip.dropMotionPower - 1) *
+              CONSTANT_SPEED_DURATION_SECONDS)
+        drip.dropTerminalVelocity =
+          drip.dropMotionPower *
+          drip.dropMotionFactor *
+          Math.pow(ACCELERATION_DURATION_SECONDS, drip.dropMotionPower - 1)
+        drip.dropAccelerationDistance =
+          drip.dropMotionFactor *
+          Math.pow(ACCELERATION_DURATION_SECONDS, drip.dropMotionPower)
 
         // Update the blur standard deviation based on scale to preserve gooey shape visibility
         drip.blur.setAttribute('stdDeviation', (6 * drip.scale).toFixed(2))
@@ -429,6 +479,37 @@ export function createLiquidDripsController(
         const DROPLET_BASE_Y_OFFSET = -2
         const scale = drip.scale
 
+        const dropletShapeProgress = Math.min(
+          1,
+          Math.max(0, (t - BULGE_END_T) / (PINCH_END_T - BULGE_END_T)),
+        )
+        const dropletLengthScale =
+          1 + (DROPLET_LENGTH_SCALE - 1) * easeInOutQuad(dropletShapeProgress)
+        const activeDropletRX =
+          (DROPLET_START_RX +
+            (DROPLET_END_RX - DROPLET_START_RX) * dropletShapeProgress) *
+          scale
+        const activeDropletRY =
+          (DROPLET_START_RY +
+            (DROPLET_END_RY - DROPLET_START_RY) * dropletShapeProgress) *
+          dropletLengthScale *
+          scale
+
+        const motionElapsedSeconds = Math.min(
+          DROP_MOTION_DURATION_SECONDS,
+          Math.max(0, (t - DROP_MOTION_START_T) * CYCLE_DURATION_MS / 1000),
+        )
+        const dropMotionOffset =
+          motionElapsedSeconds <= ACCELERATION_DURATION_SECONDS
+            ? drip.dropMotionFactor *
+              Math.pow(motionElapsedSeconds, drip.dropMotionPower)
+            : drip.dropAccelerationDistance +
+              drip.dropTerminalVelocity *
+                (motionElapsedSeconds - ACCELERATION_DURATION_SECONDS)
+        const dropMotionStartY =
+          drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale
+        const dropMotionY = dropMotionStartY + dropMotionOffset
+
         let bulgeR = 0
         let bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET
 
@@ -474,11 +555,9 @@ export function createLiquidDripsController(
           bulgeR = residualEase * 5.0 * scale
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale - residualEase * scale
 
-          const stretchDuration = PINCH_END_T - BULGE_END_T
-          const p_s = (t - BULGE_END_T) / stretchDuration
-          dropletRX = (8.0 - p_s * 3.5) * scale
-          dropletRY = (8.0 + p_s * 10.0) * scale
-          dropletCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + Math.pow(p_s, 4) * 63.0 * scale
+          dropletRX = activeDropletRX
+          dropletRY = activeDropletRY
+          dropletCY = dropMotionY
 
           baseAmp = 2.2 + easedProgress * 1.3
         } else if (t < PINCH_END_T) {
@@ -486,28 +565,15 @@ export function createLiquidDripsController(
           bulgeR = 5.0 * scale
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 3.0 * scale
 
-          const stretchDuration = PINCH_END_T - BULGE_END_T
-          const p_s = (t - BULGE_END_T) / stretchDuration
-          dropletRX = (8.0 - p_s * 3.5) * scale
-          dropletRY = (8.0 + p_s * 10.0) * scale
-          dropletCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + Math.pow(p_s, 4) * 63.0 * scale
+          dropletRX = activeDropletRX
+          dropletRY = activeDropletRY
+          dropletCY = dropMotionY
 
           baseAmp = 3.5
         } else if (t < FALL_END_T) {
           // Phase 5: Falling & Recoil
-          const fallDuration = FALL_END_T - PINCH_END_T
-          const phaseProgress = (t - PINCH_END_T) / fallDuration
-
-          const fallY =
-            drip.targetBottom +
-            BULGE_BASE_Y_OFFSET +
-            4.0 * scale +
-            63.0 * scale +
-            295.8 * phaseProgress +
-            109.2 * Math.pow(phaseProgress, 2)
-
           // Check if droplet hits the collision level
-          if (fallY >= drip.collisionY) {
+          if (dropMotionY >= drip.collisionY) {
             if (!drip.hasSplashed) {
               drip.hasSplashed = true
               onSplash?.(drip.dripX, drip.collisionY, 0, scale)
@@ -517,9 +583,9 @@ export function createLiquidDripsController(
             dropletCY = drip.collisionY
           } else {
             // Keep drawing the smooth, scalable SVG droplet while falling
-            dropletRX = 4.5 * scale
-            dropletRY = 18.0 * scale
-            dropletCY = fallY
+            dropletRX = activeDropletRX
+            dropletRY = activeDropletRY
+            dropletCY = dropMotionY
           }
 
           const wobbleProgress = (t - RECOIL_START_T) / RECOIL_DURATION
@@ -540,13 +606,7 @@ export function createLiquidDripsController(
           // In case it fell very fast and didn't trigger splash in Phase 5
           if (!drip.hasSplashed) {
             drip.hasSplashed = true
-            const maxFallY =
-              drip.targetBottom +
-              BULGE_BASE_Y_OFFSET +
-              4.0 * scale +
-              63.0 * scale +
-              295.8 +
-              109.2
+            const maxFallY = dropMotionStartY + drip.maxDropDistance
             if (drip.collisionY <= maxFallY) {
               onSplash?.(drip.dripX, drip.collisionY, 0, scale)
             }
