@@ -30,9 +30,61 @@ export type LiquidDripsController = {
   destroy(): void
 }
 
+function easeOutQuad(x: number): number {
+  return 1 - (1 - x) * (1 - x)
+}
+
+function easeInQuad(x: number): number {
+  return x * x
+}
+
 function easeInOutQuad(x: number): number {
   return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
 }
+
+// Animation cycle and phase boundaries normalized to a 5400ms cycle
+const CYCLE_DURATION_MS = 5400
+const GATHER_END_T = 1200 / CYCLE_DURATION_MS
+const BULGE_END_T = 2800 / CYCLE_DURATION_MS
+const STRETCH_END_T = 3600 / CYCLE_DURATION_MS
+const PINCH_END_T = 3720 / CYCLE_DURATION_MS
+const FALL_END_T = 4800 / CYCLE_DURATION_MS
+const SPLASH_END_T = 5080 / CYCLE_DURATION_MS
+
+// Wave settings
+const WAVE_GATHER_END_T = BULGE_END_T
+const WAVE_RELEASE_T = PINCH_END_T
+const WAVE_FORM_DURATION = 800 / CYCLE_DURATION_MS
+
+// Residual bulge settings
+const RESIDUAL_BULGE_START_T = 3280 / CYCLE_DURATION_MS
+const RESIDUAL_BULGE_DURATION = 240 / CYCLE_DURATION_MS
+
+// Recoil timing
+const RECOIL_START_T = PINCH_END_T
+const RECOIL_DURATION = 1 - RECOIL_START_T
+const RECOIL_ROTATION = Math.PI * 2
+
+// 17-point wave sampling positions normalized between waveLeft (0.0) and waveRight (1.0)
+const WAVE_SAMPLE_PROGRESSES = [
+  0.0,
+  0.07142857, // 40/560
+  0.14285714, // 80/560 (leftWaveStartX)
+  0.21428571, // 120/560
+  0.28571429, // 160/560
+  0.35714286, // 200/560
+  0.42857143, // 240/560
+  0.5,        // 280/560
+  0.57142857, // 320/560
+  0.625,      // 350/560
+  0.6875,     // 385/560 (dripX)
+  0.74107143, // 415/560
+  0.79464286, // 445/560
+  0.83928571, // 470/560 (rightWaveStartX)
+  0.89285714, // 500/560
+  0.94642857, // 530/560
+  1.0
+]
 
 function getWaveY(
   x: number,
@@ -41,23 +93,45 @@ function getWaveY(
   waveLeft: number,
   waveRight: number,
   dripX: number,
+  scale: number,
 ): number {
-  const wavelength = 140
-  const k = (2 * Math.PI) / wavelength
-  const N_waves = 3
-  const wavePhase = t * 2 * Math.PI * N_waves
+  if (t >= WAVE_RELEASE_T) return 0
 
-  if (x < dripX) {
-    const phase = k * (x - waveLeft) - wavePhase
-    const span = dripX - waveLeft
-    const envelope = span > 0 ? Math.sin((Math.PI * (x - waveLeft)) / span) : 0
-    return baseAmp * Math.sin(phase) * envelope
-  } else {
-    const phase = k * (waveRight - x) - wavePhase
-    const span = waveRight - dripX
-    const envelope = span > 0 ? Math.sin((Math.PI * (waveRight - x)) / span) : 0
-    return baseAmp * Math.sin(phase) * envelope
+  const leftWaveStartX = waveLeft + (dripX - waveLeft) * 0.208
+  const rightWaveStartX = waveRight - (waveRight - dripX) * 0.514
+
+  const gatherProgress = easeInOutQuad(Math.min(1, t / WAVE_GATHER_END_T))
+  const leftCenter = leftWaveStartX + (dripX - leftWaveStartX) * gatherProgress
+  const rightCenter = rightWaveStartX + (dripX - rightWaveStartX) * gatherProgress
+
+  const basePulseWidth = 85 * scale
+  const targetPulseWidth = 45 * scale
+  const pulseWidth = basePulseWidth - gatherProgress * (basePulseWidth - targetPulseWidth)
+
+  const formation = easeOutQuad(Math.min(1, t / WAVE_FORM_DURATION))
+  const releaseProgress = Math.max(
+    0,
+    (t - WAVE_GATHER_END_T) / (WAVE_RELEASE_T - WAVE_GATHER_END_T)
+  )
+  const releaseFade = 1 - easeInQuad(releaseProgress)
+
+  const getPulseHeight = (center: number) => {
+    const distance = Math.abs(x - center)
+    if (distance >= pulseWidth) return 0
+    return (Math.cos((Math.PI * distance) / pulseWidth) + 1) / 2
   }
+
+  const leftHeight = getPulseHeight(leftCenter)
+  const rightHeight = getPulseHeight(rightCenter)
+  const combinedHeight =
+    x < dripX
+      ? leftHeight
+      : x > dripX
+        ? rightHeight
+        : Math.max(leftHeight, rightHeight)
+
+  if (baseAmp === 0) return 0
+  return (baseAmp + 2.0) * formation * releaseFade * combinedHeight
 }
 
 let scratchCanvas: HTMLCanvasElement | null = null
@@ -277,7 +351,7 @@ export function createLiquidDripsController(
 
         drip.waveLeft = target.x + indent
         drip.waveRight = target.right - indent
-        drip.dripX = drip.waveLeft + (drip.waveRight - drip.waveLeft) * 0.65
+        drip.dripX = drip.waveLeft + (drip.waveRight - drip.waveLeft) * 0.6875
         drip.targetBottom = target.bottom
         // Scale factor: narrower card -> smaller waves, bulges, and falling droplet size (clamped to 0.6 to survive gooey blur)
         drip.scale = Math.min(1.0, Math.max(0.6, target.width / 300))
@@ -325,7 +399,7 @@ export function createLiquidDripsController(
       }
 
       const speed = options.speed
-      const baseCycleDuration = 4000
+      const baseCycleDuration = 5400
 
       for (let i = 0; i < drips.length; i++) {
         const drip = drips[i]
@@ -362,20 +436,21 @@ export function createLiquidDripsController(
         let dropletRY = 0
         let dropletCY = drip.targetBottom + DROPLET_BASE_Y_OFFSET
 
-        let baseAmp = 0.6
+        let baseAmp = 1.8
 
-        if (t < 0.15) {
-          // Phase 1: Resting
+        if (t < GATHER_END_T) {
+          // Phase 1: Gathering
           bulgeR = 0
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET
           dropletRX = 0
           dropletRY = 0
           dropletCY = drip.targetBottom + DROPLET_BASE_Y_OFFSET
-          baseAmp = 0.6
+          baseAmp = 1.8
           drip.hasSplashed = false
-        } else if (t < 0.35) {
+        } else if (t < BULGE_END_T) {
           // Phase 2: Bulging
-          const phaseProgress = (t - 0.15) / 0.2
+          const phaseDuration = BULGE_END_T - GATHER_END_T
+          const phaseProgress = (t - GATHER_END_T) / phaseDuration
           const easedProgress = easeInOutQuad(phaseProgress)
 
           bulgeR = easedProgress * 8.0 * scale
@@ -385,37 +460,43 @@ export function createLiquidDripsController(
           dropletRY = 0
           dropletCY = bulgeCY
 
-          baseAmp = 0.6 + easedProgress * 1.6
-        } else if (t < 0.55) {
+          baseAmp = 1.8 + easedProgress * 0.4
+        } else if (t < STRETCH_END_T) {
           // Phase 3: Stretching
-          const phaseProgress = (t - 0.35) / 0.2
+          const phaseProgress = (t - BULGE_END_T) / (STRETCH_END_T - BULGE_END_T)
           const easedProgress = easeInOutQuad(phaseProgress)
 
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale
-          bulgeR = 0
+          const residualProgress = Math.min(
+            1,
+            Math.max(0, (t - RESIDUAL_BULGE_START_T) / RESIDUAL_BULGE_DURATION)
+          )
+          const residualEase = easeInOutQuad(residualProgress)
+          bulgeR = residualEase * 5.0 * scale
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale - residualEase * scale
 
-          const p_s = (t - 0.35) / 0.23
+          const stretchDuration = PINCH_END_T - BULGE_END_T
+          const p_s = (t - BULGE_END_T) / stretchDuration
           dropletRX = (8.0 - p_s * 3.5) * scale
           dropletRY = (8.0 + p_s * 10.0) * scale
-          dropletCY = bulgeCY + Math.pow(p_s, 4) * 63.0
+          dropletCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + Math.pow(p_s, 4) * 63.0 * scale
 
           baseAmp = 2.2 + easedProgress * 1.3
-        } else if (t < 0.58) {
+        } else if (t < PINCH_END_T) {
           // Phase 4: Pinch-off
-          const phaseProgress = (t - 0.55) / 0.03
+          bulgeR = 5.0 * scale
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 3.0 * scale
 
-          bulgeR = 0
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale - phaseProgress * 2.0 * scale
-
-          const p_s = (t - 0.35) / 0.23
+          const stretchDuration = PINCH_END_T - BULGE_END_T
+          const p_s = (t - BULGE_END_T) / stretchDuration
           dropletRX = (8.0 - p_s * 3.5) * scale
           dropletRY = (8.0 + p_s * 10.0) * scale
-          dropletCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + Math.pow(p_s, 4) * 63.0
+          dropletCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + Math.pow(p_s, 4) * 63.0 * scale
 
           baseAmp = 3.5
-        } else if (t < 0.85) {
+        } else if (t < FALL_END_T) {
           // Phase 5: Falling & Recoil
-          const phaseProgress = (t - 0.58) / 0.27
+          const fallDuration = FALL_END_T - PINCH_END_T
+          const phaseProgress = (t - PINCH_END_T) / fallDuration
 
           const fallY =
             drip.targetBottom +
@@ -441,18 +522,17 @@ export function createLiquidDripsController(
             dropletCY = fallY
           }
 
-          const wobbleProgress = (t - 0.58) / 0.27
-          const wobbleTime = wobbleProgress * 12.0
-          const decay = Math.exp(-wobbleProgress * 5.5)
+          const wobbleProgress = (t - RECOIL_START_T) / RECOIL_DURATION
+          const wobbleTime = wobbleProgress * RECOIL_ROTATION
+          const decay = Math.max(0, 1 - wobbleProgress)
           const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
 
           bulgeR = Math.max(0, 5.0 * decay * scale)
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + wobbleOffset
 
-          baseAmp = 0.6 + 2.9 * decay
-        } else if (t < 0.92) {
+          baseAmp = 0
+        } else if (t < SPLASH_END_T) {
           // Phase 6: Splash & Dissolve
-          // (It has already hit the platform and splashed during Phase 5, so keep SVG droplet hidden)
           dropletRX = 0
           dropletRY = 0
           dropletCY = drip.collisionY
@@ -460,85 +540,88 @@ export function createLiquidDripsController(
           // In case it fell very fast and didn't trigger splash in Phase 5
           if (!drip.hasSplashed) {
             drip.hasSplashed = true
-            const maxFallY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale + 63.0 + 295.8 + 109.2
+            const maxFallY =
+              drip.targetBottom +
+              BULGE_BASE_Y_OFFSET +
+              4.0 * scale +
+              63.0 +
+              295.8 +
+              109.2
             if (drip.collisionY <= maxFallY) {
               onSplash?.(drip.dripX, drip.collisionY, 0, scale)
             }
           }
 
-          const wobbleProgress = (t - 0.58) / 0.34
-          const wobbleTime = wobbleProgress * 12.0
-          const decay = Math.exp(-wobbleProgress * 5.5)
+          const wobbleProgress = (t - RECOIL_START_T) / RECOIL_DURATION
+          const wobbleTime = wobbleProgress * RECOIL_ROTATION
+          const decay = Math.max(0, 1 - wobbleProgress)
           const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
 
           bulgeR = Math.max(0, 5.0 * decay * scale)
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + wobbleOffset
 
-          baseAmp = 0.6 + 2.9 * decay
+          baseAmp = 0
         } else {
           // Phase 7: Cool down
-          bulgeR = 0
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET
+          const wobbleProgress = (t - RECOIL_START_T) / RECOIL_DURATION
+          const wobbleTime = wobbleProgress * RECOIL_ROTATION
+          const decay = Math.max(0, 1 - wobbleProgress)
+          const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
+
+          bulgeR = Math.max(0, 5.0 * decay * scale)
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + wobbleOffset
+
           dropletRX = 0
           dropletRY = 0
           dropletCY = drip.targetBottom + DROPLET_BASE_Y_OFFSET
-          baseAmp = 0.6
+          baseAmp = 0
         }
 
-        // Wave control points heights
+        // Wave control points heights and 17-point spline path generation
         const scaledAmp = baseAmp * scale
-        const ly1 = getWaveY(drip.waveLeft + leftSpan * 0.25, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ly2 = getWaveY(drip.waveLeft + leftSpan * 0.5, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ly3 = getWaveY(drip.waveLeft + leftSpan * 0.75, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ly4 = getWaveY(drip.dripX, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-        const ry1 = getWaveY(drip.dripX + rightSpan * 0.5, t, scaledAmp, drip.waveLeft, drip.waveRight, drip.dripX)
-
-        const y1Val = drip.targetBottom + ly1
-        const y2Val = drip.targetBottom + ly2
-        const y3Val = drip.targetBottom + ly3
-        const y4Val = drip.targetBottom + ly4
-        const ry1Val = drip.targetBottom + ry1
+        const waveSpan = drip.waveRight - drip.waveLeft
+        const points = WAVE_SAMPLE_PROGRESSES.map((prog, idx) => {
+          const xVal = drip.waveLeft + prog * waveSpan
+          const yVal =
+            idx === 0 || idx === WAVE_SAMPLE_PROGRESSES.length - 1
+              ? drip.targetBottom - 1.0
+              : drip.targetBottom - 1.0 +
+                getWaveY(
+                  xVal,
+                  t,
+                  scaledAmp,
+                  drip.waveLeft,
+                  drip.waveRight,
+                  drip.dripX,
+                  scale,
+                )
+          return { x: xVal, y: yVal }
+        })
 
         const wl = drip.waveLeft.toFixed(1)
         const wr = drip.waveRight.toFixed(1)
-        const yb = drip.targetBottom.toFixed(1)
         const ybTop = (drip.targetBottom - 20).toFixed(1)
-
-        const w_left_segment = leftSpan * 0.25
-        const w_right_segment = rightSpan * 0.5
-
-        const c1x1 = (drip.waveLeft + w_left_segment * 0.1875).toFixed(1)
-        const c1x2 = (drip.waveLeft + w_left_segment * 0.85 - w_left_segment * 0.4).toFixed(1)
-        const lx1 = (drip.waveLeft + w_left_segment).toFixed(1)
-
-        const c2x1 = (drip.waveLeft + w_left_segment + w_left_segment * 0.4).toFixed(1)
-        const c2x2 = (drip.waveLeft + w_left_segment * 2 - w_left_segment * 0.4).toFixed(1)
-        const lx2 = (drip.waveLeft + w_left_segment * 2).toFixed(1)
-
-        const c3x1 = (drip.waveLeft + w_left_segment * 2 + w_left_segment * 0.4).toFixed(1)
-        const c3x2 = (drip.waveLeft + w_left_segment * 3 - w_left_segment * 0.4).toFixed(1)
-        const lx3 = (drip.waveLeft + w_left_segment * 3).toFixed(1)
-
-        const c4x1 = (drip.waveLeft + w_left_segment * 3 + w_left_segment * 0.4).toFixed(1)
-        const c4x2 = (drip.dripX - w_left_segment * 0.4).toFixed(1)
         const dxVal = drip.dripX.toFixed(1)
 
-        const c5x1 = (drip.dripX + w_right_segment * 0.32).toFixed(1)
-        const c5x2 = (drip.dripX + w_right_segment - w_right_segment * 0.32).toFixed(1)
-        const rx1 = (drip.dripX + w_right_segment).toFixed(1)
+        let pathD = `M ${wl},${ybTop} L ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)} `
 
-        const c6x1 = (drip.dripX + w_right_segment + w_right_segment * 0.32).toFixed(1)
-        const c6x2 = (drip.waveRight - w_right_segment * 0.28).toFixed(1)
+        for (let idx = 0; idx < points.length - 1; idx++) {
+          const p0 = points[Math.max(0, idx - 1)]
+          const p1 = points[idx]
+          const p2 = points[idx + 1]
+          const p3 = points[Math.min(points.length - 1, idx + 2)]
+          const cp1x = p1.x + (p2.x - p0.x) / 6
+          const cp1y = p1.y + (p2.y - p0.y) / 6
+          const cp2x = p2.x - (p3.x - p1.x) / 6
+          const cp2y = p2.y - (p3.y - p1.y) / 6
 
-        const pathD =
-          `M ${wl},${ybTop} L ${wl},${yb} ` +
-          `C ${c1x1},${yb} ${c1x2},${y1Val.toFixed(1)} ${lx1},${y1Val.toFixed(1)} ` +
-          `C ${c2x1},${y1Val.toFixed(1)} ${c2x2},${y2Val.toFixed(1)} ${lx2},${y2Val.toFixed(1)} ` +
-          `C ${c3x1},${y2Val.toFixed(1)} ${c3x2},${y3Val.toFixed(1)} ${lx3},${y3Val.toFixed(1)} ` +
-          `C ${c4x1},${y3Val.toFixed(1)} ${c4x2},${y4Val.toFixed(1)} ${dxVal},${y4Val.toFixed(1)} ` +
-          `C ${c5x1},${y4Val.toFixed(1)} ${c5x2},${ry1Val.toFixed(1)} ${rx1},${ry1Val.toFixed(1)} ` +
-          `C ${c6x1},${ry1Val.toFixed(1)} ${c6x2},${yb} ${wr},${yb} ` +
-          `L ${wr},${ybTop} Z`
+          pathD +=
+            `C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ` +
+            `${cp2x.toFixed(1)},${cp2y.toFixed(1)} ` +
+            `${p2.x.toFixed(1)},${p2.y.toFixed(1)} `
+        }
+
+        pathD += `L ${wr},${ybTop} Z`
 
         drip.path.setAttribute('d', pathD)
         drip.bulge.setAttribute('cy', bulgeCY.toFixed(1))
