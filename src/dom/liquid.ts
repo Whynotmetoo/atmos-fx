@@ -502,7 +502,7 @@ export function createLiquidDripsController(
             drip.targetBottom +
             BULGE_BASE_Y_OFFSET +
             4.0 * scale +
-            63.0 +
+            63.0 * scale +
             295.8 * phaseProgress +
             109.2 * Math.pow(phaseProgress, 2)
 
@@ -544,7 +544,7 @@ export function createLiquidDripsController(
               drip.targetBottom +
               BULGE_BASE_Y_OFFSET +
               4.0 * scale +
-              63.0 +
+              63.0 * scale +
               295.8 +
               109.2
             if (drip.collisionY <= maxFallY) {
