@@ -306,7 +306,6 @@ export function createLiquidDripsController(
 
     const droplet = doc.createElementNS('http://www.w3.org/2000/svg', 'ellipse')
     droplet.setAttribute('class', 'atmos-liquid-element')
-    droplet.setAttribute('clip-path', `url(#${clipId})`)
     droplet.setAttribute('rx', '0')
     droplet.setAttribute('ry', '0')
 
@@ -492,6 +491,14 @@ export function createLiquidDripsController(
 
         if (drip.droplet.parentNode !== dropletParent) {
           dropletParent.appendChild(drip.droplet)
+          if (isOutsideGooFilter) {
+            drip.droplet.setAttribute(
+              'clip-path',
+              drip.group.getAttribute('clip-path') || ''
+            )
+          } else {
+            drip.droplet.removeAttribute('clip-path')
+          }
         }
 
         const BULGE_BASE_Y_OFFSET = -2
