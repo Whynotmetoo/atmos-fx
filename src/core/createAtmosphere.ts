@@ -360,10 +360,12 @@ export function createAtmosphere(
     }
 
     const nextIntersectionPaused = shouldPauseForOutOfViewport()
-    if (nextIntersectionPaused && state === 'running') {
+    if (nextIntersectionPaused) {
       intersectionPaused = true
-      scheduler.stop()
-      setState('paused')
+      if (state === 'running') {
+        scheduler.stop()
+        setState('paused')
+      }
       return
     }
 
