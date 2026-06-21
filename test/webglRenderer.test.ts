@@ -14,6 +14,7 @@ function createWebGLContext() {
     DYNAMIC_DRAW: 0x88e8,
     FLOAT: 0x1406,
     LINES: 0x0001,
+    TRIANGLES: 0x0004,
     COLOR_BUFFER_BIT: 0x4000,
     createShader: vi.fn(() => ({})),
     shaderSource: vi.fn(),
@@ -26,7 +27,14 @@ function createWebGLContext() {
     getProgramParameter: vi.fn(() => true),
     deleteProgram: vi.fn(),
     createBuffer: vi.fn(() => ({})),
-    getAttribLocation: vi.fn((_program, name) => (name === 'a_position' ? 0 : 1)),
+    deleteBuffer: vi.fn(),
+    getAttribLocation: vi.fn((_program, name) => {
+      if (name === 'a_position') return 0
+      if (name === 'a_alpha') return 1
+      if (name === 'a_local_coord') return 2
+      if (name === 'a_dims') return 3
+      return -1
+    }),
     getUniformLocation: vi.fn(() => ({})),
     viewport: vi.fn(),
     clearColor: vi.fn(),

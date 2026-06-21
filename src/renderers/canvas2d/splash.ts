@@ -13,7 +13,7 @@ type SplashParticle = {
   alpha: number
 }
 
-const MAX_SPLASH_PARTICLES = 320
+export const MAX_SPLASH_PARTICLES = 320
 const SPLASH_PARTICLES_PER_HIT = 5
 
 function randomRange(min: number, max: number): number {
@@ -54,8 +54,8 @@ export class SplashPool {
       particle.vy = -randomRange(78, 190) * depth
       particle.age = 0
       particle.lifetime = randomRange(0.18, 0.34)
-      particle.length = randomRange(4, 9) * depth
-      particle.width = randomRange(0.7, 1.3) * depth
+      particle.length = randomRange(2.5, 5) * depth
+      particle.width = randomRange(1, 2) * depth
       particle.alpha = randomRange(0.32, 0.72) * depth
       this.cursor = (this.cursor + 1) % this.particles.length
     }
