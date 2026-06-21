@@ -26,26 +26,38 @@ type WebGLLayer = {
   buffer: WebGLBuffer
   positionLocation: number
   alphaLocation: number
+  localCoordLocation: number
+  dimsLocation: number
   colorLocation: WebGLUniformLocation | null
   resolutionLocation: WebGLUniformLocation | null
+  pixelRatioLocation: WebGLUniformLocation | null
   vertices: Float32Array
 }
 
 const MAX_DELTA_SECONDS = 0.05
-const VALUES_PER_VERTEX = 3
-const VERTICES_PER_PARTICLE = 2
+const VALUES_PER_VERTEX = 8
+const VERTICES_PER_PARTICLE = 6
+const MAX_SPLASH_PARTICLES = 320
 
 const VERTEX_SHADER_SOURCE = `
 attribute vec2 a_position;
 attribute float a_alpha;
+attribute vec2 a_local_coord;
+attribute vec3 a_dims; // (L, r_tail, r_head)
+
 uniform vec2 u_resolution;
+
 varying float v_alpha;
+varying vec2 v_local_coord;
+varying vec3 v_dims;
 
 void main() {
   vec2 zeroToOne = a_position / u_resolution;
   vec2 clipSpace = zeroToOne * 2.0 - 1.0;
   gl_Position = vec4(clipSpace * vec2(1.0, -1.0), 0.0, 1.0);
   v_alpha = a_alpha;
+  v_local_coord = a_local_coord;
+  v_dims = a_dims;
 }
 `
 
@@ -53,10 +65,105 @@ const FRAGMENT_SHADER_SOURCE = `
 precision mediump float;
 
 uniform vec4 u_color;
+uniform float u_pixelRatio;
+
 varying float v_alpha;
+varying vec2 v_local_coord;
+varying vec3 v_dims; // (L, r_tail, r_head)
 
 void main() {
-  gl_FragColor = vec4(u_color.rgb, u_color.a * v_alpha);
+  float x = v_local_coord.x;
+  float y = v_local_coord.y;
+  float L = v_dims.x;
+  float r_tail = v_dims.y;
+  float r_head = v_dims.z;
+
+  float dist_css = 0.0;
+  if (x < 0.0) {
+    dist_css = length(vec2(x, y)) - r_tail;
+  } else if (x > L) {
+    dist_css = length(vec2(x - L, y)) - r_head;
+  } else {
+    float r = mix(r_tail, r_head, x / L);
+    dist_css = abs(y) - r;
+  }
+
+  float half_pixel_css = 0.5 / u_pixelRatio;
+  float alpha_edge = smoothstep(half_pixel_css, -half_pixel_css, dist_css);
+
+  float alpha_fade = 1.0;
+  if (r_tail < r_head) {
+    if (L > 0.0) {
+      alpha_fade = clamp(x / L, 0.0, 1.0);
+    }
+  }
+
+  float final_alpha = u_color.a * v_alpha * alpha_edge * alpha_fade;
+  if (final_alpha <= 0.0) {
+    discard;
+  }
+
+  gl_FragColor = vec4(u_color.rgb, final_alpha);
+}
+`
+
+const SPLASH_VERTEX_SHADER_SOURCE = `
+attribute vec2 a_position;
+attribute float a_alpha;
+attribute vec2 a_local_coord;
+attribute vec3 a_dims; // (L, r, r)
+
+uniform vec2 u_resolution;
+
+varying float v_alpha;
+varying vec2 v_local_coord;
+varying vec3 v_dims;
+
+void main() {
+  vec2 zeroToOne = a_position / u_resolution;
+  vec2 clipSpace = zeroToOne * 2.0 - 1.0;
+  gl_Position = vec4(clipSpace * vec2(1.0, -1.0), 0.0, 1.0);
+  v_alpha = a_alpha;
+  v_local_coord = a_local_coord;
+  v_dims = a_dims;
+}
+`
+
+const SPLASH_FRAGMENT_SHADER_SOURCE = `
+precision mediump float;
+
+uniform vec4 u_color;
+uniform float u_pixelRatio;
+
+varying float v_alpha;
+varying vec2 v_local_coord;
+varying vec3 v_dims; // (L, r, r)
+
+void main() {
+  float x = v_local_coord.x;
+  float y = v_local_coord.y;
+  float L = v_dims.x;
+  float r = v_dims.y;
+
+  float dist_css = 0.0;
+  if (x < 0.0) {
+    dist_css = length(vec2(x, y)) - r;
+  } else if (x > L) {
+    dist_css = length(vec2(x - L, y)) - r;
+  } else {
+    dist_css = abs(y) - r;
+  }
+
+  float half_pixel_css = 0.5 / u_pixelRatio;
+  float alpha_edge = smoothstep(half_pixel_css, -half_pixel_css, dist_css);
+
+  // Splash particles are uniform and solid
+  float final_alpha = u_color.a * v_alpha * alpha_edge;
+  if (final_alpha <= 0.0) {
+    discard;
+  }
+
+  gl_FragColor = vec4(u_color.rgb, final_alpha);
 }
 `
 
@@ -141,7 +248,7 @@ function recycleParticle(
   const speed = options.speed * randomRange(520, 980) * depth
   const wind = options.wind * randomRange(120, 260) * depth
 
-  const alphaScale = isBackground ? (0.35 + depth * 0.65) : depth
+  const alphaScale = isBackground ? (0.55 + depth * 0.45) : depth
   const lengthScale = isBackground ? (0.4 + depth * 0.6) : depth
 
   particle.depth = depth
@@ -149,8 +256,8 @@ function recycleParticle(
   particle.y = initial ? randomRange(-size.height, size.height) : randomRange(-size.height * 0.35, 0)
   particle.vx = wind
   particle.vy = speed
-  particle.length = randomRange(10, 26) * lengthScale * (0.8 + options.speed * 0.35)
-  particle.alpha = randomRange(0.22, 0.78) * alphaScale
+  particle.length = randomRange(10, 26) * lengthScale * (0.8 + options.speed * 0.35) * 1.3
+  particle.alpha = (isBackground ? randomRange(0.35, 0.85) : randomRange(0.22, 0.78)) * alphaScale
 }
 
 function getWebGLContext(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
@@ -191,9 +298,13 @@ function createShader(
   return shader
 }
 
-function createProgram(gl: WebGLRenderingContext): WebGLProgram | undefined {
-  const vertexShader = createShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE)
-  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE)
+function createProgramFromSource(
+  gl: WebGLRenderingContext,
+  vertexSource: string,
+  fragmentSource: string,
+): WebGLProgram | undefined {
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexSource)
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource)
 
   if (!vertexShader || !fragmentShader) {
     return undefined
@@ -219,6 +330,10 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | undefined {
   return program
 }
 
+function createProgram(gl: WebGLRenderingContext): WebGLProgram | undefined {
+  return createProgramFromSource(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
+}
+
 function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | undefined {
   const gl = getWebGLContext(canvas)
 
@@ -240,8 +355,11 @@ function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | 
     buffer,
     positionLocation: gl.getAttribLocation(program, 'a_position'),
     alphaLocation: gl.getAttribLocation(program, 'a_alpha'),
+    localCoordLocation: gl.getAttribLocation(program, 'a_local_coord'),
+    dimsLocation: gl.getAttribLocation(program, 'a_dims'),
     colorLocation: gl.getUniformLocation(program, 'u_color'),
     resolutionLocation: gl.getUniformLocation(program, 'u_resolution'),
+    pixelRatioLocation: gl.getUniformLocation(program, 'u_pixelRatio'),
     vertices: new Float32Array(capacity * VERTICES_PER_PARTICLE * VALUES_PER_VERTEX),
   }
 }
@@ -258,6 +376,17 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private size: CanvasLayerSize
   private options: NormalizedAtmosphereOptions
   private parsedColor: [number, number, number, number] = [1, 1, 1, 0.72]
+
+  private splashProgram: WebGLProgram | undefined
+  private splashBuffer: WebGLBuffer | undefined
+  private splashVertices: Float32Array | undefined
+  private splashPositionLoc = -1
+  private splashAlphaLoc = -1
+  private splashLocalCoordLoc = -1
+  private splashDimsLoc = -1
+  private splashColorLoc: WebGLUniformLocation | null = null
+  private splashResolutionLoc: WebGLUniformLocation | null = null
+  private splashPixelRatioLoc: WebGLUniformLocation | null = null
 
   private readonly handleContextLost = (event: Event) => {
     event.preventDefault()
@@ -302,7 +431,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     this.syncParticleBudget(false)
 
     if (shouldReseedMotion) {
-      const backgroundCount = Math.floor(this.particles.length * 0.42)
+      const backgroundCount = Math.floor(this.particles.length * 0.6)
       for (let index = 0; index < this.particles.length; index += 1) {
         const particle = this.particles[index]
         const isBackground = index < backgroundCount
@@ -310,7 +439,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
         particle.vy = options.speed * randomRange(520, 980) * depth
         particle.vx = options.wind * randomRange(120, 260) * depth
         const lengthScale = isBackground ? (0.4 + depth * 0.6) : depth
-        particle.length = randomRange(10, 26) * lengthScale * (0.8 + options.speed * 0.35)
+        particle.length = randomRange(10, 26) * lengthScale * (0.8 + options.speed * 0.35) * 1.3
       }
     }
   }
@@ -356,7 +485,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
     this.lastTime = time
 
-    const backgroundCount = Math.floor(this.particles.length * 0.42)
+    const backgroundCount = Math.floor(this.particles.length * 0.6)
     let backgroundVertexCount = 0
     let foregroundVertexCount = 0
 
@@ -366,8 +495,6 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       const previousY = particle.y
       const nextX = particle.x + particle.vx * deltaSeconds
       const nextY = particle.y + particle.vy * deltaSeconds
-
-
 
       const collision =
         index >= backgroundCount
@@ -407,6 +534,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       }
     }
 
+    let splashVertexCount = 0
     for (const splash of this.splashes.particles) {
       if (!splash.active) {
         continue
@@ -436,13 +564,12 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       const lifeProgress = splash.age / splash.lifetime
       const alpha = splash.alpha * (1 - lifeProgress)
 
-      foregroundVertexCount += this.writeSplash(this.foregroundLayer, foregroundVertexCount, splash, alpha)
+      splashVertexCount += this.writeSplash(splashVertexCount, splash, alpha)
     }
-
-
 
     this.drawLayer(this.backgroundLayer, backgroundVertexCount)
     this.drawLayer(this.foregroundLayer, foregroundVertexCount)
+    this.drawSplashes(splashVertexCount)
   }
 
   clear() {
@@ -459,6 +586,20 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     this.canvases.foreground.removeEventListener('webglcontextrestored', this.handleContextRestored)
     this.particles = []
     this.lastTime = undefined
+
+    if (this.foregroundLayer) {
+      const { gl } = this.foregroundLayer
+      if (this.splashProgram) {
+        gl.deleteProgram(this.splashProgram)
+      }
+      if (this.splashBuffer) {
+        gl.deleteBuffer(this.splashBuffer)
+      }
+    }
+
+    this.splashProgram = undefined
+    this.splashBuffer = undefined
+    this.splashVertices = undefined
     this.backgroundLayer = undefined
     this.foregroundLayer = undefined
   }
@@ -477,7 +618,8 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private initializeLayers() {
     const capacity = Math.max(1, this.particles.length)
     this.backgroundLayer = createLayer(this.canvases.background, capacity)
-    this.foregroundLayer = createLayer(this.canvases.foreground, capacity + 6000)
+    this.foregroundLayer = createLayer(this.canvases.foreground, capacity)
+    this.initializeSplashProgram()
   }
 
   private syncParticleBudget(initial: boolean) {
@@ -491,11 +633,12 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     if (budget !== this.particles.length) {
       this.particles = []
       this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, budget))
-      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget + 6000))
+      this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget))
+      this.initializeSplashProgram()
     }
 
     while (this.particles.length < budget) {
-      const isBackground = this.particles.length < Math.floor(budget * 0.42)
+      const isBackground = this.particles.length < Math.floor(budget * 0.6)
       const particle: RainParticle = {
         x: 0,
         y: 0,
@@ -513,36 +656,119 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   }
 
   private writeParticle(layer: WebGLLayer, vertexOffset: number, particle: RainParticle) {
-    const tailX = particle.x - particle.vx * 0.018
-    const tailY = particle.y - particle.length
+    const dx = particle.vx * 0.018
+    const dy = particle.length
+    const len = Math.sqrt(dx * dx + dy * dy)
+    
+    const ux = len > 0 ? dx / len : 0
+    const uy = len > 0 ? dy / len : 1
+    const px = -uy
+    const py = ux
+
+    const depthScale = particle.layer === 'background' ? (0.48 + particle.depth * 0.52) : particle.depth
+    const rHead = (particle.layer === 'background' ? 1.3 : 1.45) * depthScale * (1.0 + this.options.speed * 0.15) * 0.8
+    const rTail = rHead * 0.22
+
+    const tailExtX = (particle.x - dx) - ux * rTail
+    const tailExtY = (particle.y - dy) - uy * rTail
+
+    const headExtX = particle.x + ux * rHead
+    const headExtY = particle.y + uy * rHead
+
+    const c1x = tailExtX - px * rTail
+    const c1y = tailExtY - py * rTail
+    const c2x = tailExtX + px * rTail
+    const c2y = tailExtY + py * rTail
+    const c3x = headExtX - px * rHead
+    const c3y = headExtY - py * rHead
+    const c4x = headExtX + px * rHead
+    const c4y = headExtY + py * rHead
+
     const start = vertexOffset * VALUES_PER_VERTEX
 
-    layer.vertices[start] = tailX
-    layer.vertices[start + 1] = tailY
-    layer.vertices[start + 2] = particle.alpha
-    layer.vertices[start + 3] = particle.x
-    layer.vertices[start + 4] = particle.y
-    layer.vertices[start + 5] = particle.alpha
+    const writeVertex = (vertexIndex: number, vx: number, vy: number, lu: number, lv: number) => {
+      const idx = start + vertexIndex * 8
+      layer.vertices[idx] = vx
+      layer.vertices[idx + 1] = vy
+      layer.vertices[idx + 2] = particle.alpha
+      layer.vertices[idx + 3] = lu
+      layer.vertices[idx + 4] = lv
+      layer.vertices[idx + 5] = len
+      layer.vertices[idx + 6] = rTail
+      layer.vertices[idx + 7] = rHead
+    }
+
+    // Triangle 1: Corner 1 (tail left), Corner 2 (tail right), Corner 3 (head left)
+    writeVertex(0, c1x, c1y, -rTail, -rTail)
+    writeVertex(1, c2x, c2y, -rTail, rTail)
+    writeVertex(2, c3x, c3y, len + rHead, -rHead)
+
+    // Triangle 2: Corner 3 (head left), Corner 2 (tail right), Corner 4 (head right)
+    writeVertex(3, c3x, c3y, len + rHead, -rHead)
+    writeVertex(4, c2x, c2y, -rTail, rTail)
+    writeVertex(5, c4x, c4y, len + rHead, rHead)
 
     return VERTICES_PER_PARTICLE
   }
 
-  private writeSplash(layer: WebGLLayer, vertexOffset: number, splash: any, alpha: number) {
-    const tailX = splash.x - splash.vx * 0.012
-    const tailY = splash.y - splash.vy * 0.012 - splash.length
+  private writeSplash(vertexOffset: number, splash: any, alpha: number) {
+    if (!this.splashVertices) {
+      return 0
+    }
+
+    const dx = splash.vx * 0.012
+    const dy = splash.vy * 0.012 + splash.length
+    const len = Math.sqrt(dx * dx + dy * dy)
+    
+    const ux = len > 0 ? dx / len : 0
+    const uy = len > 0 ? dy / len : 1
+    const px = -uy
+    const py = ux
+
+    const rHead = 0.7 * splash.width
+    const rTail = rHead
+
+    const tailExtX = (splash.x - dx) - ux * rTail
+    const tailExtY = (splash.y - dy) - uy * rTail
+
+    const headExtX = splash.x + ux * rHead
+    const headExtY = splash.y + uy * rHead
+
+    const c1x = tailExtX - px * rTail
+    const c1y = tailExtY - py * rTail
+    const c2x = tailExtX + px * rTail
+    const c2y = tailExtY + py * rTail
+    const c3x = headExtX - px * rHead
+    const c3y = headExtY - py * rHead
+    const c4x = headExtX + px * rHead
+    const c4y = headExtY + py * rHead
+
     const start = vertexOffset * VALUES_PER_VERTEX
 
-    layer.vertices[start] = tailX
-    layer.vertices[start + 1] = tailY
-    layer.vertices[start + 2] = alpha
-    layer.vertices[start + 3] = splash.x
-    layer.vertices[start + 4] = splash.y
-    layer.vertices[start + 5] = alpha
+    const writeVertex = (vertexIndex: number, vx: number, vy: number, lu: number, lv: number) => {
+      const idx = start + vertexIndex * 8
+      this.splashVertices![idx] = vx
+      this.splashVertices![idx + 1] = vy
+      this.splashVertices![idx + 2] = alpha
+      this.splashVertices![idx + 3] = lu
+      this.splashVertices![idx + 4] = lv
+      this.splashVertices![idx + 5] = len
+      this.splashVertices![idx + 6] = rTail
+      this.splashVertices![idx + 7] = rHead
+    }
+
+    // Triangle 1: Corner 1 (tail left), Corner 2 (tail right), Corner 3 (head left)
+    writeVertex(0, c1x, c1y, -rTail, -rTail)
+    writeVertex(1, c2x, c2y, -rTail, rTail)
+    writeVertex(2, c3x, c3y, len + rHead, -rHead)
+
+    // Triangle 2: Corner 3 (head left), Corner 2 (tail right), Corner 4 (head right)
+    writeVertex(3, c3x, c3y, len + rHead, -rHead)
+    writeVertex(4, c2x, c2y, -rTail, rTail)
+    writeVertex(5, c4x, c4y, len + rHead, rHead)
 
     return VERTICES_PER_PARTICLE
   }
-
-
 
   private drawLayer(layer: WebGLLayer, vertexCount: number) {
     const { gl } = layer
@@ -558,7 +784,12 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
     gl.useProgram(layer.program)
     gl.bindBuffer(gl.ARRAY_BUFFER, layer.buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, layer.vertices, gl.DYNAMIC_DRAW)
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      layer.vertices.subarray(0, vertexCount * VALUES_PER_VERTEX),
+      gl.DYNAMIC_DRAW,
+    )
+
     gl.enableVertexAttribArray(layer.positionLocation)
     gl.vertexAttribPointer(
       layer.positionLocation,
@@ -568,6 +799,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
       0,
     )
+
     gl.enableVertexAttribArray(layer.alphaLocation)
     gl.vertexAttribPointer(
       layer.alphaLocation,
@@ -578,15 +810,135 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       2 * Float32Array.BYTES_PER_ELEMENT,
     )
 
+    gl.enableVertexAttribArray(layer.localCoordLocation)
+    gl.vertexAttribPointer(
+      layer.localCoordLocation,
+      2,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      3 * Float32Array.BYTES_PER_ELEMENT,
+    )
+
+    gl.enableVertexAttribArray(layer.dimsLocation)
+    gl.vertexAttribPointer(
+      layer.dimsLocation,
+      3,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      5 * Float32Array.BYTES_PER_ELEMENT,
+    )
+
     if (layer.resolutionLocation) {
       gl.uniform2f(layer.resolutionLocation, this.size.width, this.size.height)
+    }
+
+    if (layer.pixelRatioLocation) {
+      gl.uniform1f(layer.pixelRatioLocation, this.size.pixelRatio)
     }
 
     if (layer.colorLocation) {
       gl.uniform4f(layer.colorLocation, red, green, blue, alpha)
     }
 
-    gl.drawArrays(gl.LINES, 0, vertexCount)
+    gl.drawArrays(gl.TRIANGLES, 0, vertexCount)
+  }
+
+  private drawSplashes(vertexCount: number) {
+    if (!this.foregroundLayer || !this.splashProgram || !this.splashBuffer || !this.splashVertices || vertexCount <= 0) {
+      return
+    }
+
+    const { gl } = this.foregroundLayer
+    const [red, green, blue, alpha] = this.parsedColor
+
+    gl.useProgram(this.splashProgram)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.splashBuffer)
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      this.splashVertices.subarray(0, vertexCount * VALUES_PER_VERTEX),
+      gl.DYNAMIC_DRAW,
+    )
+
+    gl.enableVertexAttribArray(this.splashPositionLoc)
+    gl.vertexAttribPointer(
+      this.splashPositionLoc,
+      2,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      0,
+    )
+
+    gl.enableVertexAttribArray(this.splashAlphaLoc)
+    gl.vertexAttribPointer(
+      this.splashAlphaLoc,
+      1,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      2 * Float32Array.BYTES_PER_ELEMENT,
+    )
+
+    gl.enableVertexAttribArray(this.splashLocalCoordLoc)
+    gl.vertexAttribPointer(
+      this.splashLocalCoordLoc,
+      2,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      3 * Float32Array.BYTES_PER_ELEMENT,
+    )
+
+    gl.enableVertexAttribArray(this.splashDimsLoc)
+    gl.vertexAttribPointer(
+      this.splashDimsLoc,
+      3,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      5 * Float32Array.BYTES_PER_ELEMENT,
+    )
+
+    if (this.splashResolutionLoc) {
+      gl.uniform2f(this.splashResolutionLoc, this.size.width, this.size.height)
+    }
+
+    if (this.splashPixelRatioLoc) {
+      gl.uniform1f(this.splashPixelRatioLoc, this.size.pixelRatio)
+    }
+
+    if (this.splashColorLoc) {
+      gl.uniform4f(this.splashColorLoc, red, green, blue, alpha)
+    }
+
+    gl.drawArrays(gl.TRIANGLES, 0, vertexCount)
+  }
+
+  private initializeSplashProgram() {
+    if (!this.foregroundLayer) {
+      return
+    }
+
+    const { gl } = this.foregroundLayer
+    const program = createProgramFromSource(gl, SPLASH_VERTEX_SHADER_SOURCE, SPLASH_FRAGMENT_SHADER_SOURCE)
+    const buffer = gl.createBuffer()
+
+    if (!program || !buffer) {
+      return
+    }
+
+    this.splashProgram = program
+    this.splashBuffer = buffer
+    this.splashPositionLoc = gl.getAttribLocation(program, 'a_position')
+    this.splashAlphaLoc = gl.getAttribLocation(program, 'a_alpha')
+    this.splashLocalCoordLoc = gl.getAttribLocation(program, 'a_local_coord')
+    this.splashDimsLoc = gl.getAttribLocation(program, 'a_dims')
+    this.splashColorLoc = gl.getUniformLocation(program, 'u_color')
+    this.splashResolutionLoc = gl.getUniformLocation(program, 'u_resolution')
+    this.splashPixelRatioLoc = gl.getUniformLocation(program, 'u_pixelRatio')
+    this.splashVertices = new Float32Array(MAX_SPLASH_PARTICLES * VERTICES_PER_PARTICLE * VALUES_PER_VERTEX)
   }
 
   private clearLayer(layer: WebGLLayer | undefined) {
