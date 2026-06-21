@@ -6,6 +6,7 @@ import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
 import { QualityMonitor } from './qualityMonitor'
+import { resolveAutoQuality } from '../renderers/canvas2d/quality'
 import type {
   AtmosphereController,
   AtmosphereParticle,
@@ -153,10 +154,25 @@ export function createAtmosphere(
 
   const getEffectiveOptions = (): NormalizedAtmosphereOptions => {
     const scaling = qualityMonitor.getScalingState()
+    
+    let baseQuality = normalizedOptions.quality
+    if (baseQuality === 'auto') {
+      const activeSize = canvasLayer ? canvasLayer.getSize() : { width: 0, height: 0 }
+      baseQuality = resolveAutoQuality(activeSize.width, activeSize.height)
+    }
+
+    let finalQuality = baseQuality
+    if (scaling.qualityTierOverride) {
+      const tierRank = { low: 1, medium: 2, high: 3 }
+      if (tierRank[scaling.qualityTierOverride] < tierRank[baseQuality]) {
+        finalQuality = scaling.qualityTierOverride
+      }
+    }
+
     return {
       ...normalizedOptions,
       density: normalizedOptions.density * scaling.densityMultiplier,
-      quality: scaling.qualityTierOverride ?? normalizedOptions.quality,
+      quality: finalQuality,
       liquidDripping: scaling.disableHighCostFeatures ? false : normalizedOptions.liquidDripping,
       snowAccumulation: scaling.disableHighCostFeatures ? 0 : normalizedOptions.snowAccumulation,
     }
