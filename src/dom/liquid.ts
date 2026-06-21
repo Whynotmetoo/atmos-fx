@@ -57,6 +57,7 @@ const FALL_END_T = 4800 / CYCLE_DURATION_MS
 const SPLASH_END_T = 5080 / CYCLE_DURATION_MS
 
 // Droplet shape and gravity motion
+const GLOBAL_SCALE = 0.88
 const DROPLET_START_RX = 8
 const DROPLET_END_RX = 4.5
 const DROPLET_START_RY = 8
@@ -68,7 +69,7 @@ const DETACHED_DROPLET_WIDTH_SCALE = 0.7
 const DETACHED_DROPLET_START_LENGTH_SCALE = 0.7
 const DETACHED_DROPLET_END_LENGTH_SCALE = 0.5
 const DROP_MOTION_START_T = BULGE_END_T
-const TERMINAL_VELOCITY_START_PROGRESS = 0.75
+const TERMINAL_VELOCITY_START_PROGRESS = 0.75 
 const BASE_DROP_MOTION_POWER = 3
 // Narrow cards scale the attached stretch but retain the existing long falling
 // range. A slightly higher power keeps their pinch-off position from dropping
@@ -393,7 +394,8 @@ export function createLiquidDripsController(
         drip.dripX = drip.waveLeft + (drip.waveRight - drip.waveLeft) * 0.6875
         drip.targetBottom = target.bottom
         // Scale factor: narrower card -> smaller waves, bulges, and falling droplet size (clamped to 0.6 to survive gooey blur)
-        drip.scale = Math.min(1.0, Math.max(0.6, target.width / 300))
+        drip.scale =
+          Math.min(1.0, Math.max(0.6, target.width / 300)) * GLOBAL_SCALE
         drip.dropMotionPower =
           BASE_DROP_MOTION_POWER +
           (1 - drip.scale) * DROP_MOTION_SCALE_POWER_ADJUSTMENT
