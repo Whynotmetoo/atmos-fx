@@ -385,6 +385,17 @@ function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | 
   }
 }
 
+function cleanupLayerResources(layer: WebGLLayer | undefined) {
+  if (!layer) {
+    return
+  }
+
+  const { gl, program, buffer, quadBuffer } = layer
+  gl.deleteProgram(program)
+  gl.deleteBuffer(buffer)
+  gl.deleteBuffer(quadBuffer)
+}
+
 export class WebGLRainRenderer implements Canvas2DRenderer {
   readonly backend = 'webgl' as const
   private backgroundLayer: WebGLLayer | undefined
@@ -614,6 +625,8 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     this.lastTime = undefined
 
     this.cleanupSplashResources()
+    cleanupLayerResources(this.backgroundLayer)
+    cleanupLayerResources(this.foregroundLayer)
     this.backgroundLayer = undefined
     this.foregroundLayer = undefined
   }
@@ -651,6 +664,8 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
   private initializeLayers() {
     this.cleanupSplashResources()
+    cleanupLayerResources(this.backgroundLayer)
+    cleanupLayerResources(this.foregroundLayer)
     const capacity = Math.max(1, this.particles.length)
     this.backgroundLayer = createLayer(this.canvases.background, capacity)
     this.foregroundLayer = createLayer(this.canvases.foreground, capacity)
@@ -668,6 +683,8 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     if (budget !== this.particles.length) {
       this.particles = []
       this.cleanupSplashResources()
+      cleanupLayerResources(this.backgroundLayer)
+      cleanupLayerResources(this.foregroundLayer)
       this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, budget))
       this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget))
       this.initializeSplashProgram()

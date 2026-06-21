@@ -133,6 +133,9 @@ describe('WebGL renderer foundation', () => {
     expect((context as any).__extMock.drawArraysInstancedANGLE).toHaveBeenCalled()
 
     renderer?.destroy()
+
+    expect(context.deleteProgram).toHaveBeenCalled()
+    expect(context.deleteBuffer).toHaveBeenCalled()
   })
 
   it('pauses drawing while the WebGL context is lost and resumes after restore', () => {
