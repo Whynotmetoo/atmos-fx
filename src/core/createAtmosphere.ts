@@ -143,6 +143,8 @@ export function createAtmosphere(
   let rendererParticle: AtmosphereParticle | undefined
   let visibilityPaused = false
   let reducedMotionPaused = false
+  let intersectionPaused = false
+  let isIntersecting = true
   let manuallyPaused = false
   let lastTime: number | undefined
 
@@ -272,11 +274,15 @@ export function createAtmosphere(
   const shouldPauseForHiddenDocument = () =>
     normalizedOptions.pauseWhenHidden && ownerDocument.hidden
 
-  const hasAutoPause = () => visibilityPaused || reducedMotionPaused
+  const shouldPauseForOutOfViewport = () =>
+    normalizedOptions.pauseWhenHidden && !isIntersecting
+
+  const hasAutoPause = () => visibilityPaused || reducedMotionPaused || intersectionPaused
 
   const refreshAutoPauseFlags = () => {
     visibilityPaused = shouldPauseForHiddenDocument()
     reducedMotionPaused = shouldReduceMotion()
+    intersectionPaused = shouldPauseForOutOfViewport()
   }
 
   const startAnimationIfAllowed = () => {
@@ -343,12 +349,47 @@ export function createAtmosphere(
     resizeLayerAndRenderer()
   }
 
+  const handleIntersectionChange = (entries: IntersectionObserverEntry[]) => {
+    if (state === 'destroyed' || state === 'stopped') {
+      return
+    }
+
+    const entry = entries[0]
+    if (entry) {
+      isIntersecting = entry.isIntersecting
+    }
+
+    const nextIntersectionPaused = shouldPauseForOutOfViewport()
+    if (nextIntersectionPaused && state === 'running') {
+      intersectionPaused = true
+      scheduler.stop()
+      setState('paused')
+      return
+    }
+
+    if (!nextIntersectionPaused && intersectionPaused) {
+      intersectionPaused = false
+
+      if (!hasAutoPause() && !manuallyPaused) {
+        startAnimationIfAllowed()
+      }
+    }
+  }
+
   ownerDocument.addEventListener('visibilitychange', handleVisibilityChange)
   ownerWindow?.addEventListener('resize', handleContainerResize)
   const ResizeObserverCtor = ownerWindow?.ResizeObserver
   const resizeObserver =
     ResizeObserverCtor === undefined ? undefined : new ResizeObserverCtor(handleContainerResize)
   resizeObserver?.observe(element)
+  
+  const IntersectionObserverCtor = ownerWindow?.IntersectionObserver
+  const intersectionObserver =
+    IntersectionObserverCtor === undefined
+      ? undefined
+      : new IntersectionObserverCtor(handleIntersectionChange, { threshold: 0 })
+  intersectionObserver?.observe(element)
+
   const removeReducedMotionListener = addReducedMotionListener(
     reducedMotionQuery,
     handleReducedMotionChange,
@@ -420,6 +461,7 @@ export function createAtmosphere(
       ownerDocument.removeEventListener('visibilitychange', handleVisibilityChange)
       ownerWindow?.removeEventListener('resize', handleContainerResize)
       resizeObserver?.disconnect()
+      intersectionObserver?.disconnect()
       removeReducedMotionListener()
       scheduler.stop()
       collisionTargetManager.destroy()

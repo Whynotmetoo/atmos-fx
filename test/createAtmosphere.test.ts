@@ -572,4 +572,57 @@ describe('createAtmosphere', () => {
 
     expect(root.style.position).toBe('static')
   })
+
+  it('pauses when the root element is scrolled out of viewport and resumes when visible', () => {
+    let intersectionCallback: IntersectionObserverCallback | undefined
+
+    class MockIntersectionObserver {
+      observe = vi.fn()
+      disconnect = vi.fn()
+
+      constructor(callback: IntersectionObserverCallback) {
+        intersectionCallback = callback
+      }
+    }
+
+    Object.defineProperty(window, 'IntersectionObserver', {
+      configurable: true,
+      value: MockIntersectionObserver,
+    })
+
+    const root = createRoot()
+    const controller = createAtmosphere(root)
+
+    controller.start()
+
+    expect(root.dataset.atmosFx).toBe('running')
+
+    // Simulate scrolled out of viewport (isIntersecting = false)
+    intersectionCallback?.(
+      [
+        {
+          isIntersecting: false,
+          target: root,
+        } as unknown as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+
+    expect(root.dataset.atmosFx).toBe('paused')
+
+    // Simulate scrolled back into viewport (isIntersecting = true)
+    intersectionCallback?.(
+      [
+        {
+          isIntersecting: true,
+          target: root,
+        } as unknown as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+
+    expect(root.dataset.atmosFx).toBe('running')
+
+    controller.destroy()
+  })
 })
