@@ -265,4 +265,45 @@ describe('Atmosphere React adapter', () => {
       reactRoot.unmount()
     })
   })
+
+  it('resets options when props are removed/undefined', async () => {
+    const updateSpy = vi.fn()
+    vi.spyOn(createAtmosphereModule, 'createAtmosphere').mockReturnValue({
+      start: vi.fn(),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+      resize: vi.fn(),
+      update: updateSpy,
+      destroy: vi.fn(),
+    })
+
+    await act(async () => {
+      reactRoot.render(
+        <AtmosFx
+          preset="rain"
+          liquidGatheringPoint={0.42}
+        />,
+      )
+    })
+
+    await act(async () => {
+      reactRoot.render(
+        <AtmosFx
+          preset="rain"
+          liquidGatheringPoint={undefined}
+        />,
+      )
+    })
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        liquidGatheringPoint: undefined,
+      }),
+    )
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
 })

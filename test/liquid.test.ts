@@ -4,6 +4,7 @@ import {
   createLiquidDripsController,
   getLiquidGatheringDuration,
   getLiquidWaveCenter,
+  getWaveSampleProgresses,
 } from '../src/dom/liquid'
 
 describe('liquid gathering', () => {
@@ -103,5 +104,61 @@ describe('liquid gathering', () => {
 
     liquid.destroy()
     root.remove()
+  })
+
+  it('dynamically inserts gathering point and boundaries into sample progresses', () => {
+    const waveLeft = 10
+    const waveRight = 290
+    const waveSpan = waveRight - waveLeft
+    const dripX = waveLeft + waveSpan * 0.4
+    const scale = 0.88
+    const gatheringDurationMs = 1500
+
+    // During gathering (e.g. elapsedMs = 500)
+    const progressesGathering = getWaveSampleProgresses(
+      500,
+      waveLeft,
+      waveRight,
+      dripX,
+      scale,
+      gatheringDurationMs,
+    )
+
+    // Should contain extra dynamic points (left/right centers) sorted properly
+    expect(progressesGathering.length).toBeGreaterThan(17)
+    const isSortedGathering = progressesGathering.every(
+      (val, i, arr) => !i || arr[i - 1] <= val,
+    )
+    expect(isSortedGathering).toBe(true)
+    expect(progressesGathering[0]).toBe(0.0)
+    expect(progressesGathering[progressesGathering.length - 1]).toBe(1.0)
+
+    // After gathering (e.g. elapsedMs = 1600)
+    const progressesFinished = getWaveSampleProgresses(
+      1600,
+      waveLeft,
+      waveRight,
+      dripX,
+      scale,
+      gatheringDurationMs,
+    )
+
+    // At the end of gathering, leftCenter = rightCenter = dripX (0.4)
+    // The list should contain 0.4, and boundaries (0.4 - pulseProg, 0.4 + pulseProg)
+    const pulseWidth = 45 * scale
+    const pulseProg = pulseWidth / waveSpan
+    const expectedCrest = 0.4
+    const expectedLeft = 0.4 - pulseProg
+    const expectedRight = 0.4 + pulseProg
+
+    expect(
+      progressesFinished.some((p) => Math.abs(p - expectedCrest) < 0.001),
+    ).toBe(true)
+    expect(
+      progressesFinished.some((p) => Math.abs(p - expectedLeft) < 0.001),
+    ).toBe(true)
+    expect(
+      progressesFinished.some((p) => Math.abs(p - expectedRight) < 0.001),
+    ).toBe(true)
   })
 })

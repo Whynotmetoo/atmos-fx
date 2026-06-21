@@ -177,6 +177,74 @@ const WAVE_SAMPLE_PROGRESSES = [
   1.0
 ]
 
+export function getWaveSampleProgresses(
+  elapsedMs: number,
+  waveLeft: number,
+  waveRight: number,
+  dripX: number,
+  scale: number,
+  gatheringDurationMs: number,
+): number[] {
+  const waveSpan = waveRight - waveLeft
+  if (waveSpan <= 0) return WAVE_SAMPLE_PROGRESSES
+
+  const bulgeEndMs = gatheringDurationMs + BULGING_DURATION_MS
+  const releaseEndMs =
+    bulgeEndMs + STRETCHING_DURATION_MS + PINCH_DURATION_MS
+  if (elapsedMs >= releaseEndMs) return WAVE_SAMPLE_PROGRESSES
+
+  const gatherProgress = easeInOutQuad(
+    Math.min(1, elapsedMs / gatheringDurationMs),
+  )
+
+  const leftWaveStartX = waveLeft + (dripX - waveLeft) * 0.208
+  const rightWaveStartX = waveRight - (waveRight - dripX) * 0.514
+
+  const leftCenter = getLiquidWaveCenter(
+    leftWaveStartX,
+    dripX,
+    gatherProgress,
+  )
+  const rightCenter = getLiquidWaveCenter(
+    rightWaveStartX,
+    dripX,
+    gatherProgress,
+  )
+
+  const basePulseWidth = 85 * scale
+  const targetPulseWidth = 45 * scale
+  const pulseWidth =
+    basePulseWidth - gatherProgress * (basePulseWidth - targetPulseWidth)
+
+  const leftCenterProg = (leftCenter - waveLeft) / waveSpan
+  const rightCenterProg = (rightCenter - waveLeft) / waveSpan
+  const pulseProg = pulseWidth / waveSpan
+
+  const customProgresses = [...WAVE_SAMPLE_PROGRESSES]
+  const candidates = [
+    leftCenterProg,
+    leftCenterProg - pulseProg,
+    leftCenterProg + pulseProg,
+    rightCenterProg,
+    rightCenterProg - pulseProg,
+    rightCenterProg + pulseProg,
+  ]
+
+  candidates.forEach((p) => {
+    if (p > 0 && p < 1) {
+      const EPSILON = 0.005
+      if (
+        !customProgresses.some((existing) => Math.abs(existing - p) < EPSILON)
+      ) {
+        customProgresses.push(p)
+      }
+    }
+  })
+
+  customProgresses.sort((a, b) => a - b)
+  return customProgresses
+}
+
 function getWaveY(
   x: number,
   elapsedMs: number,
@@ -779,10 +847,18 @@ export function createLiquidDripsController(
         // Wave control points heights and 17-point spline path generation
         const scaledAmp = baseAmp * scale
         const waveSpan = drip.waveRight - drip.waveLeft
-        const points = WAVE_SAMPLE_PROGRESSES.map((prog, idx) => {
+        const progresses = getWaveSampleProgresses(
+          elapsedMs,
+          drip.waveLeft,
+          drip.waveRight,
+          drip.dripX,
+          scale,
+          drip.gatheringDurationMs,
+        )
+        const points = progresses.map((prog, idx) => {
           const xVal = drip.waveLeft + prog * waveSpan
           const yVal =
-            idx === 0 || idx === WAVE_SAMPLE_PROGRESSES.length - 1
+            idx === 0 || idx === progresses.length - 1
               ? drip.targetBottom - 1.0
               : drip.targetBottom - 1.0 +
                 getWaveY(

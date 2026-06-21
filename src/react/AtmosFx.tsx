@@ -129,9 +129,7 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.liquidDripping = liquidDripping
       }
 
-      if (liquidGatheringPoint !== undefined) {
-        nextOptions.liquidGatheringPoint = liquidGatheringPoint
-      }
+      nextOptions.liquidGatheringPoint = liquidGatheringPoint
 
       if (injectStyles !== undefined) {
         nextOptions.injectStyles = injectStyles
