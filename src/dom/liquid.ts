@@ -7,6 +7,9 @@ type LiquidDrip = {
   waveLeft: number
   waveRight: number
   dripX: number
+  randomGatheringPoint: number
+  gatheringDurationMs: number
+  cycleDurationMs: number
   targetBottom: number
   liquidDripping: boolean
   scale: number
@@ -47,14 +50,72 @@ function easeInOutQuad(x: number): number {
   return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
 }
 
-// Animation cycle and phase boundaries normalized to a 5400ms cycle
-const CYCLE_DURATION_MS = 5400
-const GATHER_END_T = 1200 / CYCLE_DURATION_MS
-const BULGE_END_T = 2800 / CYCLE_DURATION_MS
-const STRETCH_END_T = 3450 / CYCLE_DURATION_MS
-const PINCH_END_T = 3720 / CYCLE_DURATION_MS
-const FALL_END_T = 4800 / CYCLE_DURATION_MS
-const SPLASH_END_T = 5080 / CYCLE_DURATION_MS
+// Gathering scales with card width. A 300px card uses a 1500ms baseline
+// timing, while wider cards add 2ms per pixel until the 4000ms cap.
+const GATHERING_BASE_MS = 900
+const GATHERING_MS_PER_PX = 2
+const MAX_GATHERING_DURATION_MS = 4000
+const MIN_GATHERING_POINT = 0.33
+const MAX_GATHERING_POINT = 0.66
+
+// Every phase after Gathering keeps its established duration.
+const BULGING_DURATION_MS = 1600
+const STRETCHING_DURATION_MS = 650
+const PINCH_DURATION_MS = 270
+const FALLING_DURATION_MS = 1080
+const SPLASH_DURATION_MS = 280
+const COOL_DOWN_DURATION_MS = 320
+const POST_GATHERING_DURATION_MS =
+  BULGING_DURATION_MS +
+  STRETCHING_DURATION_MS +
+  PINCH_DURATION_MS +
+  FALLING_DURATION_MS +
+  SPLASH_DURATION_MS +
+  COOL_DOWN_DURATION_MS
+
+export function getLiquidGatheringDuration(width: number): number {
+  return Math.min(
+    MAX_GATHERING_DURATION_MS,
+    GATHERING_BASE_MS + Math.max(0, width) * GATHERING_MS_PER_PX,
+  )
+}
+
+function clampGatheringPoint(value: number): number {
+  return Math.min(MAX_GATHERING_POINT, Math.max(MIN_GATHERING_POINT, value))
+}
+
+function createRandomGatheringPoint(): number {
+  return (
+    MIN_GATHERING_POINT +
+    Math.random() * (MAX_GATHERING_POINT - MIN_GATHERING_POINT)
+  )
+}
+
+function getCardGatheringPoint(
+  element: HTMLElement | undefined,
+  configuredPoint: number | undefined,
+  randomPoint: number,
+): number {
+  const cardValue = element?.dataset.atmosLiquidGatheringPoint
+  if (cardValue !== undefined) {
+    const parsedValue = Number(cardValue)
+    if (Number.isFinite(parsedValue)) {
+      return clampGatheringPoint(parsedValue)
+    }
+  }
+
+  return configuredPoint === undefined
+    ? randomPoint
+    : clampGatheringPoint(configuredPoint)
+}
+
+export function getLiquidWaveCenter(
+  startX: number,
+  gatheringX: number,
+  gatheringProgress: number,
+): number {
+  return startX + (gatheringX - startX) * gatheringProgress
+}
 
 // Droplet shape and gravity motion
 const GLOBAL_SCALE = 0.88
@@ -68,7 +129,6 @@ const DROPLET_LENGTH_SCALE = 1.3
 const DETACHED_DROPLET_WIDTH_SCALE = 0.7
 const DETACHED_DROPLET_START_LENGTH_SCALE = 0.7
 const DETACHED_DROPLET_END_LENGTH_SCALE = 0.5
-const DROP_MOTION_START_T = BULGE_END_T
 const TERMINAL_VELOCITY_START_PROGRESS = 0.75 
 const BASE_DROP_MOTION_POWER = 3
 // Narrow cards scale the attached stretch but retain the existing long falling
@@ -78,24 +138,22 @@ const DROP_MOTION_SCALE_POWER_ADJUSTMENT = 1.25
 const ATTACHED_DROP_DISTANCE = 63
 const FALLING_DROP_DISTANCE = 295.8 + 109.2
 const DROP_MOTION_DURATION_SECONDS =
-  (FALL_END_T - DROP_MOTION_START_T) * CYCLE_DURATION_MS / 1000
+  (STRETCHING_DURATION_MS + PINCH_DURATION_MS + FALLING_DURATION_MS) / 1000
 const ACCELERATION_DURATION_SECONDS =
   DROP_MOTION_DURATION_SECONDS * TERMINAL_VELOCITY_START_PROGRESS
 const CONSTANT_SPEED_DURATION_SECONDS =
   DROP_MOTION_DURATION_SECONDS - ACCELERATION_DURATION_SECONDS
 
 // Wave settings
-const WAVE_GATHER_END_T = BULGE_END_T
-const WAVE_RELEASE_T = PINCH_END_T
-const WAVE_FORM_DURATION = 800 / CYCLE_DURATION_MS
+const WAVE_FORM_DURATION_MS = 800
 
 // Residual bulge settings
-const RESIDUAL_BULGE_START_T = 3280 / CYCLE_DURATION_MS
-const RESIDUAL_BULGE_DURATION = 240 / CYCLE_DURATION_MS
+const RESIDUAL_BULGE_DELAY_MS = 480
+const RESIDUAL_BULGE_DURATION_MS = 240
 
 // Recoil timing
-const RECOIL_START_T = PINCH_END_T
-const RECOIL_DURATION = 1 - RECOIL_START_T
+const RECOIL_DURATION_MS =
+  FALLING_DURATION_MS + SPLASH_DURATION_MS + COOL_DOWN_DURATION_MS
 const RECOIL_ROTATION = Math.PI * 2
 
 // 17-point wave sampling positions normalized between waveLeft (0.0) and waveRight (1.0)
@@ -119,32 +177,115 @@ const WAVE_SAMPLE_PROGRESSES = [
   1.0
 ]
 
+export function getWaveSampleProgresses(
+  elapsedMs: number,
+  waveLeft: number,
+  waveRight: number,
+  dripX: number,
+  scale: number,
+  gatheringDurationMs: number,
+): number[] {
+  const waveSpan = waveRight - waveLeft
+  if (waveSpan <= 0) return WAVE_SAMPLE_PROGRESSES
+
+  const bulgeEndMs = gatheringDurationMs + BULGING_DURATION_MS
+  const releaseEndMs =
+    bulgeEndMs + STRETCHING_DURATION_MS + PINCH_DURATION_MS
+  if (elapsedMs >= releaseEndMs) return WAVE_SAMPLE_PROGRESSES
+
+  const gatherProgress = easeInOutQuad(
+    Math.min(1, elapsedMs / gatheringDurationMs),
+  )
+
+  const leftWaveStartX = waveLeft + (dripX - waveLeft) * 0.208
+  const rightWaveStartX = waveRight - (waveRight - dripX) * 0.514
+
+  const leftCenter = getLiquidWaveCenter(
+    leftWaveStartX,
+    dripX,
+    gatherProgress,
+  )
+  const rightCenter = getLiquidWaveCenter(
+    rightWaveStartX,
+    dripX,
+    gatherProgress,
+  )
+
+  const basePulseWidth = 85 * scale
+  const targetPulseWidth = 45 * scale
+  const pulseWidth =
+    basePulseWidth - gatherProgress * (basePulseWidth - targetPulseWidth)
+
+  const leftCenterProg = (leftCenter - waveLeft) / waveSpan
+  const rightCenterProg = (rightCenter - waveLeft) / waveSpan
+  const pulseProg = pulseWidth / waveSpan
+
+  const customProgresses = [...WAVE_SAMPLE_PROGRESSES]
+  const candidates = [
+    leftCenterProg,
+    leftCenterProg - pulseProg,
+    leftCenterProg + pulseProg,
+    rightCenterProg,
+    rightCenterProg - pulseProg,
+    rightCenterProg + pulseProg,
+  ]
+
+  candidates.forEach((p) => {
+    if (p > 0 && p < 1) {
+      const EPSILON = 0.005
+      if (
+        !customProgresses.some((existing) => Math.abs(existing - p) < EPSILON)
+      ) {
+        customProgresses.push(p)
+      }
+    }
+  })
+
+  customProgresses.sort((a, b) => a - b)
+  return customProgresses
+}
+
 function getWaveY(
   x: number,
-  t: number,
+  elapsedMs: number,
   baseAmp: number,
   waveLeft: number,
   waveRight: number,
   dripX: number,
   scale: number,
+  gatheringDurationMs: number,
 ): number {
-  if (t >= WAVE_RELEASE_T) return 0
+  const bulgeEndMs = gatheringDurationMs + BULGING_DURATION_MS
+  const releaseEndMs =
+    bulgeEndMs + STRETCHING_DURATION_MS + PINCH_DURATION_MS
+  if (elapsedMs >= releaseEndMs) return 0
 
+  // Both centers share elapsed-time progress, so unequal travel distances use
+  // different velocities and still arrive at dripX on the same frame.
   const leftWaveStartX = waveLeft + (dripX - waveLeft) * 0.208
   const rightWaveStartX = waveRight - (waveRight - dripX) * 0.514
-
-  const gatherProgress = easeInOutQuad(Math.min(1, t / WAVE_GATHER_END_T))
-  const leftCenter = leftWaveStartX + (dripX - leftWaveStartX) * gatherProgress
-  const rightCenter = rightWaveStartX + (dripX - rightWaveStartX) * gatherProgress
+  const gatherProgress = easeInOutQuad(
+    Math.min(1, elapsedMs / gatheringDurationMs),
+  )
+  const leftCenter = getLiquidWaveCenter(
+    leftWaveStartX,
+    dripX,
+    gatherProgress,
+  )
+  const rightCenter = getLiquidWaveCenter(
+    rightWaveStartX,
+    dripX,
+    gatherProgress,
+  )
 
   const basePulseWidth = 85 * scale
   const targetPulseWidth = 45 * scale
   const pulseWidth = basePulseWidth - gatherProgress * (basePulseWidth - targetPulseWidth)
 
-  const formation = easeOutQuad(Math.min(1, t / WAVE_FORM_DURATION))
+  const formation = easeOutQuad(Math.min(1, elapsedMs / WAVE_FORM_DURATION_MS))
   const releaseProgress = Math.max(
     0,
-    (t - WAVE_GATHER_END_T) / (WAVE_RELEASE_T - WAVE_GATHER_END_T)
+    (elapsedMs - bulgeEndMs) / (releaseEndMs - bulgeEndMs),
   )
   const releaseFade = 1 - easeInQuad(releaseProgress)
 
@@ -256,6 +397,7 @@ export function createLiquidDripsController(
   root.appendChild(svg)
 
   const drips: LiquidDrip[] = []
+  const randomGatheringPoints = new WeakMap<HTMLElement, number>()
   let options: NormalizedAtmosphereOptions | undefined
 
   const createDrip = (index: number) => {
@@ -320,6 +462,9 @@ export function createLiquidDripsController(
       waveLeft: 0,
       waveRight: 0,
       dripX: 0,
+      randomGatheringPoint: createRandomGatheringPoint(),
+      gatheringDurationMs: getLiquidGatheringDuration(0),
+      cycleDurationMs: getLiquidGatheringDuration(0) + POST_GATHERING_DURATION_MS,
       targetBottom: 0,
       liquidDripping: true,
       scale: 1.0,
@@ -390,7 +535,25 @@ export function createLiquidDripsController(
 
         drip.waveLeft = target.x + indent
         drip.waveRight = target.right - indent
-        drip.dripX = drip.waveLeft + (drip.waveRight - drip.waveLeft) * 0.6875
+        if (target.element) {
+          const existingPoint = randomGatheringPoints.get(target.element)
+          if (existingPoint === undefined) {
+            drip.randomGatheringPoint = createRandomGatheringPoint()
+            randomGatheringPoints.set(target.element, drip.randomGatheringPoint)
+          } else {
+            drip.randomGatheringPoint = existingPoint
+          }
+        }
+        const gatheringPoint = getCardGatheringPoint(
+          target.element,
+          options.liquidGatheringPoint,
+          drip.randomGatheringPoint,
+        )
+        drip.dripX =
+          drip.waveLeft + (drip.waveRight - drip.waveLeft) * gatheringPoint
+        drip.gatheringDurationMs = getLiquidGatheringDuration(target.width)
+        drip.cycleDurationMs =
+          drip.gatheringDurationMs + POST_GATHERING_DURATION_MS
         drip.targetBottom = target.bottom
         // Scale factor: narrower card -> smaller waves, bulges, and falling droplet size (clamped to 0.6 to survive gooey blur)
         drip.scale =
@@ -458,7 +621,6 @@ export function createLiquidDripsController(
       }
 
       const speed = options.speed
-      const baseCycleDuration = 5400
 
       for (let i = 0; i < drips.length; i++) {
         const drip = drips[i]
@@ -482,11 +644,18 @@ export function createLiquidDripsController(
         }
 
         drip.elapsed += deltaTimeSeconds * 1000 * speed
-        const t = ((drip.elapsed + drip.phaseOffset) % baseCycleDuration) / baseCycleDuration
+        const elapsedMs =
+          (drip.elapsed + drip.phaseOffset) % drip.cycleDurationMs
+        const gatherEndMs = drip.gatheringDurationMs
+        const bulgeEndMs = gatherEndMs + BULGING_DURATION_MS
+        const stretchEndMs = bulgeEndMs + STRETCHING_DURATION_MS
+        const pinchEndMs = stretchEndMs + PINCH_DURATION_MS
+        const fallEndMs = pinchEndMs + FALLING_DURATION_MS
+        const splashEndMs = fallEndMs + SPLASH_DURATION_MS
         // Leave the goo filter when pinch-off starts, before the filter's alpha
         // threshold erodes the now-isolated ellipse. It still overlaps the
         // residual bulge here, so the parent switch has no visible seam.
-        const isOutsideGooFilter = t >= STRETCH_END_T
+        const isOutsideGooFilter = elapsedMs >= stretchEndMs
         const dropletParent = isOutsideGooFilter ? group : drip.group
 
         if (drip.droplet.parentNode !== dropletParent) {
@@ -507,7 +676,11 @@ export function createLiquidDripsController(
 
         const dropletShapeProgress = Math.min(
           1,
-          Math.max(0, (t - BULGE_END_T) / (PINCH_END_T - BULGE_END_T)),
+          Math.max(
+            0,
+            (elapsedMs - bulgeEndMs) /
+              (STRETCHING_DURATION_MS + PINCH_DURATION_MS),
+          ),
         )
         const dropletLengthScale =
           1 + (DROPLET_LENGTH_SCALE - 1) * easeInOutQuad(dropletShapeProgress)
@@ -523,7 +696,7 @@ export function createLiquidDripsController(
 
         const motionElapsedSeconds = Math.min(
           DROP_MOTION_DURATION_SECONDS,
-          Math.max(0, (t - DROP_MOTION_START_T) * CYCLE_DURATION_MS / 1000),
+          Math.max(0, (elapsedMs - bulgeEndMs) / 1000),
         )
         const dropMotionOffset =
           motionElapsedSeconds <= ACCELERATION_DURATION_SECONDS
@@ -545,7 +718,7 @@ export function createLiquidDripsController(
 
         let baseAmp = 1.8
 
-        if (t < GATHER_END_T) {
+        if (elapsedMs < gatherEndMs) {
           // Phase 1: Gathering
           bulgeR = 0
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET
@@ -554,10 +727,10 @@ export function createLiquidDripsController(
           dropletCY = drip.targetBottom + DROPLET_BASE_Y_OFFSET
           baseAmp = 1.8
           drip.hasSplashed = false
-        } else if (t < BULGE_END_T) {
+        } else if (elapsedMs < bulgeEndMs) {
           // Phase 2: Bulging
-          const phaseDuration = BULGE_END_T - GATHER_END_T
-          const phaseProgress = (t - GATHER_END_T) / phaseDuration
+          const phaseProgress =
+            (elapsedMs - gatherEndMs) / BULGING_DURATION_MS
           const easedProgress = easeInOutQuad(phaseProgress)
 
           bulgeR = easedProgress * 8.0 * scale
@@ -568,14 +741,19 @@ export function createLiquidDripsController(
           dropletCY = bulgeCY
 
           baseAmp = 1.8 + easedProgress * 0.4
-        } else if (t < STRETCH_END_T) {
+        } else if (elapsedMs < stretchEndMs) {
           // Phase 3: Stretching
-          const phaseProgress = (t - BULGE_END_T) / (STRETCH_END_T - BULGE_END_T)
+          const phaseProgress =
+            (elapsedMs - bulgeEndMs) / STRETCHING_DURATION_MS
           const easedProgress = easeInOutQuad(phaseProgress)
 
           const residualProgress = Math.min(
             1,
-            Math.max(0, (t - RESIDUAL_BULGE_START_T) / RESIDUAL_BULGE_DURATION)
+            Math.max(
+              0,
+              (elapsedMs - (bulgeEndMs + RESIDUAL_BULGE_DELAY_MS)) /
+                RESIDUAL_BULGE_DURATION_MS,
+            ),
           )
           const residualEase = easeInOutQuad(residualProgress)
           bulgeR = residualEase * 5.0 * scale
@@ -586,7 +764,7 @@ export function createLiquidDripsController(
           dropletCY = dropMotionY
 
           baseAmp = 2.2 + easedProgress * 1.3
-        } else if (t < PINCH_END_T) {
+        } else if (elapsedMs < pinchEndMs) {
           // Phase 4: Pinch-off
           bulgeR = 5.0 * scale
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 3.0 * scale
@@ -596,7 +774,7 @@ export function createLiquidDripsController(
           dropletCY = dropMotionY
 
           baseAmp = 3.5
-        } else if (t < FALL_END_T) {
+        } else if (elapsedMs < fallEndMs) {
           // Phase 5: Falling & Recoil
           // Check if droplet hits the collision level
           if (dropMotionY >= drip.collisionY) {
@@ -614,7 +792,8 @@ export function createLiquidDripsController(
             dropletCY = dropMotionY
           }
 
-          const wobbleProgress = (t - RECOIL_START_T) / RECOIL_DURATION
+          const wobbleProgress =
+            (elapsedMs - pinchEndMs) / RECOIL_DURATION_MS
           const wobbleTime = wobbleProgress * RECOIL_ROTATION
           const decay = Math.max(0, 1 - wobbleProgress)
           const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
@@ -623,7 +802,7 @@ export function createLiquidDripsController(
           bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + wobbleOffset
 
           baseAmp = 0
-        } else if (t < SPLASH_END_T) {
+        } else if (elapsedMs < splashEndMs) {
           // Phase 6: Splash & Dissolve
           dropletRX = 0
           dropletRY = 0
@@ -638,7 +817,8 @@ export function createLiquidDripsController(
             }
           }
 
-          const wobbleProgress = (t - RECOIL_START_T) / RECOIL_DURATION
+          const wobbleProgress =
+            (elapsedMs - pinchEndMs) / RECOIL_DURATION_MS
           const wobbleTime = wobbleProgress * RECOIL_ROTATION
           const decay = Math.max(0, 1 - wobbleProgress)
           const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
@@ -649,7 +829,8 @@ export function createLiquidDripsController(
           baseAmp = 0
         } else {
           // Phase 7: Cool down
-          const wobbleProgress = (t - RECOIL_START_T) / RECOIL_DURATION
+          const wobbleProgress =
+            (elapsedMs - pinchEndMs) / RECOIL_DURATION_MS
           const wobbleTime = wobbleProgress * RECOIL_ROTATION
           const decay = Math.max(0, 1 - wobbleProgress)
           const wobbleOffset = Math.cos(wobbleTime) * 3.0 * decay * scale
@@ -666,20 +847,29 @@ export function createLiquidDripsController(
         // Wave control points heights and 17-point spline path generation
         const scaledAmp = baseAmp * scale
         const waveSpan = drip.waveRight - drip.waveLeft
-        const points = WAVE_SAMPLE_PROGRESSES.map((prog, idx) => {
+        const progresses = getWaveSampleProgresses(
+          elapsedMs,
+          drip.waveLeft,
+          drip.waveRight,
+          drip.dripX,
+          scale,
+          drip.gatheringDurationMs,
+        )
+        const points = progresses.map((prog, idx) => {
           const xVal = drip.waveLeft + prog * waveSpan
           const yVal =
-            idx === 0 || idx === WAVE_SAMPLE_PROGRESSES.length - 1
+            idx === 0 || idx === progresses.length - 1
               ? drip.targetBottom - 1.0
               : drip.targetBottom - 1.0 +
                 getWaveY(
                   xVal,
-                  t,
+                  elapsedMs,
                   scaledAmp,
                   drip.waveLeft,
                   drip.waveRight,
                   drip.dripX,
                   scale,
+                  drip.gatheringDurationMs,
                 )
           return { x: xVal, y: yVal }
         })
@@ -716,7 +906,7 @@ export function createLiquidDripsController(
         drip.droplet.setAttribute('cx', dxVal)
         const filterExitProgress = Math.min(
           1,
-          Math.max(0, (t - STRETCH_END_T) / (PINCH_END_T - STRETCH_END_T)),
+          Math.max(0, (elapsedMs - stretchEndMs) / PINCH_DURATION_MS),
         )
         const detachedLengthScale =
           DETACHED_DROPLET_START_LENGTH_SCALE +

@@ -83,14 +83,21 @@ describe('Atmosphere React adapter', () => {
     expect(cleanup).toHaveBeenCalledOnce()
   })
 
-  it('plumbs liquidDripping prop to createAtmosphere', async () => {
+  it('plumbs liquid options to createAtmosphere', async () => {
     const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
     await act(async () => {
-      reactRoot.render(<AtmosFx preset="rain" liquidDripping={false} />)
+      reactRoot.render(
+        <AtmosFx
+          preset="rain"
+          liquidDripping={false}
+          liquidGatheringPoint={0.42}
+        />,
+      )
     })
     expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
       preset: 'rain',
       liquidDripping: false,
+      liquidGatheringPoint: 0.42,
     }))
     await act(async () => {
       reactRoot.unmount()
@@ -113,7 +120,12 @@ describe('Atmosphere React adapter', () => {
   it('renders AtmosCard with data attributes', async () => {
     await act(async () => {
       reactRoot.render(
-        <AtmosCard liquidDripping={false} transMode="glass" className="my-card">
+        <AtmosCard
+          liquidDripping={false}
+          liquidGatheringPoint={0.44}
+          transMode="glass"
+          className="my-card"
+        >
           <span>content</span>
         </AtmosCard>
       )
@@ -122,6 +134,7 @@ describe('Atmosphere React adapter', () => {
     expect(cardEl).not.toBeNull()
     expect(cardEl?.getAttribute('data-atmos-collision')).toBe('')
     expect(cardEl?.getAttribute('data-atmos-liquid-dripping')).toBe('false')
+    expect(cardEl?.getAttribute('data-atmos-liquid-gathering-point')).toBe('0.44')
     expect(cardEl?.getAttribute('data-atmos-glass')).toBe('')
     expect(cardEl?.querySelector('span')?.textContent).toBe('content')
 
@@ -134,7 +147,7 @@ describe('Atmosphere React adapter', () => {
     const customRef = vi.fn()
     await act(async () => {
       reactRoot.render(
-        <AtmosCard liquidDripping={true} transMode="solid" asChild className="extra-class" style={{ color: 'red' }}>
+        <AtmosCard liquidDripping={true} liquidGatheringPoint={0.6} transMode="solid" asChild className="extra-class" style={{ color: 'red' }}>
           <button ref={customRef} className="base-class" style={{ background: 'blue' }}>
             click me
           </button>
@@ -145,6 +158,7 @@ describe('Atmosphere React adapter', () => {
     expect(buttonEl).not.toBeNull()
     expect(buttonEl?.getAttribute('data-atmos-collision')).toBe('')
     expect(buttonEl?.getAttribute('data-atmos-liquid-dripping')).toBe('true')
+    expect(buttonEl?.getAttribute('data-atmos-liquid-gathering-point')).toBe('0.6')
     expect(buttonEl?.getAttribute('data-atmos-opaque')).toBe('')
     expect(buttonEl?.className).toBe('base-class extra-class')
     expect(buttonEl?.style.color).toBe('red')
@@ -246,6 +260,47 @@ describe('Atmosphere React adapter', () => {
     buttonEl?.click()
     expect(parentClick).toHaveBeenCalledOnce()
     expect(childClick).toHaveBeenCalledOnce()
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('resets options when props are removed/undefined', async () => {
+    const updateSpy = vi.fn()
+    vi.spyOn(createAtmosphereModule, 'createAtmosphere').mockReturnValue({
+      start: vi.fn(),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+      resize: vi.fn(),
+      update: updateSpy,
+      destroy: vi.fn(),
+    })
+
+    await act(async () => {
+      reactRoot.render(
+        <AtmosFx
+          preset="rain"
+          liquidGatheringPoint={0.42}
+        />,
+      )
+    })
+
+    await act(async () => {
+      reactRoot.render(
+        <AtmosFx
+          preset="rain"
+          liquidGatheringPoint={undefined}
+        />,
+      )
+    })
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        liquidGatheringPoint: undefined,
+      }),
+    )
 
     await act(async () => {
       reactRoot.unmount()

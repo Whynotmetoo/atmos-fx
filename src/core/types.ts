@@ -25,11 +25,14 @@ export type AtmosphereOptions = {
   pauseWhenHidden?: boolean
   respectReducedMotion?: boolean
   liquidDripping?: boolean
+  liquidGatheringPoint?: number
   injectStyles?: boolean
   styleNonce?: string
 }
 
-export type NormalizedAtmosphereOptions = Required<AtmosphereOptions>
+export type NormalizedAtmosphereOptions = Required<
+  Omit<AtmosphereOptions, 'liquidGatheringPoint'>
+> & Pick<AtmosphereOptions, 'liquidGatheringPoint'>
 
 export type AtmosphereController = {
   start(): void
