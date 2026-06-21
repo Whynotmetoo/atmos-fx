@@ -105,7 +105,7 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "api-desc-opaqueSelector": "Query selector for elements that skip transparency blurs. Defaults to [data-atmos-opaque].",
     "api-desc-globalLiquidDripping": "Globally toggles the water condensation and dripping animation (only in Rain mode).",
     "api-desc-globalLiquidGatheringPoint": "Sets the liquid gathering point from 0.33 to 0.66. Defaults to stable-random per card.",
-    "api-desc-pauseWhenHidden": "Automatically pause animation when document is hidden.",
+    "api-desc-pauseWhenHidden": "Automatically pause animation when document is hidden or the root element is out of the viewport.",
     "api-desc-respectReducedMotion": "Honors OS prefers-reduced-motion settings.",
     "api-desc-injectStyles": "Whether default stylesheet rules are automatically injected.",
     "api-desc-styleNonce": "CSP nonce for the injected style tag.",
@@ -228,7 +228,7 @@ zh: {
   "api-desc-opaqueSelector": "用于指定不进行背景模糊处理的元素的查询选择器。默认为 [data-atmos-opaque]。",
   "api-desc-globalLiquidDripping": "全局控制水滴在卡片上冷凝、聚集并滴落的动画（仅在雨模式下有效）。",
   "api-desc-globalLiquidGatheringPoint": "设置液体汇合点，范围为 0.33 到 0.66；默认按卡片稳定随机。",
-  "api-desc-pauseWhenHidden": "当 document 不可见时自动暂停动画。",
+  "api-desc-pauseWhenHidden": "当 document 不可见或根元素滑出视口时自动暂停动画。",
   "api-desc-respectReducedMotion": "遵循操作系统的 prefers-reduced-motion 设置。",
   "api-desc-injectStyles": "是否自动注入默认样式规则。",
   "api-desc-styleNonce": "注入 style 标签时使用的 CSP nonce。",
@@ -280,7 +280,7 @@ const showcaseAtmosphere = createAtmosphere(showcaseRoot, {
   liquidDripping: true,
   collisionSelector: '[data-atmos-collision]',
   opaqueSelector: '[data-atmos-opaque]',
-  pauseWhenHidden: false
+  pauseWhenHidden: true
 })
 showcaseAtmosphere.start()
 
@@ -395,7 +395,7 @@ const playgroundState: PlaygroundState = {
 const playgroundAtmosphere = createAtmosphere(playgroundRoot, {
   ...playgroundState,
   surfaceOpacity: 0.3 - (playgroundState.surfaceOpacity / 100) * 0.22,
-  pauseWhenHidden: false
+  pauseWhenHidden: true
 })
 playgroundAtmosphere.start()
 ;(window as any).playgroundAtmosphere = playgroundAtmosphere

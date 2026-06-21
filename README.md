@@ -137,7 +137,7 @@ onUnmounted(() => {
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | Query selector for elements that skip transparency blurs. |
 | `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
 | `liquidGatheringPoint` | `number` | Random | Sets the horizontal liquid gathering point from `0.33` to `0.66`. The default is stable-random per card. |
-| `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden. |
+| `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden or the root element is out of the viewport. |
 | `respectReducedMotion`| `boolean` | `true` | Honors OS `prefers-reduced-motion` settings. |
 | `injectStyles` | `boolean` | `true` | Whether default stylesheet rules are automatically injected. |
 | `styleNonce` | `string` | `undefined` | CSP nonce for the injected style tag. |

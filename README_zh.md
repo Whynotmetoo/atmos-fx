@@ -162,7 +162,7 @@ onUnmounted(() => {
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | 用于跳过透明度处理的不透明子级元素的 CSS 选择器。 |
 | `liquidDripping` | `boolean` | `true` | 全局开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。 |
 | `liquidGatheringPoint` | `number` | 随机 | 设置水平汇合点，范围为 `0.33` 到 `0.66`；默认按卡片稳定随机。 |
-| `pauseWhenHidden` | `boolean` | `true` | 当 document 不可见时自动暂停动画。 |
+| `pauseWhenHidden` | `boolean` | `true` | 当 document 不可见或根元素滑出视口时自动暂停动画。 |
 | `respectReducedMotion`| `boolean` | `true` | 遵循操作系统的 `prefers-reduced-motion` 设置。 |
 | `injectStyles` | `boolean` | `true` | 是否自动注入默认样式规则。 |
 | `styleNonce` | `string` | `undefined` | 注入 style 标签时使用的 CSP nonce。 |

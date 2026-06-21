@@ -132,4 +132,53 @@ describe('collision targets', () => {
     // It should clean up the managed attribute
     expect(secondTarget.dataset.atmosCollision).toBeUndefined()
   })
+
+  it('throttles scroll events and filters unrelated scroll targets', () => {
+    vi.useFakeTimers()
+    const root = document.createElement('section')
+    const firstTarget = document.createElement('article')
+    root.append(firstTarget)
+    firstTarget.dataset.atmosCollision = ''
+
+    root.getBoundingClientRect = vi.fn(() => rect(10, 20, 300, 200))
+    firstTarget.getBoundingClientRect = vi.fn(() => rect(20, 30, 80, 30))
+
+    const onChange = vi.fn()
+    const manager = createCollisionTargetManager(root, createOptions(), onChange)
+
+    // Initial load
+    manager.refresh()
+    onChange.mockClear()
+
+    // 1. Dispatch scroll on window - should trigger layout update
+    const scrollEvent = new Event('scroll', { bubbles: true })
+    window.dispatchEvent(scrollEvent)
+    
+    // Fast-forward timers to run scheduled refresh
+    vi.runOnlyPendingTimers()
+    expect(onChange).toHaveBeenCalledTimes(1)
+    onChange.mockClear()
+
+    // 2. Dispatch unrelated scroll - target is not child, ancestor, or window
+    const unrelatedDiv = document.createElement('div')
+    document.body.appendChild(unrelatedDiv)
+    unrelatedDiv.dispatchEvent(new Event('scroll', { bubbles: true }))
+    
+    vi.runOnlyPendingTimers()
+    expect(onChange).not.toHaveBeenCalled()
+    document.body.removeChild(unrelatedDiv)
+
+    // 3. Throttle check: dispatch 3 events within 50ms - should only trigger twice (immediate + trailing)
+    window.dispatchEvent(scrollEvent) // Immediate
+    vi.advanceTimersByTime(20)
+    window.dispatchEvent(scrollEvent) // Throttled, trailing scheduled
+    vi.advanceTimersByTime(20)
+    window.dispatchEvent(scrollEvent) // Throttled, trailing rescheduled
+    
+    vi.runAllTimers()
+    expect(onChange).toHaveBeenCalledTimes(2)
+
+    manager.destroy()
+    vi.useRealTimers()
+  })
 })

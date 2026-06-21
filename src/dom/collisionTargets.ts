@@ -245,11 +245,45 @@ export function createCollisionTargetManager(
           }
         })
 
+  let lastScrollTime = 0
+  let scrollTimeoutId: number | undefined
+
+  const handleScroll = (event: Event) => {
+    if (destroyed) {
+      return
+    }
+
+    const target = event.target
+    if (target instanceof HTMLElement && target !== root && !root.contains(target)) {
+      const isAncestor = target.contains(root)
+      if (!isAncestor) {
+        return
+      }
+    }
+
+    const now = performance.now()
+    const timeSinceLastScroll = now - lastScrollTime
+
+    if (lastScrollTime === 0 || timeSinceLastScroll >= 100) {
+      lastScrollTime = now
+      scheduleRefresh()
+    } else {
+      if (scrollTimeoutId !== undefined) {
+        ownerWindow?.clearTimeout(scrollTimeoutId)
+      }
+      scrollTimeoutId = ownerWindow?.setTimeout(() => {
+        scrollTimeoutId = undefined
+        lastScrollTime = performance.now()
+        scheduleRefresh()
+      }, 100 - timeSinceLastScroll)
+    }
+  }
+
   resizeObserver?.observe(root)
   startObserving()
 
   ownerWindow?.addEventListener('resize', scheduleRefresh)
-  ownerWindow?.addEventListener('scroll', scheduleRefresh, true)
+  ownerWindow?.addEventListener('scroll', handleScroll, true)
 
   return {
     refresh,
@@ -265,7 +299,7 @@ export function createCollisionTargetManager(
       resizeObserver?.disconnect()
       stopObserving()
       ownerWindow?.removeEventListener('resize', scheduleRefresh)
-      ownerWindow?.removeEventListener('scroll', scheduleRefresh, true)
+      ownerWindow?.removeEventListener('scroll', handleScroll, true)
 
       if (animationFrameId !== undefined) {
         ownerWindow?.cancelAnimationFrame(animationFrameId)
@@ -273,6 +307,11 @@ export function createCollisionTargetManager(
 
       if (timeoutId !== undefined) {
         ownerWindow?.clearTimeout(timeoutId)
+      }
+
+      if (scrollTimeoutId !== undefined) {
+        ownerWindow?.clearTimeout(scrollTimeoutId)
+        scrollTimeoutId = undefined
       }
 
       clearManagedCollisionElements()
