@@ -26,26 +26,37 @@ type WebGLLayer = {
   buffer: WebGLBuffer
   positionLocation: number
   alphaLocation: number
+  localCoordLocation: number
+  dimsLocation: number
   colorLocation: WebGLUniformLocation | null
   resolutionLocation: WebGLUniformLocation | null
+  pixelRatioLocation: WebGLUniformLocation | null
   vertices: Float32Array
 }
 
 const MAX_DELTA_SECONDS = 0.05
-const VALUES_PER_VERTEX = 3
-const VERTICES_PER_PARTICLE = 2
+const VALUES_PER_VERTEX = 8
+const VERTICES_PER_PARTICLE = 6
 
 const VERTEX_SHADER_SOURCE = `
 attribute vec2 a_position;
 attribute float a_alpha;
+attribute vec2 a_local_coord;
+attribute vec3 a_dims; // (L, r_tail, r_head)
+
 uniform vec2 u_resolution;
+
 varying float v_alpha;
+varying vec2 v_local_coord;
+varying vec3 v_dims;
 
 void main() {
   vec2 zeroToOne = a_position / u_resolution;
   vec2 clipSpace = zeroToOne * 2.0 - 1.0;
   gl_Position = vec4(clipSpace * vec2(1.0, -1.0), 0.0, 1.0);
   v_alpha = a_alpha;
+  v_local_coord = a_local_coord;
+  v_dims = a_dims;
 }
 `
 
@@ -53,10 +64,44 @@ const FRAGMENT_SHADER_SOURCE = `
 precision mediump float;
 
 uniform vec4 u_color;
+uniform float u_pixelRatio;
+
 varying float v_alpha;
+varying vec2 v_local_coord;
+varying vec3 v_dims; // (L, r_tail, r_head)
 
 void main() {
-  gl_FragColor = vec4(u_color.rgb, u_color.a * v_alpha);
+  float x = v_local_coord.x;
+  float y = v_local_coord.y;
+  float L = v_dims.x;
+  float r_tail = v_dims.y;
+  float r_head = v_dims.z;
+
+  float dist_css = 0.0;
+  if (x < 0.0) {
+    dist_css = length(vec2(x, y)) - r_tail;
+  } else if (x > L) {
+    dist_css = length(vec2(x - L, y)) - r_head;
+  } else {
+    float r = mix(r_tail, r_head, x / L);
+    dist_css = abs(y) - r;
+  }
+
+  float half_pixel_css = 0.5 / u_pixelRatio;
+  float alpha_edge = smoothstep(half_pixel_css, -half_pixel_css, dist_css);
+
+  float progress = 1.0;
+  if (L > 0.0) {
+    progress = clamp(x / L, 0.0, 1.0);
+  }
+  float alpha_fade = progress;
+
+  float final_alpha = u_color.a * v_alpha * alpha_edge * alpha_fade;
+  if (final_alpha <= 0.0) {
+    discard;
+  }
+
+  gl_FragColor = vec4(u_color.rgb, final_alpha);
 }
 `
 
@@ -240,8 +285,11 @@ function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | 
     buffer,
     positionLocation: gl.getAttribLocation(program, 'a_position'),
     alphaLocation: gl.getAttribLocation(program, 'a_alpha'),
+    localCoordLocation: gl.getAttribLocation(program, 'a_local_coord'),
+    dimsLocation: gl.getAttribLocation(program, 'a_dims'),
     colorLocation: gl.getUniformLocation(program, 'u_color'),
     resolutionLocation: gl.getUniformLocation(program, 'u_resolution'),
+    pixelRatioLocation: gl.getUniformLocation(program, 'u_pixelRatio'),
     vertices: new Float32Array(capacity * VERTICES_PER_PARTICLE * VALUES_PER_VERTEX),
   }
 }
@@ -513,36 +561,114 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   }
 
   private writeParticle(layer: WebGLLayer, vertexOffset: number, particle: RainParticle) {
-    const tailX = particle.x - particle.vx * 0.018
-    const tailY = particle.y - particle.length
+    const dx = particle.vx * 0.018
+    const dy = particle.length
+    const len = Math.sqrt(dx * dx + dy * dy)
+    
+    const ux = len > 0 ? dx / len : 0
+    const uy = len > 0 ? dy / len : 1
+    const px = -uy
+    const py = ux
+
+    const rHead = (particle.layer === 'background' ? 0.75 : 1.45) * particle.depth * (1.0 + this.options.speed * 0.15)
+    const rTail = rHead * 0.22
+
+    const tailExtX = (particle.x - dx) - ux * rTail
+    const tailExtY = (particle.y - dy) - uy * rTail
+
+    const headExtX = particle.x + ux * rHead
+    const headExtY = particle.y + uy * rHead
+
+    const c1x = tailExtX - px * rTail
+    const c1y = tailExtY - py * rTail
+    const c2x = tailExtX + px * rTail
+    const c2y = tailExtY + py * rTail
+    const c3x = headExtX - px * rHead
+    const c3y = headExtY - py * rHead
+    const c4x = headExtX + px * rHead
+    const c4y = headExtY + py * rHead
+
     const start = vertexOffset * VALUES_PER_VERTEX
 
-    layer.vertices[start] = tailX
-    layer.vertices[start + 1] = tailY
-    layer.vertices[start + 2] = particle.alpha
-    layer.vertices[start + 3] = particle.x
-    layer.vertices[start + 4] = particle.y
-    layer.vertices[start + 5] = particle.alpha
+    const writeVertex = (vertexIndex: number, vx: number, vy: number, lu: number, lv: number) => {
+      const idx = start + vertexIndex * 8
+      layer.vertices[idx] = vx
+      layer.vertices[idx + 1] = vy
+      layer.vertices[idx + 2] = particle.alpha
+      layer.vertices[idx + 3] = lu
+      layer.vertices[idx + 4] = lv
+      layer.vertices[idx + 5] = len
+      layer.vertices[idx + 6] = rTail
+      layer.vertices[idx + 7] = rHead
+    }
+
+    // Triangle 1: Corner 1 (tail left), Corner 2 (tail right), Corner 3 (head left)
+    writeVertex(0, c1x, c1y, -rTail, -rTail)
+    writeVertex(1, c2x, c2y, -rTail, rTail)
+    writeVertex(2, c3x, c3y, len + rHead, -rHead)
+
+    // Triangle 2: Corner 3 (head left), Corner 2 (tail right), Corner 4 (head right)
+    writeVertex(3, c3x, c3y, len + rHead, -rHead)
+    writeVertex(4, c2x, c2y, -rTail, rTail)
+    writeVertex(5, c4x, c4y, len + rHead, rHead)
 
     return VERTICES_PER_PARTICLE
   }
 
   private writeSplash(layer: WebGLLayer, vertexOffset: number, splash: any, alpha: number) {
-    const tailX = splash.x - splash.vx * 0.012
-    const tailY = splash.y - splash.vy * 0.012 - splash.length
+    const dx = splash.vx * 0.012
+    const dy = splash.vy * 0.012 + splash.length
+    const len = Math.sqrt(dx * dx + dy * dy)
+    
+    const ux = len > 0 ? dx / len : 0
+    const uy = len > 0 ? dy / len : 1
+    const px = -uy
+    const py = ux
+
+    const rHead = 0.8 * splash.depth
+    const rTail = rHead
+
+    const tailExtX = (splash.x - dx) - ux * rTail
+    const tailExtY = (splash.y - dy) - uy * rTail
+
+    const headExtX = splash.x + ux * rHead
+    const headExtY = splash.y + uy * rHead
+
+    const c1x = tailExtX - px * rTail
+    const c1y = tailExtY - py * rTail
+    const c2x = tailExtX + px * rTail
+    const c2y = tailExtY + py * rTail
+    const c3x = headExtX - px * rHead
+    const c3y = headExtY - py * rHead
+    const c4x = headExtX + px * rHead
+    const c4y = headExtY + py * rHead
+
     const start = vertexOffset * VALUES_PER_VERTEX
 
-    layer.vertices[start] = tailX
-    layer.vertices[start + 1] = tailY
-    layer.vertices[start + 2] = alpha
-    layer.vertices[start + 3] = splash.x
-    layer.vertices[start + 4] = splash.y
-    layer.vertices[start + 5] = alpha
+    const writeVertex = (vertexIndex: number, vx: number, vy: number, lu: number, lv: number) => {
+      const idx = start + vertexIndex * 8
+      layer.vertices[idx] = vx
+      layer.vertices[idx + 1] = vy
+      layer.vertices[idx + 2] = alpha
+      layer.vertices[idx + 3] = lu
+      layer.vertices[idx + 4] = lv
+      layer.vertices[idx + 5] = len
+      layer.vertices[idx + 6] = rTail
+      layer.vertices[idx + 7] = rHead
+    }
+
+    // Triangle 1: Corner 1 (tail left), Corner 2 (tail right), Corner 3 (head left)
+    writeVertex(0, c1x, c1y, -rTail, -rTail)
+    writeVertex(1, c2x, c2y, -rTail, rTail)
+    writeVertex(2, c3x, c3y, len + rHead, -rHead)
+
+    // Triangle 2: Corner 3 (head left), Corner 2 (tail right), Corner 4 (head right)
+    writeVertex(3, c3x, c3y, len + rHead, -rHead)
+    writeVertex(4, c2x, c2y, -rTail, rTail)
+    writeVertex(5, c4x, c4y, len + rHead, rHead)
 
     return VERTICES_PER_PARTICLE
   }
-
-
 
   private drawLayer(layer: WebGLLayer, vertexCount: number) {
     const { gl } = layer
@@ -558,7 +684,12 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
     gl.useProgram(layer.program)
     gl.bindBuffer(gl.ARRAY_BUFFER, layer.buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, layer.vertices, gl.DYNAMIC_DRAW)
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      layer.vertices.subarray(0, vertexCount * VALUES_PER_VERTEX),
+      gl.DYNAMIC_DRAW,
+    )
+
     gl.enableVertexAttribArray(layer.positionLocation)
     gl.vertexAttribPointer(
       layer.positionLocation,
@@ -568,6 +699,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
       0,
     )
+
     gl.enableVertexAttribArray(layer.alphaLocation)
     gl.vertexAttribPointer(
       layer.alphaLocation,
@@ -578,15 +710,39 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
       2 * Float32Array.BYTES_PER_ELEMENT,
     )
 
+    gl.enableVertexAttribArray(layer.localCoordLocation)
+    gl.vertexAttribPointer(
+      layer.localCoordLocation,
+      2,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      3 * Float32Array.BYTES_PER_ELEMENT,
+    )
+
+    gl.enableVertexAttribArray(layer.dimsLocation)
+    gl.vertexAttribPointer(
+      layer.dimsLocation,
+      3,
+      gl.FLOAT,
+      false,
+      VALUES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
+      5 * Float32Array.BYTES_PER_ELEMENT,
+    )
+
     if (layer.resolutionLocation) {
       gl.uniform2f(layer.resolutionLocation, this.size.width, this.size.height)
+    }
+
+    if (layer.pixelRatioLocation) {
+      gl.uniform1f(layer.pixelRatioLocation, this.size.pixelRatio)
     }
 
     if (layer.colorLocation) {
       gl.uniform4f(layer.colorLocation, red, green, blue, alpha)
     }
 
-    gl.drawArrays(gl.LINES, 0, vertexCount)
+    gl.drawArrays(gl.TRIANGLES, 0, vertexCount)
   }
 
   private clearLayer(layer: WebGLLayer | undefined) {
