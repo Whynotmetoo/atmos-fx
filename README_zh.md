@@ -161,6 +161,7 @@ onUnmounted(() => {
 | `collisionSelector` | `string` | `[data-atmos-collision]` | 用于查找顶部边缘着陆表面的 CSS 选择器。 |
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | 用于跳过透明度处理的不透明子级元素的 CSS 选择器。 |
 | `liquidDripping` | `boolean` | `true` | 全局开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。 |
+| `liquidGatheringPoint` | `number` | 随机 | 设置水平汇合点，范围为 `0.33` 到 `0.66`；默认按卡片稳定随机。 |
 | `pauseWhenHidden` | `boolean` | `true` | 当 document 不可见时自动暂停动画。 |
 | `respectReducedMotion`| `boolean` | `true` | 遵循操作系统的 `prefers-reduced-motion` 设置。 |
 | `injectStyles` | `boolean` | `true` | 是否自动注入默认样式规则。 |
@@ -172,6 +173,7 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | 应用于卡片的特定透明风格。 |
 | `liquidDripping` | `boolean` | `true` | 开关水汽凝结与滴落动画。 |
+| `liquidGatheringPoint` | `number` | 继承 / 随机 | 覆盖当前卡片的汇合点，范围为 `0.33` 到 `0.66`。 |
 | `asChild` | `boolean` | `false` | 将属性合并到底层子元素上以避免额外渲染一层包装元素。 |
 | `opacity` | `number` | `undefined` | 组件级别的自定义背景透明度覆盖值（0 到 1）。 |
 
@@ -188,12 +190,14 @@ onUnmounted(() => {
 - `data-atmos-glass` 让嵌套元素启用玻璃表面样式。
 - `data-atmos-collision` 让元素顶部边缘成为降水粒子的碰撞表面。
 - `data-atmos-liquid-dripping="true"` 开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。
+- `data-atmos-liquid-gathering-point="0.5"` 设置当前卡片的液体汇合点，范围为 `0.33` 到 `0.66`。
 
 ## Design & UI Guidelines
 
 为了获得更真实自然的氛围效果，使用 `AtmosCard` 设计界面时建议遵循以下原则：
 
 * **粒子分层与滴落**：粒子会在前景层和背景层中渲染。前景粒子会被可碰撞的 `AtmosCard` 元素阻挡。如果某个卡片启用了 `liquidDripping`，聚集的雨水会向下滴落，并与下方任何可碰撞的 `AtmosCard` 正确发生碰撞。
+* **按宽度调整 Gathering**：卡片越宽，Gathering 越长（`900ms + 2ms × CSS 像素宽度`，最大 `4000ms`；`300px` 对应 `1500ms`）；后续滴落阶段保持固定时长。
 * **避免过宽的阻挡卡片**：非常宽的可碰撞 `AtmosCard` 会像一把伞一样，挡住大部分前景雨滴。这会阻止雨滴到达下方元素，从而明显削弱它们的雨滴溅落动画。除非你有意实现这种“雨伞”效果，否则应避免使用过宽的碰撞表面。
 * **避免嵌套卡片**：除非你有非常明确的视觉效果需求，否则不要将一个 `AtmosCard` 直接嵌套在另一个 `AtmosCard` 中。这可能导致碰撞边界和视觉行为相互冲突，产生不符合自然物理直觉的效果。
 * **卡片模式（`transMode`）**：

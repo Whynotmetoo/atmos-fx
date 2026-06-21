@@ -243,13 +243,13 @@ describe('createAtmosphere', () => {
     expect(droplet).not.toBeNull()
     expect(droplet?.closest('[filter]')).not.toBeNull()
 
-    liquid.update(3.61)
+    liquid.update(3.91)
 
     expect(root.querySelectorAll('ellipse')).toHaveLength(1)
     expect(root.querySelector('ellipse')).toBe(droplet)
     expect(droplet?.closest('[filter]')).toBeNull()
-    expect(droplet?.getAttribute('rx')).toBe('3.4')
-    expect(droplet?.getAttribute('ry')).toBe('12.3')
+    expect(droplet?.getAttribute('rx')).toBe('3.0')
+    expect(droplet?.getAttribute('ry')).toBe('10.8')
 
     liquid.update(1.8)
 

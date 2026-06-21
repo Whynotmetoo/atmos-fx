@@ -19,9 +19,11 @@ export const DEFAULT_OPTIONS = {
   pauseWhenHidden: true,
   respectReducedMotion: true,
   liquidDripping: true,
+  liquidGatheringPoint: undefined,
   injectStyles: true,
   styleNonce: '',
-} satisfies Required<AtmosphereOptions>
+} satisfies Required<Omit<AtmosphereOptions, 'liquidGatheringPoint'>> &
+  Pick<AtmosphereOptions, 'liquidGatheringPoint'>
 
 export const PRESET_OPTIONS = {
   rain: {

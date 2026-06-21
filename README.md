@@ -136,6 +136,7 @@ onUnmounted(() => {
 | `collisionSelector` | `string` | `[data-atmos-collision]` | Query selector for discovering top-edge landing surfaces. |
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | Query selector for elements that skip transparency blurs. |
 | `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
+| `liquidGatheringPoint` | `number` | Random | Sets the horizontal liquid gathering point from `0.33` to `0.66`. The default is stable-random per card. |
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden. |
 | `respectReducedMotion`| `boolean` | `true` | Honors OS `prefers-reduced-motion` settings. |
 | `injectStyles` | `boolean` | `true` | Whether default stylesheet rules are automatically injected. |
@@ -147,6 +148,7 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | Specifies card integration style. |
 | `liquidDripping` | `boolean` | `true` | Toggles the water condensation and dripping animation. |
+| `liquidGatheringPoint` | `number` | Inherits / Random | Overrides the liquid gathering point for this card from `0.33` to `0.66`. |
 | `asChild` | `boolean` | `false` | Merges properties onto the underlying child element to avoid rendering an extra wrapper element. |
 | `opacity` | `number` | `undefined` | Component-level custom backdrop opacity override. |
 
@@ -163,12 +165,14 @@ The `options` object accepts exactly the same parameters as the `AtmosFx` Props 
 - `data-atmos-glass` opts nested elements into the glass surface style.
 - `data-atmos-collision` makes the element's top edge a precipitation collision surface.
 - `data-atmos-liquid-dripping="true"` toggles the water condensation and dripping animation (only in Rain mode).
+- `data-atmos-liquid-gathering-point="0.5"` sets a card's liquid gathering point from `0.33` to `0.66`.
 
 ## Design & UI Guidelines
 
 To ensure visually realistic atmosphere effects, here are some guidelines to follow when designing with `AtmosCard`:
 
 - **Particle Layering & Dripping**: Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable `AtmosCard` elements. If `liquidDripping` is enabled on a card, the accumulated rainwater will drip down and correctly collide with any collidable `AtmosCard`s positioned below it.
+- **Width-aware Gathering**: Wider cards spend longer in Gathering (`900ms + 2ms` per CSS pixel, capped at `4000ms`; `300px` takes `1500ms`). Later drip phases keep fixed durations.
 - **Avoid Wide Blocking Cards**: A very wide collidable `AtmosCard` will act like an umbrella, blocking most of the foreground rain. This prevents rain from reaching the elements below it, significantly reducing their rain splash animations. Unless this "umbrella" effect is specifically intended, avoid overly wide collision surfaces.
 - **Avoid Nesting Cards**: Unless you have a highly specific visual effect in mind, avoid nesting an `AtmosCard` directly inside another `AtmosCard`. This can cause conflicting collision bounds and visual behaviors that defy natural physics.
 - **Card Modes (`transMode`)**:

@@ -18,6 +18,7 @@ export const reactAtmosFxProps: AtmosFxProps = {
   contentOpacity: 0.66,
   surfaceOpacity: 0.18,
   snowAccumulation: 0.6,
+  liquidGatheringPoint: 0.5,
   className: 'weather',
   role: 'region',
   'aria-label': 'Weather atmosphere',
@@ -33,4 +34,3 @@ export function ReactAdapterTypeSmoke() {
     </AtmosFx>
   )
 }
-
