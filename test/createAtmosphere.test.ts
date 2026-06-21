@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAtmosphere } from '../src/core/createAtmosphere'
+import { normalizeAtmosphereOptions } from '../src/core/options'
+import { createLiquidDripsController } from '../src/dom/liquid'
 
 function createRoot() {
   const root = document.createElement('section')
@@ -214,6 +216,47 @@ describe('createAtmosphere', () => {
 
     controller.destroy()
     expect(root.querySelector('[data-atmos-layer="liquid"]')).toBeNull()
+  })
+
+  it('moves one droplet out of the goo filter during pinch-off', () => {
+    const root = createRoot()
+    const card = document.createElement('div')
+    root.append(card)
+
+    const liquid = createLiquidDripsController(root)
+    liquid.sync(
+      normalizeAtmosphereOptions({ preset: 'rain', bottomCollision: false }),
+      [
+        {
+          element: card,
+          x: 10,
+          y: 10,
+          width: 300,
+          height: 80,
+          right: 310,
+          bottom: 90,
+        },
+      ],
+    )
+
+    const droplet = root.querySelector('ellipse')
+    expect(droplet).not.toBeNull()
+    expect(droplet?.closest('[filter]')).not.toBeNull()
+
+    liquid.update(3.61)
+
+    expect(root.querySelectorAll('ellipse')).toHaveLength(1)
+    expect(root.querySelector('ellipse')).toBe(droplet)
+    expect(droplet?.closest('[filter]')).toBeNull()
+    expect(droplet?.getAttribute('rx')).toBe('3.4')
+    expect(droplet?.getAttribute('ry')).toBe('12.3')
+
+    liquid.update(1.8)
+
+    expect(root.querySelector('ellipse')).toBe(droplet)
+    expect(droplet?.closest('[filter]')).not.toBeNull()
+
+    liquid.destroy()
   })
 
   it('clears rendered rain when stopped', () => {
