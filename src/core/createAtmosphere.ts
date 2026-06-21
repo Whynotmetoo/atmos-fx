@@ -5,6 +5,7 @@ import { createLiquidDripsController } from '../dom/liquid'
 import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
+import { QualityMonitor } from './qualityMonitor'
 import type {
   AtmosphereController,
   AtmosphereParticle,
@@ -148,6 +149,19 @@ export function createAtmosphere(
   let manuallyPaused = false
   let lastTime: number | undefined
 
+  const qualityMonitor = new QualityMonitor(normalizedOptions.autoScaleQuality)
+
+  const getEffectiveOptions = (): NormalizedAtmosphereOptions => {
+    const scaling = qualityMonitor.getScalingState()
+    return {
+      ...normalizedOptions,
+      density: normalizedOptions.density * scaling.densityMultiplier,
+      quality: scaling.qualityTierOverride ?? normalizedOptions.quality,
+      liquidDripping: scaling.disableHighCostFeatures ? false : normalizedOptions.liquidDripping,
+      snowAccumulation: scaling.disableHighCostFeatures ? 0 : normalizedOptions.snowAccumulation,
+    }
+  }
+
   const scheduler = createAnimationScheduler((time) => {
     const deltaSeconds =
       lastTime === undefined
@@ -155,8 +169,30 @@ export function createAtmosphere(
         : Math.min(0.05, Math.max(0, (time - lastTime) / 1000))
     lastTime = time
 
+    const frameStart = performance.now()
     renderer?.render(time)
-    liquidDripsController.update(deltaSeconds)
+
+    const effectiveOptions = getEffectiveOptions()
+    if (effectiveOptions.liquidDripping) {
+      liquidDripsController.update(deltaSeconds)
+    } else {
+      liquidDripsController.sync(effectiveOptions, [])
+    }
+    const frameDuration = performance.now() - frameStart
+
+    qualityMonitor.recordFrame(time, frameDuration, () => {
+      const scaling = qualityMonitor.getScalingState()
+      const size = canvasLayer?.resize(scaling.dprCap)
+      if (size) {
+        renderer?.resize(size)
+      }
+      ensureRenderer()
+      const currentTargets = collisionTargetManager.getTargets()
+      liquidDripsController.sync(
+        getEffectiveOptions(),
+        scaling.disableHighCostFeatures ? [] : currentTargets
+      )
+    })
   })
 
   const collisionTargetManager = createCollisionTargetManager(
@@ -164,7 +200,12 @@ export function createAtmosphere(
     normalizedOptions,
     (targets) => {
       renderer?.setCollisionTargets(targets)
-      liquidDripsController.sync(normalizedOptions, targets)
+      const effectiveOptions = getEffectiveOptions()
+      const scaling = qualityMonitor.getScalingState()
+      liquidDripsController.sync(
+        effectiveOptions,
+        scaling.disableHighCostFeatures ? [] : targets
+      )
     },
   )
 
@@ -188,7 +229,12 @@ export function createAtmosphere(
   const syncCollisionTargets = () => {
     const targets = collisionTargetManager.updateOptions(normalizedOptions)
     renderer?.setCollisionTargets(targets)
-    liquidDripsController.sync(normalizedOptions, targets)
+    const effectiveOptions = getEffectiveOptions()
+    const scaling = qualityMonitor.getScalingState()
+    liquidDripsController.sync(
+      effectiveOptions,
+      scaling.disableHighCostFeatures ? [] : targets
+    )
   }
 
   const setState = (nextState: ControllerState) => {
@@ -207,17 +253,23 @@ export function createAtmosphere(
       canvasLayer = createCanvasLayer(element)
     }
 
-    return canvasLayer.resize()
+    const scaling = qualityMonitor.getScalingState()
+    return canvasLayer.resize(scaling.dprCap)
   }
 
   const resizeLayerAndRenderer = () => {
-    const size = canvasLayer?.resize()
+    const scaling = qualityMonitor.getScalingState()
+    const size = canvasLayer?.resize(scaling.dprCap)
+    const effectiveOptions = getEffectiveOptions()
 
     if (size) {
       const targets = collisionTargetManager.refresh()
       renderer?.resize(size)
       renderer?.setCollisionTargets(targets)
-      liquidDripsController.sync(normalizedOptions, targets)
+      liquidDripsController.sync(
+        effectiveOptions,
+        scaling.disableHighCostFeatures ? [] : targets
+      )
     }
 
     return size
@@ -248,6 +300,7 @@ export function createAtmosphere(
       return
     }
 
+    const effectiveOptions = getEffectiveOptions()
     if (!renderer) {
       renderer = createRenderer(
         {
@@ -255,7 +308,7 @@ export function createAtmosphere(
           foreground: activeCanvasLayer.foregroundCanvas,
         },
         activeCanvasLayer.getSize(),
-        normalizedOptions,
+        effectiveOptions,
       )
       rendererParticle = normalizedOptions.particle
       element.dataset.atmosRenderer = renderer.backend
@@ -263,7 +316,7 @@ export function createAtmosphere(
       return
     }
 
-    renderer.updateOptions(normalizedOptions)
+    renderer.updateOptions(effectiveOptions)
     element.dataset.atmosRenderer = renderer.backend
     renderer.setCollisionTargets(collisionTargetManager.getTargets())
   }
@@ -418,6 +471,7 @@ export function createAtmosphere(
       renderer?.clear()
       liquidDripsController.sync(normalizedOptions, [])
       lastTime = undefined
+      qualityMonitor.reset()
       setState('stopped')
     },
     pause() {
@@ -454,6 +508,8 @@ export function createAtmosphere(
       if (normalizedOptions.injectStyles) {
         injectStyles(ownerDocument, normalizedOptions.styleNonce)
       }
+      qualityMonitor.setEnabled(normalizedOptions.autoScaleQuality)
+      qualityMonitor.reset()
       syncDataset()
       syncCollisionTargets()
       ensureRenderer()

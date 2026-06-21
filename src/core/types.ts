@@ -28,6 +28,7 @@ export type AtmosphereOptions = {
   liquidGatheringPoint?: number
   injectStyles?: boolean
   styleNonce?: string
+  autoScaleQuality?: boolean
 }
 
 export type NormalizedAtmosphereOptions = Required<
