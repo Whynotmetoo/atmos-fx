@@ -3,7 +3,7 @@ import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { findTopEdgeCollision } from '../canvas2d/collision'
 import { calculateRainParticleBudget } from '../canvas2d/quality'
-import { SplashPool } from '../canvas2d/splash'
+import { MAX_SPLASH_PARTICLES, SplashPool } from '../canvas2d/splash'
 import type { Canvas2DRenderer, RendererCanvases } from '../canvas2d/types'
 
 type RainParticleLayer = 'background' | 'foreground'
@@ -37,7 +37,7 @@ type WebGLLayer = {
 const MAX_DELTA_SECONDS = 0.05
 const VALUES_PER_VERTEX = 8
 const VERTICES_PER_PARTICLE = 6
-const MAX_SPLASH_PARTICLES = 320
+// MAX_SPLASH_PARTICLES imported from '../canvas2d/splash'
 
 const VERTEX_SHADER_SOURCE = `
 attribute vec2 a_position;
@@ -107,27 +107,8 @@ void main() {
 }
 `
 
-const SPLASH_VERTEX_SHADER_SOURCE = `
-attribute vec2 a_position;
-attribute float a_alpha;
-attribute vec2 a_local_coord;
-attribute vec3 a_dims; // (L, r, r)
-
-uniform vec2 u_resolution;
-
-varying float v_alpha;
-varying vec2 v_local_coord;
-varying vec3 v_dims;
-
-void main() {
-  vec2 zeroToOne = a_position / u_resolution;
-  vec2 clipSpace = zeroToOne * 2.0 - 1.0;
-  gl_Position = vec4(clipSpace * vec2(1.0, -1.0), 0.0, 1.0);
-  v_alpha = a_alpha;
-  v_local_coord = a_local_coord;
-  v_dims = a_dims;
-}
-`
+// Splash reuses the same vertex shader as rain — only the fragment shader differs.
+// If the vertex transform changes, both programs stay in sync automatically.
 
 const SPLASH_FRAGMENT_SHADER_SOURCE = `
 precision mediump float;
@@ -568,6 +549,8 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
 
     this.drawLayer(this.backgroundLayer, backgroundVertexCount)
+    // drawLayer clears the foreground canvas. drawSplashes intentionally skips
+    // clearing so splash quads composite on top of the already-drawn foreground rain.
     this.drawLayer(this.foregroundLayer, foregroundVertexCount)
     this.drawSplashes(splashVertexCount)
   }
@@ -587,19 +570,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     this.particles = []
     this.lastTime = undefined
 
-    if (this.foregroundLayer) {
-      const { gl } = this.foregroundLayer
-      if (this.splashProgram) {
-        gl.deleteProgram(this.splashProgram)
-      }
-      if (this.splashBuffer) {
-        gl.deleteBuffer(this.splashBuffer)
-      }
-    }
-
-    this.splashProgram = undefined
-    this.splashBuffer = undefined
-    this.splashVertices = undefined
+    this.cleanupSplashResources()
     this.backgroundLayer = undefined
     this.foregroundLayer = undefined
   }
@@ -615,7 +586,24 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
   }
 
+  private cleanupSplashResources() {
+    if (this.foregroundLayer) {
+      const { gl } = this.foregroundLayer
+      if (this.splashProgram) {
+        gl.deleteProgram(this.splashProgram)
+      }
+      if (this.splashBuffer) {
+        gl.deleteBuffer(this.splashBuffer)
+      }
+    }
+
+    this.splashProgram = undefined
+    this.splashBuffer = undefined
+    this.splashVertices = undefined
+  }
+
   private initializeLayers() {
+    this.cleanupSplashResources()
     const capacity = Math.max(1, this.particles.length)
     this.backgroundLayer = createLayer(this.canvases.background, capacity)
     this.foregroundLayer = createLayer(this.canvases.foreground, capacity)
@@ -632,6 +620,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
     if (budget !== this.particles.length) {
       this.particles = []
+      this.cleanupSplashResources()
       this.backgroundLayer = createLayer(this.canvases.background, Math.max(1, budget))
       this.foregroundLayer = createLayer(this.canvases.foreground, Math.max(1, budget))
       this.initializeSplashProgram()
@@ -851,6 +840,8 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
 
     const { gl } = this.foregroundLayer
+
+    gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
     const [red, green, blue, alpha] = this.parsedColor
 
     gl.useProgram(this.splashProgram)
@@ -922,7 +913,7 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
     }
 
     const { gl } = this.foregroundLayer
-    const program = createProgramFromSource(gl, SPLASH_VERTEX_SHADER_SOURCE, SPLASH_FRAGMENT_SHADER_SOURCE)
+    const program = createProgramFromSource(gl, VERTEX_SHADER_SOURCE, SPLASH_FRAGMENT_SHADER_SOURCE)
     const buffer = gl.createBuffer()
 
     if (!program || !buffer) {

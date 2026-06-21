@@ -13,7 +13,7 @@ type SplashParticle = {
   alpha: number
 }
 
-const MAX_SPLASH_PARTICLES = 320
+export const MAX_SPLASH_PARTICLES = 320
 const SPLASH_PARTICLES_PER_HIT = 5
 
 function randomRange(min: number, max: number): number {
