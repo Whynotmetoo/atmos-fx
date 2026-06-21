@@ -20,6 +20,8 @@ type LiquidDrip = {
   maxDropDistance: number
   collisionY: number
   hasSplashed: boolean
+  isIntersecting: boolean
+  targetElement: HTMLElement | null
   
   // DOM Elements
   group: SVGGElement
@@ -177,21 +179,37 @@ const WAVE_SAMPLE_PROGRESSES = [
   1.0
 ]
 
-export function getWaveSampleProgresses(
+// Preallocated static module-level buffers
+const progressesBuffer = new Float32Array(32)
+const pointsBuffer = Array.from({ length: 32 }, () => ({ x: 0, y: 0 }))
+const pathSegments: string[] = []
+
+export function fillWaveSampleProgresses(
+  outBuffer: Float32Array,
   elapsedMs: number,
   waveLeft: number,
   waveRight: number,
   dripX: number,
   scale: number,
   gatheringDurationMs: number,
-): number[] {
+): number {
   const waveSpan = waveRight - waveLeft
-  if (waveSpan <= 0) return WAVE_SAMPLE_PROGRESSES
+  if (waveSpan <= 0) {
+    for (let i = 0; i < WAVE_SAMPLE_PROGRESSES.length; i++) {
+      outBuffer[i] = WAVE_SAMPLE_PROGRESSES[i]
+    }
+    return WAVE_SAMPLE_PROGRESSES.length
+  }
 
   const bulgeEndMs = gatheringDurationMs + BULGING_DURATION_MS
   const releaseEndMs =
     bulgeEndMs + STRETCHING_DURATION_MS + PINCH_DURATION_MS
-  if (elapsedMs >= releaseEndMs) return WAVE_SAMPLE_PROGRESSES
+  if (elapsedMs >= releaseEndMs) {
+    for (let i = 0; i < WAVE_SAMPLE_PROGRESSES.length; i++) {
+      outBuffer[i] = WAVE_SAMPLE_PROGRESSES[i]
+    }
+    return WAVE_SAMPLE_PROGRESSES.length
+  }
 
   const gatherProgress = easeInOutQuad(
     Math.min(1, elapsedMs / gatheringDurationMs),
@@ -220,83 +238,94 @@ export function getWaveSampleProgresses(
   const rightCenterProg = (rightCenter - waveLeft) / waveSpan
   const pulseProg = pulseWidth / waveSpan
 
-  const customProgresses = [...WAVE_SAMPLE_PROGRESSES]
-  const candidates = [
-    leftCenterProg,
-    leftCenterProg - pulseProg,
-    leftCenterProg + pulseProg,
-    rightCenterProg,
-    rightCenterProg - pulseProg,
-    rightCenterProg + pulseProg,
-  ]
+  // Populate output buffer with initial 17 points
+  let count = WAVE_SAMPLE_PROGRESSES.length
+  for (let i = 0; i < count; i++) {
+    outBuffer[i] = WAVE_SAMPLE_PROGRESSES[i]
+  }
 
-  candidates.forEach((p) => {
+  const EPSILON = 0.005
+
+  const tryAddCandidate = (p: number) => {
     if (p > 0 && p < 1) {
-      const EPSILON = 0.005
-      if (
-        !customProgresses.some((existing) => Math.abs(existing - p) < EPSILON)
-      ) {
-        customProgresses.push(p)
+      let exists = false
+      for (let i = 0; i < count; i++) {
+        if (Math.abs(outBuffer[i] - p) < EPSILON) {
+          exists = true
+          break
+        }
+      }
+      if (!exists && count < outBuffer.length) {
+        outBuffer[count] = p
+        count++
       }
     }
-  })
+  }
 
-  customProgresses.sort((a, b) => a - b)
-  return customProgresses
+  tryAddCandidate(leftCenterProg)
+  tryAddCandidate(leftCenterProg - pulseProg)
+  tryAddCandidate(leftCenterProg + pulseProg)
+  tryAddCandidate(rightCenterProg)
+  tryAddCandidate(rightCenterProg - pulseProg)
+  tryAddCandidate(rightCenterProg + pulseProg)
+
+  // In-place sort of the active elements in outBuffer (count elements)
+  for (let i = 1; i < count; i++) {
+    const key = outBuffer[i]
+    let j = i - 1
+    while (j >= 0 && outBuffer[j] > key) {
+      outBuffer[j + 1] = outBuffer[j]
+      j = j - 1
+    }
+    outBuffer[j + 1] = key
+  }
+
+  return count
 }
 
-function getWaveY(
-  x: number,
+export function getWaveSampleProgresses(
   elapsedMs: number,
-  baseAmp: number,
   waveLeft: number,
   waveRight: number,
   dripX: number,
   scale: number,
   gatheringDurationMs: number,
-): number {
-  const bulgeEndMs = gatheringDurationMs + BULGING_DURATION_MS
-  const releaseEndMs =
-    bulgeEndMs + STRETCHING_DURATION_MS + PINCH_DURATION_MS
-  if (elapsedMs >= releaseEndMs) return 0
-
-  // Both centers share elapsed-time progress, so unequal travel distances use
-  // different velocities and still arrive at dripX on the same frame.
-  const leftWaveStartX = waveLeft + (dripX - waveLeft) * 0.208
-  const rightWaveStartX = waveRight - (waveRight - dripX) * 0.514
-  const gatherProgress = easeInOutQuad(
-    Math.min(1, elapsedMs / gatheringDurationMs),
-  )
-  const leftCenter = getLiquidWaveCenter(
-    leftWaveStartX,
+): number[] {
+  const buf = new Float32Array(32)
+  const count = fillWaveSampleProgresses(
+    buf,
+    elapsedMs,
+    waveLeft,
+    waveRight,
     dripX,
-    gatherProgress,
+    scale,
+    gatheringDurationMs,
   )
-  const rightCenter = getLiquidWaveCenter(
-    rightWaveStartX,
-    dripX,
-    gatherProgress,
-  )
-
-  const basePulseWidth = 85 * scale
-  const targetPulseWidth = 45 * scale
-  const pulseWidth = basePulseWidth - gatherProgress * (basePulseWidth - targetPulseWidth)
-
-  const formation = easeOutQuad(Math.min(1, elapsedMs / WAVE_FORM_DURATION_MS))
-  const releaseProgress = Math.max(
-    0,
-    (elapsedMs - bulgeEndMs) / (releaseEndMs - bulgeEndMs),
-  )
-  const releaseFade = 1 - easeInQuad(releaseProgress)
-
-  const getPulseHeight = (center: number) => {
-    const distance = Math.abs(x - center)
-    if (distance >= pulseWidth) return 0
-    return (Math.cos((Math.PI * distance) / pulseWidth) + 1) / 2
+  const result: number[] = []
+  for (let i = 0; i < count; i++) {
+    result.push(buf[i])
   }
+  return result
+}
 
-  const leftHeight = getPulseHeight(leftCenter)
-  const rightHeight = getPulseHeight(rightCenter)
+function getWaveY(
+  x: number,
+  dripX: number,
+  leftCenter: number,
+  rightCenter: number,
+  pulseWidth: number,
+  baseAmp: number,
+  formation: number,
+  releaseFade: number,
+): number {
+  if (baseAmp === 0) return 0
+
+  const leftDist = Math.abs(x - leftCenter)
+  const leftHeight = leftDist >= pulseWidth ? 0 : (Math.cos((Math.PI * leftDist) / pulseWidth) + 1) / 2
+
+  const rightDist = Math.abs(x - rightCenter)
+  const rightHeight = rightDist >= pulseWidth ? 0 : (Math.cos((Math.PI * rightDist) / pulseWidth) + 1) / 2
+
   const combinedHeight =
     x < dripX
       ? leftHeight
@@ -304,7 +333,6 @@ function getWaveY(
         ? rightHeight
         : Math.max(leftHeight, rightHeight)
 
-  if (baseAmp === 0) return 0
   return (baseAmp + 2.0) * formation * releaseFade * combinedHeight
 }
 
@@ -398,6 +426,23 @@ export function createLiquidDripsController(
 
   const drips: LiquidDrip[] = []
   const randomGatheringPoints = new WeakMap<HTMLElement, number>()
+  const dripMap = new WeakMap<HTMLElement, LiquidDrip>()
+
+  const observer = typeof IntersectionObserver !== 'undefined'
+    ? new IntersectionObserver((entries) => {
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i]
+          const drip = dripMap.get(entry.target as HTMLElement)
+          if (drip) {
+            drip.isIntersecting = entry.isIntersecting
+          }
+        }
+      }, {
+        root: null,
+        threshold: 0.0,
+      })
+    : null
+
   let options: NormalizedAtmosphereOptions | undefined
 
   const createDrip = (index: number) => {
@@ -475,6 +520,8 @@ export function createLiquidDripsController(
       maxDropDistance: ATTACHED_DROP_DISTANCE + FALLING_DROP_DISTANCE,
       collisionY: 10000,
       hasSplashed: false,
+      isIntersecting: true,
+      targetElement: null,
       group: cardGroup,
       path,
       bulge,
@@ -489,6 +536,12 @@ export function createLiquidDripsController(
   const removeDrip = (index: number) => {
     const drip = drips[index]
     if (drip) {
+      if (drip.targetElement) {
+        if (observer) {
+          observer.unobserve(drip.targetElement)
+        }
+        dripMap.delete(drip.targetElement)
+      }
       drip.droplet.remove()
       drip.group.remove()
       drip.clipPath.remove()
@@ -531,6 +584,24 @@ export function createLiquidDripsController(
       for (let i = 0; i < targets.length; i++) {
         const drip = drips[i]
         const target = targets[i]
+
+        const element = target.element || null
+        if (drip.targetElement !== element) {
+          if (drip.targetElement) {
+            if (observer) {
+              observer.unobserve(drip.targetElement)
+            }
+            dripMap.delete(drip.targetElement)
+          }
+          drip.targetElement = element
+          if (element) {
+            dripMap.set(element, drip)
+            if (observer) {
+              observer.observe(element)
+            }
+          }
+        }
+
         const indent = Math.min(20, target.width * 0.15)
 
         drip.waveLeft = target.x + indent
@@ -624,6 +695,10 @@ export function createLiquidDripsController(
 
       for (let i = 0; i < drips.length; i++) {
         const drip = drips[i]
+
+        if (!drip.isIntersecting) {
+          continue
+        }
 
         if (!drip.liquidDripping) {
           drip.path.setAttribute('d', '')
@@ -844,10 +919,41 @@ export function createLiquidDripsController(
           baseAmp = 0
         }
 
-        // Wave control points heights and 17-point spline path generation
+        // Precalculate wave parameters once per drip update
+        const leftWaveStartX = drip.waveLeft + (drip.dripX - drip.waveLeft) * 0.208
+        const rightWaveStartX = drip.waveRight - (drip.waveRight - drip.dripX) * 0.514
+        const gatherProgress = easeInOutQuad(
+          Math.min(1, elapsedMs / drip.gatheringDurationMs),
+        )
+        const leftCenter = getLiquidWaveCenter(
+          leftWaveStartX,
+          drip.dripX,
+          gatherProgress,
+        )
+        const rightCenter = getLiquidWaveCenter(
+          rightWaveStartX,
+          drip.dripX,
+          gatherProgress,
+        )
+
+        const basePulseWidth = 85 * scale
+        const targetPulseWidth = 45 * scale
+        const pulseWidth =
+          basePulseWidth - gatherProgress * (basePulseWidth - targetPulseWidth)
+
+        const formation = easeOutQuad(Math.min(1, elapsedMs / WAVE_FORM_DURATION_MS))
+        const releaseEndMs = pinchEndMs
+        const releaseProgress = Math.max(
+          0,
+          (elapsedMs - bulgeEndMs) / (releaseEndMs - bulgeEndMs),
+        )
+        const releaseFade = 1 - easeInQuad(releaseProgress)
+
         const scaledAmp = baseAmp * scale
         const waveSpan = drip.waveRight - drip.waveLeft
-        const progresses = getWaveSampleProgresses(
+
+        const progressesCount = fillWaveSampleProgresses(
+          progressesBuffer,
           elapsedMs,
           drip.waveLeft,
           drip.waveRight,
@@ -855,49 +961,57 @@ export function createLiquidDripsController(
           scale,
           drip.gatheringDurationMs,
         )
-        const points = progresses.map((prog, idx) => {
+
+        for (let idx = 0; idx < progressesCount; idx++) {
+          const prog = progressesBuffer[idx]
           const xVal = drip.waveLeft + prog * waveSpan
-          const yVal =
-            idx === 0 || idx === progresses.length - 1
-              ? drip.targetBottom - 1.0
-              : drip.targetBottom - 1.0 +
-                getWaveY(
-                  xVal,
-                  elapsedMs,
-                  scaledAmp,
-                  drip.waveLeft,
-                  drip.waveRight,
-                  drip.dripX,
-                  scale,
-                  drip.gatheringDurationMs,
-                )
-          return { x: xVal, y: yVal }
-        })
+          let yVal = drip.targetBottom - 1.0
+
+          if (scaledAmp !== 0 && idx > 0 && idx < progressesCount - 1) {
+            yVal += getWaveY(
+              xVal,
+              drip.dripX,
+              leftCenter,
+              rightCenter,
+              pulseWidth,
+              scaledAmp,
+              formation,
+              releaseFade,
+            )
+          }
+
+          const pt = pointsBuffer[idx]
+          pt.x = xVal
+          pt.y = yVal
+        }
 
         const wl = drip.waveLeft.toFixed(1)
         const wr = drip.waveRight.toFixed(1)
         const ybTop = (drip.targetBottom - 20).toFixed(1)
         const dxVal = drip.dripX.toFixed(1)
 
-        let pathD = `M ${wl},${ybTop} L ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)} `
+        pathSegments.length = 0
+        pathSegments.push('M ', wl, ',', ybTop, ' L ', pointsBuffer[0].x.toFixed(1), ',', pointsBuffer[0].y.toFixed(1), ' ')
 
-        for (let idx = 0; idx < points.length - 1; idx++) {
-          const p0 = points[Math.max(0, idx - 1)]
-          const p1 = points[idx]
-          const p2 = points[idx + 1]
-          const p3 = points[Math.min(points.length - 1, idx + 2)]
+        for (let idx = 0; idx < progressesCount - 1; idx++) {
+          const p0 = pointsBuffer[Math.max(0, idx - 1)]
+          const p1 = pointsBuffer[idx]
+          const p2 = pointsBuffer[idx + 1]
+          const p3 = pointsBuffer[Math.min(progressesCount - 1, idx + 2)]
           const cp1x = p1.x + (p2.x - p0.x) / 6
           const cp1y = p1.y + (p2.y - p0.y) / 6
           const cp2x = p2.x - (p3.x - p1.x) / 6
           const cp2y = p2.y - (p3.y - p1.y) / 6
 
-          pathD +=
-            `C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ` +
-            `${cp2x.toFixed(1)},${cp2y.toFixed(1)} ` +
-            `${p2.x.toFixed(1)},${p2.y.toFixed(1)} `
+          pathSegments.push(
+            'C ', cp1x.toFixed(1), ',', cp1y.toFixed(1), ' ',
+            cp2x.toFixed(1), ',', cp2y.toFixed(1), ' ',
+            p2.x.toFixed(1), ',', p2.y.toFixed(1), ' '
+          )
         }
 
-        pathD += `L ${wr},${ybTop} Z`
+        pathSegments.push('L ', wr, ',', ybTop, ' Z')
+        const pathD = pathSegments.join('')
 
         drip.path.setAttribute('d', pathD)
         drip.bulge.setAttribute('cy', bulgeCY.toFixed(1))
@@ -930,6 +1044,9 @@ export function createLiquidDripsController(
 
     destroy() {
       clearDrips()
+      if (observer) {
+        observer.disconnect()
+      }
       svg.remove()
     },
   }

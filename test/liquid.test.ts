@@ -161,4 +161,87 @@ describe('liquid gathering', () => {
       progressesFinished.some((p) => Math.abs(p - expectedRight) < 0.001),
     ).toBe(true)
   })
+
+  it('skips dripping updates for off-screen cards', () => {
+    let intersectionCallback: IntersectionObserverCallback | undefined
+    const observeSpy = vi.fn()
+    const unobserveSpy = vi.fn()
+    const disconnectSpy = vi.fn()
+
+    class MockIntersectionObserver {
+      observe = observeSpy
+      unobserve = unobserveSpy
+      disconnect = disconnectSpy
+
+      constructor(callback: IntersectionObserverCallback) {
+        intersectionCallback = callback
+      }
+    }
+
+    vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+
+    const root = document.createElement('div')
+    const card = document.createElement('div')
+    root.append(card)
+    document.body.append(root)
+
+    const liquid = createLiquidDripsController(root)
+    const target = {
+      element: card,
+      x: 10,
+      y: 10,
+      width: 300,
+      height: 80,
+      right: 310,
+      bottom: 90,
+    }
+
+    liquid.sync(normalizeAtmosphereOptions({ preset: 'rain', liquidDripping: true }), [target])
+
+    // Verify it is observed
+    expect(observeSpy).toHaveBeenCalledWith(card)
+
+    // Under gathering phase at t=0.0
+    liquid.update(0)
+    // Progress to bulging phase so droplet values become active
+    liquid.update(1.0)
+    const initialCy = root.querySelector('ellipse')?.getAttribute('cy')
+    expect(initialCy).not.toBeNull()
+
+    // Simulate offscreen (isIntersecting = false)
+    intersectionCallback?.(
+      [
+        {
+          isIntersecting: false,
+          target: card,
+        } as unknown as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+
+    // Call update, check if the cy remains unchanged (skipped)
+    liquid.update(1.0)
+    const afterOffscreenCy = root.querySelector('ellipse')?.getAttribute('cy')
+    expect(afterOffscreenCy).toBe(initialCy)
+
+    // Simulate onscreen (isIntersecting = true)
+    intersectionCallback?.(
+      [
+        {
+          isIntersecting: true,
+          target: card,
+        } as unknown as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+
+    // Now update should run again and change the cy value
+    liquid.update(1.0)
+    const afterOnscreenCy = root.querySelector('ellipse')?.getAttribute('cy')
+    expect(afterOnscreenCy).not.toBe(initialCy)
+
+    liquid.destroy()
+    root.remove()
+    vi.unstubAllGlobals()
+  })
 })
