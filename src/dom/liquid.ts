@@ -51,7 +51,7 @@ function easeInOutQuad(x: number): number {
 const CYCLE_DURATION_MS = 5400
 const GATHER_END_T = 1200 / CYCLE_DURATION_MS
 const BULGE_END_T = 2800 / CYCLE_DURATION_MS
-const STRETCH_END_T = 3600 / CYCLE_DURATION_MS
+const STRETCH_END_T = 3450 / CYCLE_DURATION_MS
 const PINCH_END_T = 3720 / CYCLE_DURATION_MS
 const FALL_END_T = 4800 / CYCLE_DURATION_MS
 const SPLASH_END_T = 5080 / CYCLE_DURATION_MS
@@ -62,6 +62,11 @@ const DROPLET_END_RX = 4.5
 const DROPLET_START_RY = 8
 const DROPLET_END_RY = 18
 const DROPLET_LENGTH_SCALE = 1.3
+// The unfiltered ellipse retains more visible area than the same geometry after
+// the gooey alpha threshold. Scale it at detach time to preserve visual volume.
+const DETACHED_DROPLET_WIDTH_SCALE = 0.7
+const DETACHED_DROPLET_START_LENGTH_SCALE = 0.7
+const DETACHED_DROPLET_END_LENGTH_SCALE = 0.5
 const DROP_MOTION_START_T = BULGE_END_T
 const TERMINAL_VELOCITY_START_PROGRESS = 0.75
 const BASE_DROP_MOTION_POWER = 3
@@ -300,6 +305,7 @@ export function createLiquidDripsController(
 
     const droplet = doc.createElementNS('http://www.w3.org/2000/svg', 'ellipse')
     droplet.setAttribute('class', 'atmos-liquid-element')
+    droplet.setAttribute('clip-path', `url(#${clipId})`)
     droplet.setAttribute('rx', '0')
     droplet.setAttribute('ry', '0')
 
@@ -338,6 +344,7 @@ export function createLiquidDripsController(
   const removeDrip = (index: number) => {
     const drip = drips[index]
     if (drip) {
+      drip.droplet.remove()
       drip.group.remove()
       drip.clipPath.remove()
       drip.filter.remove()
@@ -430,6 +437,7 @@ export function createLiquidDripsController(
         const cardLiquidDripping = target.element?.dataset.atmosLiquidDripping !== 'false'
         drip.liquidDripping = cardLiquidDripping
         drip.group.style.display = cardLiquidDripping ? 'block' : 'none'
+        drip.droplet.style.display = cardLiquidDripping ? 'block' : 'none'
 
         drip.path.setAttribute('fill', parsedColor.rgb)
         drip.bulge.setAttribute('fill', parsedColor.rgb)
@@ -474,6 +482,15 @@ export function createLiquidDripsController(
 
         drip.elapsed += deltaTimeSeconds * 1000 * speed
         const t = ((drip.elapsed + drip.phaseOffset) % baseCycleDuration) / baseCycleDuration
+        // Leave the goo filter when pinch-off starts, before the filter's alpha
+        // threshold erodes the now-isolated ellipse. It still overlaps the
+        // residual bulge here, so the parent switch has no visible seam.
+        const isOutsideGooFilter = t >= STRETCH_END_T
+        const dropletParent = isOutsideGooFilter ? group : drip.group
+
+        if (drip.droplet.parentNode !== dropletParent) {
+          dropletParent.appendChild(drip.droplet)
+        }
 
         const BULGE_BASE_Y_OFFSET = -2
         const DROPLET_BASE_Y_OFFSET = -2
@@ -688,9 +705,27 @@ export function createLiquidDripsController(
         drip.bulge.setAttribute('r', bulgeR.toFixed(1))
         drip.bulge.setAttribute('cx', dxVal)
         drip.droplet.setAttribute('cx', dxVal)
-        drip.droplet.setAttribute('cy', dropletCY.toFixed(1))
-        drip.droplet.setAttribute('rx', dropletRX.toFixed(1))
-        drip.droplet.setAttribute('ry', dropletRY.toFixed(1))
+        const filterExitProgress = Math.min(
+          1,
+          Math.max(0, (t - STRETCH_END_T) / (PINCH_END_T - STRETCH_END_T)),
+        )
+        const detachedLengthScale =
+          DETACHED_DROPLET_START_LENGTH_SCALE +
+          (DETACHED_DROPLET_END_LENGTH_SCALE -
+            DETACHED_DROPLET_START_LENGTH_SCALE) *
+            easeInOutQuad(filterExitProgress)
+        const visualScaleX = isOutsideGooFilter ? DETACHED_DROPLET_WIDTH_SCALE : 1
+        const visualScaleY = isOutsideGooFilter ? detachedLengthScale : 1
+        const renderedRY = dropletRY * visualScaleY
+        const lowerHalfRY = isOutsideGooFilter
+          ? dropletRY * DETACHED_DROPLET_START_LENGTH_SCALE
+          : renderedRY
+        // Counter-shift the center by the added radius. The lower tip keeps
+        // following the original gravity path while the extra length grows up.
+        const renderedCY = dropletCY - (renderedRY - lowerHalfRY)
+        drip.droplet.setAttribute('cy', renderedCY.toFixed(1))
+        drip.droplet.setAttribute('rx', (dropletRX * visualScaleX).toFixed(1))
+        drip.droplet.setAttribute('ry', renderedRY.toFixed(1))
       }
     },
 
