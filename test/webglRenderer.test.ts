@@ -5,6 +5,11 @@ import { createRenderer } from '../src/renderers/createRenderer'
 import { createWebGLRainRenderer } from '../src/renderers/webgl/rain'
 
 function createWebGLContext() {
+  const extMock = {
+    vertexAttribDivisorANGLE: vi.fn(),
+    drawArraysInstancedANGLE: vi.fn(),
+  }
+
   return {
     VERTEX_SHADER: 0x8b31,
     FRAGMENT_SHADER: 0x8b30,
@@ -31,8 +36,11 @@ function createWebGLContext() {
     getAttribLocation: vi.fn((_program, name) => {
       if (name === 'a_position') return 0
       if (name === 'a_alpha') return 1
-      if (name === 'a_local_coord') return 2
-      if (name === 'a_dims') return 3
+      if (name === 'a_radius') return 2
+      if (name === 'a_quad_pos') return 3
+      if (name === 'a_dir') return 4
+      if (name === 'a_len') return 5
+      if (name === 'a_radii') return 6
       return -1
     }),
     getUniformLocation: vi.fn(() => ({})),
@@ -48,7 +56,14 @@ function createWebGLContext() {
     uniform2f: vi.fn(),
     uniform4f: vi.fn(),
     drawArrays: vi.fn(),
-  } as unknown as WebGLRenderingContext
+    getExtension: vi.fn((name) => {
+      if (name === 'ANGLE_instanced_arrays') {
+        return extMock
+      }
+      return null
+    }),
+    __extMock: extMock,
+  } as unknown as WebGLRenderingContext & { __extMock: typeof extMock }
 }
 
 function createCanvas(context: WebGLRenderingContext | null) {
@@ -115,9 +130,12 @@ describe('WebGL renderer foundation', () => {
 
     expect(context.viewport).toHaveBeenCalledWith(0, 0, 1600, 1200)
     expect(context.bufferData).toHaveBeenCalled()
-    expect(context.drawArrays).toHaveBeenCalled()
+    expect((context as any).__extMock.drawArraysInstancedANGLE).toHaveBeenCalled()
 
     renderer?.destroy()
+
+    expect(context.deleteProgram).toHaveBeenCalled()
+    expect(context.deleteBuffer).toHaveBeenCalled()
   })
 
   it('pauses drawing while the WebGL context is lost and resumes after restore', () => {
@@ -126,17 +144,17 @@ describe('WebGL renderer foundation', () => {
     const renderer = createWebGLRainRenderer(canvases, size, options)
 
     renderer?.render(16)
-    const drawCountBeforeLoss = vi.mocked(context.drawArrays).mock.calls.length
+    const drawCountBeforeLoss = vi.mocked((context as any).__extMock.drawArraysInstancedANGLE).mock.calls.length
 
     canvases.background.dispatchEvent(new Event('webglcontextlost', { cancelable: true }))
     renderer?.render(32)
 
-    expect(context.drawArrays).toHaveBeenCalledTimes(drawCountBeforeLoss)
+    expect((context as any).__extMock.drawArraysInstancedANGLE).toHaveBeenCalledTimes(drawCountBeforeLoss)
 
     canvases.background.dispatchEvent(new Event('webglcontextrestored'))
     renderer?.render(48)
 
-    expect(vi.mocked(context.drawArrays).mock.calls.length).toBeGreaterThan(drawCountBeforeLoss)
+    expect(vi.mocked((context as any).__extMock.drawArraysInstancedANGLE).mock.calls.length).toBeGreaterThan(drawCountBeforeLoss)
 
     renderer?.destroy()
   })
