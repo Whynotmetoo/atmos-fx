@@ -320,14 +320,12 @@ function getWaveY(
 ): number {
   if (baseAmp === 0) return 0
 
-  const getPulseHeight = (center: number) => {
-    const distance = Math.abs(x - center)
-    if (distance >= pulseWidth) return 0
-    return (Math.cos((Math.PI * distance) / pulseWidth) + 1) / 2
-  }
+  const leftDist = Math.abs(x - leftCenter)
+  const leftHeight = leftDist >= pulseWidth ? 0 : (Math.cos((Math.PI * leftDist) / pulseWidth) + 1) / 2
 
-  const leftHeight = getPulseHeight(leftCenter)
-  const rightHeight = getPulseHeight(rightCenter)
+  const rightDist = Math.abs(x - rightCenter)
+  const rightHeight = rightDist >= pulseWidth ? 0 : (Math.cos((Math.PI * rightDist) / pulseWidth) + 1) / 2
+
   const combinedHeight =
     x < dripX
       ? leftHeight
