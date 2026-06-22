@@ -2,7 +2,7 @@ import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { AccumulationPool } from '../canvas2d/accumulation'
-import { findTopEdgeCollision } from '../canvas2d/collision'
+import { findTargetCollision } from '../canvas2d/collision'
 import { calculateAccumulationBudget, calculateSnowParticleBudget } from '../canvas2d/quality'
 import type { Canvas2DRenderer, RendererCanvases } from '../canvas2d/types'
 
@@ -382,10 +382,10 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
       if (!isBackground) {
         const collision =
           particle.vy > 0
-            ? this.findSnowLanding(previousDrawX, previousY, drawX, particle.y)
+            ? findTargetCollision(previousDrawX, previousY, drawX, particle.y, this.collisionTargets)
             : undefined
 
-        if (collision) {
+        if (collision && collision.type === 'top') {
           if (this.options.snowAccumulation > 0) {
             this.accumulation.spawn(
               collision.x,
@@ -393,7 +393,32 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
               particle.radius * randomRange(0.65, 1.2),
               Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
               particle.depth,
-              collision.target ?? null,
+              collision.target,
+            )
+          }
+          recycleParticle(particle, this.size, this.options, false)
+          continue
+        }
+
+        if (collision && (collision.type === 'left' || collision.type === 'right')) {
+          particle.vx = 0
+          particle.drift = Math.max(0.05, particle.drift * 0.08)
+          const target = collision.target
+          const drawXNew = collision.type === 'left' ? target.x - particle.radius - 1 : target.right + particle.radius + 1
+          particle.x = drawXNew - Math.sin(particle.phase) * particle.drift
+        }
+
+        if (!collision && this.options.bottomCollision && previousY <= this.size.height && particle.y >= this.size.height && particle.vy > 0) {
+          const progress = (this.size.height - previousY) / (particle.y - previousY)
+          const landingX = previousDrawX + (drawX - previousDrawX) * progress
+          if (this.options.snowAccumulation > 0) {
+            this.accumulation.spawn(
+              landingX,
+              this.size.height,
+              particle.radius * randomRange(0.65, 1.2),
+              Math.min(0.82, particle.alpha * (0.58 + this.options.snowAccumulation * 0.42)),
+              particle.depth,
+              null,
             )
           }
           recycleParticle(particle, this.size, this.options, false)
@@ -484,34 +509,7 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     }
   }
 
-  private findSnowLanding(
-    previousX: number,
-    previousY: number,
-    nextX: number,
-    nextY: number,
-  ): { x: number; y: number; target?: CollisionTargetRect } | undefined {
-    const collision = findTopEdgeCollision(
-      previousX,
-      previousY,
-      nextX,
-      nextY,
-      this.collisionTargets,
-    )
 
-    if (collision) {
-      return collision
-    }
-
-    if (this.options.bottomCollision && previousY <= this.size.height && nextY >= this.size.height) {
-      const progress = (this.size.height - previousY) / (nextY - previousY)
-      return {
-        x: previousX + (nextX - previousX) * progress,
-        y: this.size.height,
-      }
-    }
-
-    return undefined
-  }
 
   private initializeLayers() {
     const particleCapacity = Math.max(1, this.particles.length)

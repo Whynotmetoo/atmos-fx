@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CollisionTargetRect } from '../src/dom/collisionTargets'
-import { findTopEdgeCollision } from '../src/renderers/canvas2d/collision'
+import { findTopEdgeCollision, findTargetCollision } from '../src/renderers/canvas2d/collision'
 
 const target: CollisionTargetRect = {
   x: 40,
@@ -52,5 +52,52 @@ describe('findTopEdgeCollision', () => {
       y: 90,
       target: upperTarget,
     })
+  })
+})
+
+describe('findTargetCollision', () => {
+  it('detects top edge collision (moving downward)', () => {
+    expect(findTargetCollision(70, 80, 90, 120, [target])).toEqual({
+      x: 80,
+      y: 100,
+      target,
+      type: 'top',
+    })
+  })
+
+  it('detects left edge collision (moving rightward)', () => {
+    // Starts at x=20, y=120. Moves to x=60, y=140.
+    // Crosses x=40 (target.x).
+    // progress = (40 - 20) / (60 - 20) = 0.5.
+    // hitY = 120 + 20 * 0.5 = 130.
+    // Since 130 is in [100, 160] target Y bounds, it should collide on the left.
+    expect(findTargetCollision(20, 120, 60, 140, [target])).toEqual({
+      x: 40,
+      y: 130,
+      target,
+      type: 'left',
+    })
+  })
+
+  it('detects right edge collision (moving leftward)', () => {
+    // Starts at x=180, y=110. Moves to x=140, y=130.
+    // Crosses x=160 (target.right).
+    // progress = (160 - 180) / (140 - 180) = 0.5.
+    // hitY = 110 + 20 * 0.5 = 120.
+    // Since 120 is in [100, 160] target Y bounds, it should collide on the right.
+    expect(findTargetCollision(180, 110, 140, 130, [target])).toEqual({
+      x: 160,
+      y: 120,
+      target,
+      type: 'right',
+    })
+  })
+
+  it('ignores collisions outside vertical boundaries of target side walls', () => {
+    // Starts at x=20, y=80. Moves to x=60, y=90.
+    // Crosses x=40 (target.x).
+    // progress = 0.5. hitY = 85.
+    // Since 85 is above target.y (100), it should not collide.
+    expect(findTargetCollision(20, 80, 60, 90, [target])).toBeUndefined()
   })
 })

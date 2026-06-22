@@ -1,7 +1,7 @@
 import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
-import { findTopEdgeCollision } from '../canvas2d/collision'
+import { findTargetCollision } from '../canvas2d/collision'
 import { calculateRainParticleBudget } from '../canvas2d/quality'
 import { MAX_SPLASH_PARTICLES, SplashPool } from '../canvas2d/splash'
 import type { Canvas2DRenderer, RendererCanvases } from '../canvas2d/types'
@@ -533,11 +533,17 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
 
       const collision =
         index >= backgroundCount
-          ? findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
+          ? findTargetCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
           : undefined
 
       if (collision) {
-        this.splashes.spawn(collision.x, collision.y, particle.vx, particle.depth)
+        let splashVx = particle.vx
+        if (collision.type === 'left') {
+          splashVx = -Math.abs(particle.vx) * 0.4
+        } else if (collision.type === 'right') {
+          splashVx = Math.abs(particle.vx) * 0.4
+        }
+        this.splashes.spawn(collision.x, collision.y, splashVx, particle.depth)
         recycleParticle(particle, this.size, this.options, false)
         continue
       }
@@ -592,6 +598,26 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
         splash.y < -20 ||
         splash.y > this.size.height + 20
       ) {
+        splash.active = false
+        continue
+      }
+
+      // Physics-based clipping: if splash particle enters target card bounds, destroy it
+      let hitCard = false
+      for (let i = 0; i < this.collisionTargets.length; i++) {
+        const target = this.collisionTargets[i]!
+        if (
+          splash.x >= target.x &&
+          splash.x <= target.right &&
+          splash.y >= target.y &&
+          splash.y <= target.bottom
+        ) {
+          hitCard = true
+          break
+        }
+      }
+
+      if (hitCard) {
         splash.active = false
         continue
       }
