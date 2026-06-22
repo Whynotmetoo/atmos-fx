@@ -1,5 +1,6 @@
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
+import { findTargetCollision } from './collision'
 
 export type AccumulationParticle = {
   active: boolean
@@ -140,39 +141,74 @@ export class AccumulationPool {
           }
         }
       } else {
-        // Falling
-        const gravity = (isSnow ? 50 : 280) * p.depth
-        p.vy = (p.vy ?? 0) + gravity * deltaSeconds
-        p.x += (p.vx ?? 0) * deltaSeconds
-        p.y += p.vy * deltaSeconds
+        // Falling state: Apply horizontal damping (air resistance)
+        const damping = Math.max(0, 1.0 - 4.5 * deltaSeconds)
+        p.vx = (p.vx ?? 0) * damping
 
-        let landed = false
-        // Check if it lands on a target
-        for (const target of collisionTargets) {
-          if (p.y >= target.y && p.y - p.vy * deltaSeconds <= target.y) {
-            if (p.x >= target.x && p.x <= target.right) {
-              p.y = target.y
-              p.vy = 0
-              p.vx = 0
-              p.onSurface = true
-              p.target = target
-              landed = true
-              break
-            }
-          }
+        // Slowly melt/fade during free fall
+        p.alpha -= (isSnow ? 0.16 : 0.28) * deltaSeconds
+        if (p.alpha <= 0.0) {
+          p.active = false
+          continue
         }
 
-        if (!landed) {
-          if (p.y >= size.height) {
+        const gravity = (isSnow ? 50 : 280) * p.depth
+        p.vy = (p.vy ?? 0) + gravity * deltaSeconds
+
+        const previousX = p.x
+        const previousY = p.y
+        const nextX = p.x + (p.vx ?? 0) * deltaSeconds
+        const nextY = p.y + p.vy * deltaSeconds
+
+        // Target collision detection (top, left, and right sides)
+        const collision = findTargetCollision(previousX, previousY, nextX, nextY, collisionTargets)
+
+        if (collision) {
+          if (collision.type === 'top') {
+            // Land on card top
+            p.x = collision.x
+            p.y = collision.y
+            p.vy = 0
+            p.vx = 0
+            p.onSurface = true
+            p.target = collision.target
+          } else {
+            // Card side wall collision
+            if (isSnow) {
+              // Snow slides down card wall vertically
+              p.vx = 0
+              p.x = collision.type === 'left' ? collision.target.x - p.radius - 1 : collision.target.right + p.radius + 1
+              p.y = collision.y
+            } else {
+              // Hail bounces off card wall horizontally
+              const bounceFactor = 0.22
+              p.vx = - (p.vx ?? 0) * bounceFactor
+              p.vy = p.vy * 0.75
+              p.x = collision.type === 'left' ? collision.target.x - p.radius : collision.target.right + p.radius
+              p.y = collision.y
+            }
+          }
+        } else {
+          // Check bottom collision
+          let landedBottom = false
+          if (nextY >= size.height) {
             if (options.bottomCollision) {
+              const progress = (size.height - previousY) / (nextY - previousY || 1)
+              p.x = previousX + (nextX - previousX) * progress
               p.y = size.height
               p.vy = 0
               p.vx = 0
               p.onSurface = true
               p.target = null
+              landedBottom = true
             } else {
               p.active = false
             }
+          }
+
+          if (!landedBottom && p.active) {
+            p.x = nextX
+            p.y = nextY
           }
         }
 
