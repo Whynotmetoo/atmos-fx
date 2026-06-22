@@ -113,6 +113,7 @@ const options: NormalizedAtmosphereOptions = {
   respectReducedMotion: true,
   liquidDripping: true,
   injectStyles: true,
+  autoScaleQuality: true,
   styleNonce: '',
 }
 
