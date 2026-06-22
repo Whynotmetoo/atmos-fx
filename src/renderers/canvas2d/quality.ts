@@ -46,9 +46,9 @@ const HAIL_QUALITY_LIMITS = {
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 const ACCUMULATION_QUALITY_LIMITS = {
-  low: { min: 24, max: 70 },
-  medium: { min: 40, max: 130 },
-  high: { min: 60, max: 220 },
+  low: { min: 40, max: 150 },
+  medium: { min: 80, max: 300 },
+  high: { min: 120, max: 600 },
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
 
 function clamp(value: number, min: number, max: number): number {
@@ -140,7 +140,7 @@ export function calculateAccumulationBudget({
   const areaScale = Math.sqrt((width * height) / REFERENCE_AREA)
   const densityScale = 0.25 + clamp(density, 0, 1) * 0.75
   const limits = ACCUMULATION_QUALITY_LIMITS[resolvedQuality]
-  const base = resolvedQuality === 'low' ? 52 : resolvedQuality === 'medium' ? 96 : 168
+  const base = resolvedQuality === 'low' ? 90 : resolvedQuality === 'medium' ? 180 : 320
   const budget = Math.round(base * areaScale * densityScale)
 
   return clamp(budget, limits.min, limits.max)
