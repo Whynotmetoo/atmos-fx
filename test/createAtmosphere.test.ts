@@ -243,7 +243,7 @@ describe('createAtmosphere', () => {
     expect(droplet).not.toBeNull()
     expect(droplet?.closest('[filter]')).not.toBeNull()
 
-    liquid.update(3.91)
+    liquid.update(3.11)
 
     expect(root.querySelectorAll('.atmos-liquid-droplet')).toHaveLength(1)
     expect(root.querySelector('.atmos-liquid-droplet')).toBe(droplet)

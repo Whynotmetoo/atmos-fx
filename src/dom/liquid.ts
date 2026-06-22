@@ -61,7 +61,7 @@ const MIN_GATHERING_POINT = 0.33
 const MAX_GATHERING_POINT = 0.66
 
 // Every phase after Gathering keeps its established duration.
-const BULGING_DURATION_MS = 1600
+const BULGING_DURATION_MS = 800
 const STRETCHING_DURATION_MS = 650
 const PINCH_DURATION_MS = 270
 const FALLING_DURATION_MS = 1080
@@ -132,7 +132,7 @@ const DETACHED_DROPLET_WIDTH_SCALE = 0.7
 const DETACHED_DROPLET_START_LENGTH_SCALE = 0.7
 const DETACHED_DROPLET_END_LENGTH_SCALE = 0.5
 const TERMINAL_VELOCITY_START_PROGRESS = 0.75 
-const BASE_DROP_MOTION_POWER = 3
+const BASE_DROP_MOTION_POWER = 2.0
 // Narrow cards scale the attached stretch but retain the existing long falling
 // range. A slightly higher power keeps their pinch-off position from dropping
 // too far while preserving the shared terminal-velocity handoff.
