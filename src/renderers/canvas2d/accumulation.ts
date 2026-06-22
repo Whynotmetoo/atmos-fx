@@ -145,12 +145,7 @@ export class AccumulationPool {
         const damping = Math.max(0, 1.0 - 4.5 * deltaSeconds)
         p.vx = (p.vx ?? 0) * damping
 
-        // Slowly melt/fade during free fall
-        p.alpha -= (isSnow ? 0.16 : 0.28) * deltaSeconds
-        if (p.alpha <= 0.0) {
-          p.active = false
-          continue
-        }
+
 
         const gravity = (isSnow ? 50 : 280) * p.depth
         p.vy = (p.vy ?? 0) + gravity * deltaSeconds
