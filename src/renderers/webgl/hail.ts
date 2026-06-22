@@ -2,7 +2,7 @@ import type { NormalizedAtmosphereOptions } from '../../core/types'
 import type { CanvasLayerSize } from '../../dom/canvasLayer'
 import type { CollisionTargetRect } from '../../dom/collisionTargets'
 import { AccumulationPool } from '../canvas2d/accumulation'
-import { findTopEdgeCollision } from '../canvas2d/collision'
+import { findTargetCollision } from '../canvas2d/collision'
 import { calculateAccumulationBudget, calculateHailParticleBudget } from '../canvas2d/quality'
 import type { Canvas2DRenderer, RendererCanvases } from '../canvas2d/types'
 
@@ -457,8 +457,8 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
       const nextY = (!isBackground && particle.rolling) ? particle.y : particle.y + particle.vy * deltaSeconds
       
       let collision =
-        !isBackground && !particle.rolling && particle.vy > 0
-          ? findTopEdgeCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
+        !isBackground && !particle.rolling
+          ? findTargetCollision(previousX, previousY, nextX, nextY, this.collisionTargets)
           : undefined
 
       if (!isBackground && !collision && this.options.bottomCollision && !particle.rolling && nextY >= this.size.height && particle.vy > 0) {
@@ -467,6 +467,7 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
           x: previousX + (nextX - previousX) * t,
           y: this.size.height,
           target: null as any,
+          type: 'top',
         }
       }
 
@@ -482,21 +483,35 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
         )
 
         const bounceFactor = randomRange(0.18, 0.3) * (this.options.hailBounce ?? 0.5)
-        if (particle.bounces < 2 && particle.vy > 150 && bounceFactor > 0.05) {
-          particle.x = collision.x
-          particle.y = collision.y - particle.radius
-          particle.vy = -particle.vy * bounceFactor
-          particle.vx = particle.vx * 0.4 + randomRange(-40, 40) * particle.depth
-          particle.bounces += 1
-        } else {
-          // Roll instead of disappearing immediately
-          if (Math.abs(particle.vx) > 12 && Math.random() > 0.28) {
-            particle.rolling = true
-            particle.rollTime = 0
-            particle.lastTarget = collision.target
+        
+        if (collision.type === 'top') {
+          if (particle.bounces < 2 && particle.vy > 150 && bounceFactor > 0.05) {
             particle.x = collision.x
             particle.y = collision.y - particle.radius
-            particle.vy = 0
+            particle.vy = -particle.vy * bounceFactor
+            particle.vx = particle.vx * 0.4 + randomRange(-40, 40) * particle.depth
+            particle.bounces += 1
+          } else {
+            // Roll instead of disappearing immediately
+            if (Math.abs(particle.vx) > 12 && Math.random() > 0.28) {
+              particle.rolling = true
+              particle.rollTime = 0
+              particle.lastTarget = collision.target
+              particle.x = collision.x
+              particle.y = collision.y - particle.radius
+              particle.vy = 0
+            } else {
+              recycleParticle(particle, this.size, this.options, false)
+            }
+          }
+        } else {
+          // Side collision (left or right)
+          if (particle.bounces < 2 && bounceFactor > 0.05) {
+            particle.x = collision.type === 'left' ? collision.x - particle.radius : collision.x + particle.radius
+            particle.y = collision.y
+            particle.vx = -particle.vx * bounceFactor
+            particle.vy = particle.vy * 0.75
+            particle.bounces += 1
           } else {
             recycleParticle(particle, this.size, this.options, false)
           }
