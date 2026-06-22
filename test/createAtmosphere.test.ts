@@ -243,7 +243,7 @@ describe('createAtmosphere', () => {
     expect(droplet).not.toBeNull()
     expect(droplet?.closest('[filter]')).not.toBeNull()
 
-    liquid.update(3.91)
+    liquid.update(3.80)
 
     expect(root.querySelectorAll('.atmos-liquid-droplet')).toHaveLength(1)
     expect(root.querySelector('.atmos-liquid-droplet')).toBe(droplet)
@@ -254,8 +254,8 @@ describe('createAtmosphere', () => {
     const pts = dVal.split(/[MCZ\s,]+/).filter(Boolean).map(parseFloat)
     const rxEquivalent = (pts[6] - pts[0]).toFixed(1)
     const ryEquivalent = ((pts[11] - pts[1]) / 2).toFixed(1)
-    expect(rxEquivalent).toBe('3.0')
-    expect(ryEquivalent).toBe('10.8')
+    expect(rxEquivalent).toBe('2.8')
+    expect(ryEquivalent).toBe('9.9')
 
     liquid.update(1.8)
 

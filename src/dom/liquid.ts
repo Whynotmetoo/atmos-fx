@@ -54,14 +54,14 @@ function easeInOutQuad(x: number): number {
 
 // Gathering scales with card width. A 300px card uses a 1500ms baseline
 // timing, while wider cards add 2ms per pixel until the 4000ms cap.
-const GATHERING_BASE_MS = 900
-const GATHERING_MS_PER_PX = 2
-const MAX_GATHERING_DURATION_MS = 4000
+const GATHERING_BASE_MS = 1250
+const GATHERING_MS_PER_PX = 2.8
+const MAX_GATHERING_DURATION_MS = 5500
 const MIN_GATHERING_POINT = 0.33
 const MAX_GATHERING_POINT = 0.66
 
 // Every phase after Gathering keeps its established duration.
-const BULGING_DURATION_MS = 1600
+const BULGING_DURATION_MS = 900
 const STRETCHING_DURATION_MS = 650
 const PINCH_DURATION_MS = 270
 const FALLING_DURATION_MS = 1080
@@ -120,7 +120,7 @@ export function getLiquidWaveCenter(
 }
 
 // Droplet shape and gravity motion
-const GLOBAL_SCALE = 0.88
+const GLOBAL_SCALE = 0.8
 const DROPLET_START_RX = 8
 const DROPLET_END_RX = 4.5
 const DROPLET_START_RY = 8
@@ -148,11 +148,6 @@ const CONSTANT_SPEED_DURATION_SECONDS =
 
 // Wave settings
 const WAVE_FORM_DURATION_MS = 800
-
-// Residual bulge settings
-const RESIDUAL_BULGE_DELAY_MS = 480
-const RESIDUAL_BULGE_DURATION_MS = 240
-
 // Recoil timing
 const RECOIL_DURATION_MS =
   FALLING_DURATION_MS + SPLASH_DURATION_MS + COOL_DOWN_DURATION_MS
@@ -790,22 +785,25 @@ export function createLiquidDripsController(
         let baseAmp = 1.8
 
         if (elapsedMs < gatherEndMs) {
-          // Phase 1: Gathering
-          bulgeR = 0
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET
+          // Phase 1: Gathering - Early bulge expansion (easeInQuad)
+          const progress = elapsedMs / gatherEndMs
+          const eased = easeInQuad(progress)
+          bulgeR = eased * 4.0 * scale
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + eased * 2.0 * scale
+
           dropletRX = 0
           dropletRY = 0
           dropletCY = drip.targetBottom + DROPLET_BASE_Y_OFFSET
           baseAmp = 1.8
           drip.hasSplashed = false
         } else if (elapsedMs < bulgeEndMs) {
-          // Phase 2: Bulging
+          // Phase 2: Bulging - Smoothly continue expansion (easeOutQuad)
           const phaseProgress =
             (elapsedMs - gatherEndMs) / BULGING_DURATION_MS
-          const easedProgress = easeInOutQuad(phaseProgress)
+          const easedProgress = easeOutQuad(phaseProgress)
 
-          bulgeR = easedProgress * 8.0 * scale
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + easedProgress * 4.0 * scale
+          bulgeR = (4.0 + easedProgress * 4.0) * scale
+          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + (2.0 + easedProgress * 2.0) * scale
 
           dropletRX = 0
           dropletRY = 0
@@ -813,22 +811,23 @@ export function createLiquidDripsController(
 
           baseAmp = 1.8 + easedProgress * 0.4
         } else if (elapsedMs < stretchEndMs) {
-          // Phase 3: Stretching
+          // Phase 3: Stretching - Extend expansion, then shrink to residual bulge
           const phaseProgress =
             (elapsedMs - bulgeEndMs) / STRETCHING_DURATION_MS
           const easedProgress = easeInOutQuad(phaseProgress)
 
-          const residualProgress = Math.min(
-            1,
-            Math.max(
-              0,
-              (elapsedMs - (bulgeEndMs + RESIDUAL_BULGE_DELAY_MS)) /
-                RESIDUAL_BULGE_DURATION_MS,
-            ),
-          )
-          const residualEase = easeInOutQuad(residualProgress)
-          bulgeR = residualEase * 5.0 * scale
-          bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + 4.0 * scale - residualEase * scale
+          const elapsedInStretch = elapsedMs - bulgeEndMs
+          if (elapsedInStretch < 200) {
+            const progress = elapsedInStretch / 200
+            const eased = easeInOutQuad(progress)
+            bulgeR = (8.0 + eased * 0.5) * scale
+            bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + (4.0 + eased * 1.0) * scale
+          } else {
+            const progress = (elapsedInStretch - 200) / 450
+            const eased = easeInOutQuad(progress)
+            bulgeR = (8.5 - eased * 3.5) * scale
+            bulgeCY = drip.targetBottom + BULGE_BASE_Y_OFFSET + (5.0 - eased * 2.0) * scale
+          }
 
           dropletRX = activeDropletRX
           dropletRY = activeDropletRY
