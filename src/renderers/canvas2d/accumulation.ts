@@ -13,7 +13,6 @@ export type AccumulationParticle = {
   onSurface?: boolean
   target?: CollisionTargetRect | null
   age?: number
-  offsetY?: number
 }
 
 export class AccumulationPool {
@@ -44,7 +43,6 @@ export class AccumulationPool {
         onSurface: false,
         target: null,
         age: 0,
-        offsetY: 0,
       })
     }
 
@@ -77,7 +75,6 @@ export class AccumulationPool {
     particle.onSurface = true
     particle.target = target
     particle.age = 0
-    particle.offsetY = 0
 
     this.cursor = (this.cursor + 1) % this.maxSize
   }
@@ -116,11 +113,10 @@ export class AccumulationPool {
           )
           if (currentTarget) {
             p.target = currentTarget
-            p.y = currentTarget.y + (p.offsetY ?? 0)
+            p.y = currentTarget.y
           } else {
             p.onSurface = false
             p.target = null
-            p.offsetY = 0
           }
         }
       } else {
@@ -140,7 +136,6 @@ export class AccumulationPool {
               p.vx = 0
               p.onSurface = true
               p.target = target
-              p.offsetY = 0
               landed = true
               break
             }
@@ -155,7 +150,6 @@ export class AccumulationPool {
               p.vx = 0
               p.onSurface = true
               p.target = null
-              p.offsetY = 0
             } else {
               p.active = false
             }
@@ -168,7 +162,7 @@ export class AccumulationPool {
       }
     }
 
-    // 2. Overlap settling and spreading (with vertical stacking)
+    // 2. Overlap settling and spreading (pure horizontal flattening)
     for (let i = 0; i < this.particles.length; i++) {
       const p1 = this.particles[i]
       if (!p1.active || !p1.onSurface) {
@@ -182,7 +176,7 @@ export class AccumulationPool {
         }
 
         const dx = p2.x - p1.x
-        const dy = (p2.offsetY ?? 0) - (p1.offsetY ?? 0)
+        const dy = p2.y - p1.y
         const minHorizontalDist = (p1.radius + p2.radius) * 0.95
 
         if (Math.abs(dx) < minHorizontalDist && Math.abs(dy) < 5) {
@@ -199,26 +193,6 @@ export class AccumulationPool {
           } else {
             p1.x = Math.max(0, Math.min(size.width, p1.x))
             p2.x = Math.max(0, Math.min(size.width, p2.x))
-          }
-
-          // Vertical stacking: if heavily overlapping horizontally, push one up
-          if (overlap > minHorizontalDist * 0.25) {
-            const pushHeight = Math.min(p1.radius, p2.radius) * 0.32
-            // Push up the younger particle (later collision)
-            if ((p2.age ?? 0) < (p1.age ?? 0)) {
-              p2.offsetY = (p2.offsetY ?? 0) - pushHeight
-            } else {
-              p1.offsetY = (p1.offsetY ?? 0) - pushHeight
-            }
-
-            // Cap the maximum stacking height (e.g. 2.8 times particle radius) to keep layout aesthetic
-            const maxStack = -Math.max(p1.radius, p2.radius) * 2.8
-            p1.offsetY = Math.max(maxStack, p1.offsetY ?? 0)
-            p2.offsetY = Math.max(maxStack, p2.offsetY ?? 0)
-
-            // Re-update real-time Y position
-            p1.y = (p1.target ? p1.target.y : size.height) + (p1.offsetY ?? 0)
-            p2.y = (p2.target ? p2.target.y : size.height) + (p2.offsetY ?? 0)
           }
         }
       }
