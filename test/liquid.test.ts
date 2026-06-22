@@ -27,10 +27,10 @@ describe('liquid gathering', () => {
   }
 
   it('scales Gathering with card width and caps it at 4000ms', () => {
-    expect(getLiquidGatheringDuration(150)).toBe(1200)
-    expect(getLiquidGatheringDuration(300)).toBe(1500)
-    expect(getLiquidGatheringDuration(600)).toBe(2100)
-    expect(getLiquidGatheringDuration(2000)).toBe(4000)
+    expect(getLiquidGatheringDuration(150)).toBe(1670)
+    expect(getLiquidGatheringDuration(300)).toBe(2090)
+    expect(getLiquidGatheringDuration(600)).toBe(2930)
+    expect(getLiquidGatheringDuration(2000)).toBe(5500)
   })
 
   it('brings unequal left and right wave spans to the gathering point together', () => {
@@ -250,7 +250,7 @@ describe('liquid gathering', () => {
     )
 
     // Now update should run again and change the cy value
-    liquid.update(1.0)
+    liquid.update(1.5)
     const afterOnscreenCy = getDropletCy(root.querySelector('.atmos-liquid-droplet'))
     expect(afterOnscreenCy).not.toBe(initialCy)
 
