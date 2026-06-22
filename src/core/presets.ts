@@ -22,6 +22,7 @@ export const DEFAULT_OPTIONS = {
   liquidGatheringPoint: undefined,
   injectStyles: true,
   styleNonce: '',
+  autoScaleQuality: true,
 } satisfies Required<Omit<AtmosphereOptions, 'liquidGatheringPoint'>> &
   Pick<AtmosphereOptions, 'liquidGatheringPoint'>
 

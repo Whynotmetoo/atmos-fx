@@ -3,7 +3,7 @@ export type CanvasLayer = {
   backgroundCanvas: HTMLCanvasElement
   foregroundCanvas: HTMLCanvasElement
   getSize(): CanvasLayerSize
-  resize(): CanvasLayerSize
+  resize(dprOverride?: number): CanvasLayerSize
   destroy(): void
 }
 
@@ -73,9 +73,10 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
     canvasHeight: 0,
   }
 
-  const resize = () => {
+  const resize = (dprOverride?: number) => {
     const { width, height } = getRootSize(root)
-    const pixelRatio = getPixelRatio()
+    const basePixelRatio = getPixelRatio()
+    const pixelRatio = dprOverride !== undefined ? Math.min(basePixelRatio, dprOverride) : basePixelRatio
     const nextWidth = Math.round(width * pixelRatio)
     const nextHeight = Math.round(height * pixelRatio)
 
