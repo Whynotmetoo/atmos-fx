@@ -27,7 +27,7 @@ type LiquidDrip = {
   group: SVGGElement
   path: SVGPathElement
   bulge: SVGCircleElement
-  droplet: SVGEllipseElement
+  droplet: SVGPathElement
   clipPath: SVGClipPathElement
   clipRect: SVGRectElement
   filter: SVGFilterElement
@@ -491,10 +491,8 @@ export function createLiquidDripsController(
     bulge.setAttribute('class', 'atmos-liquid-element')
     bulge.setAttribute('r', '0')
 
-    const droplet = doc.createElementNS('http://www.w3.org/2000/svg', 'ellipse')
-    droplet.setAttribute('class', 'atmos-liquid-element')
-    droplet.setAttribute('rx', '0')
-    droplet.setAttribute('ry', '0')
+    const droplet = doc.createElementNS('http://www.w3.org/2000/svg', 'path')
+    droplet.setAttribute('class', 'atmos-liquid-element atmos-liquid-droplet')
 
     cardGroup.appendChild(path)
     cardGroup.appendChild(bulge)
@@ -703,8 +701,7 @@ export function createLiquidDripsController(
         if (!drip.liquidDripping) {
           drip.path.setAttribute('d', '')
           drip.bulge.setAttribute('r', '0')
-          drip.droplet.setAttribute('rx', '0')
-          drip.droplet.setAttribute('ry', '0')
+          drip.droplet.setAttribute('d', '')
           continue
         }
         const leftSpan = drip.dripX - drip.waveLeft
@@ -713,8 +710,7 @@ export function createLiquidDripsController(
         if (leftSpan <= 0 || rightSpan <= 0) {
           drip.path.setAttribute('d', '')
           drip.bulge.setAttribute('r', '0')
-          drip.droplet.setAttribute('rx', '0')
-          drip.droplet.setAttribute('ry', '0')
+          drip.droplet.setAttribute('d', '')
           continue
         }
 
@@ -1017,7 +1013,6 @@ export function createLiquidDripsController(
         drip.bulge.setAttribute('cy', bulgeCY.toFixed(1))
         drip.bulge.setAttribute('r', bulgeR.toFixed(1))
         drip.bulge.setAttribute('cx', dxVal)
-        drip.droplet.setAttribute('cx', dxVal)
         const filterExitProgress = Math.min(
           1,
           Math.max(0, (elapsedMs - stretchEndMs) / PINCH_DURATION_MS),
@@ -1036,9 +1031,43 @@ export function createLiquidDripsController(
         // Counter-shift the center by the added radius. The lower tip keeps
         // following the original gravity path while the extra length grows up.
         const renderedCY = dropletCY - (renderedRY - lowerHalfRY)
-        drip.droplet.setAttribute('cy', renderedCY.toFixed(1))
-        drip.droplet.setAttribute('rx', (dropletRX * visualScaleX).toFixed(1))
-        drip.droplet.setAttribute('ry', renderedRY.toFixed(1))
+
+        const w = dropletRX * visualScaleX
+        const h = renderedRY
+
+        if (w <= 0 || h <= 0) {
+          const x = parseFloat(dxVal)
+          const y = renderedCY
+          drip.droplet.setAttribute('d', `M ${x.toFixed(1)},${y.toFixed(1)}`)
+        } else {
+          const x = parseFloat(dxVal)
+          const y = renderedCY
+          const xStr = x.toFixed(1)
+          const yMinusH = (y - h).toFixed(1)
+          const yPlusH = (y + h).toFixed(1)
+          const xPlusW = (x + w).toFixed(1)
+          const xMinusW = (x - w).toFixed(1)
+
+          // Cubic Bezier control points for teardrop shape
+          const cp1x = (x + 0.2 * w).toFixed(1)
+          const cp2y = (y - 0.3 * h).toFixed(1)
+          const cp3y = (y + 0.3 * h).toFixed(1)
+
+          const cp4y = (y + 0.7 * h).toFixed(1)
+          const cp5x = (x + 0.5 * w).toFixed(1)
+
+          const cp6x = (x - 0.5 * w).toFixed(1)
+
+          const cp8x = (x - 0.2 * w).toFixed(1)
+
+          const dropletD = `M ${xStr},${yMinusH} ` +
+            `C ${cp1x},${yMinusH} ${xPlusW},${cp2y} ${xPlusW},${cp3y} ` +
+            `C ${xPlusW},${cp4y} ${cp5x},${yPlusH} ${xStr},${yPlusH} ` +
+            `C ${cp6x},${yPlusH} ${xMinusW},${cp4y} ${xMinusW},${cp3y} ` +
+            `C ${xMinusW},${cp2y} ${cp8x},${yMinusH} ${xStr},${yMinusH} Z`
+
+          drip.droplet.setAttribute('d', dropletD)
+        }
       }
     },
 

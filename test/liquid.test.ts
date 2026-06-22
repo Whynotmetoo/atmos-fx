@@ -12,6 +12,20 @@ describe('liquid gathering', () => {
     vi.restoreAllMocks()
   })
 
+  function getDropletCx(droplet: Element | null | undefined): string | null {
+    const d = droplet?.getAttribute('d')
+    if (!d) return null
+    const pts = d.split(/[MCZ\s,]+/).filter(Boolean).map(parseFloat)
+    return pts.length > 0 ? pts[0].toFixed(1) : null
+  }
+
+  function getDropletCy(droplet: Element | null | undefined): string | null {
+    const d = droplet?.getAttribute('d')
+    if (!d) return null
+    const pts = d.split(/[MCZ\s,]+/).filter(Boolean).map(parseFloat)
+    return pts.length > 1 ? pts[1].toFixed(1) : null
+  }
+
   it('scales Gathering with card width and caps it at 4000ms', () => {
     expect(getLiquidGatheringDuration(150)).toBe(1200)
     expect(getLiquidGatheringDuration(300)).toBe(1500)
@@ -60,7 +74,7 @@ describe('liquid gathering', () => {
       [target],
     )
     liquid.update(0)
-    expect(root.querySelector('ellipse')?.getAttribute('cx')).toBe('134.0')
+    expect(getDropletCx(root.querySelector('.atmos-liquid-droplet'))).toBe('134.0')
 
     card.dataset.atmosLiquidGatheringPoint = '0.6'
     liquid.sync(
@@ -68,7 +82,7 @@ describe('liquid gathering', () => {
       [target],
     )
     liquid.update(0)
-    expect(root.querySelector('ellipse')?.getAttribute('cx')).toBe('186.0')
+    expect(getDropletCx(root.querySelector('.atmos-liquid-droplet'))).toBe('186.0')
 
     liquid.destroy()
     root.remove()
@@ -95,12 +109,12 @@ describe('liquid gathering', () => {
 
     liquid.sync(options, [target])
     liquid.update(0)
-    const initialX = root.querySelector('ellipse')?.getAttribute('cx')
+    const initialX = getDropletCx(root.querySelector('.atmos-liquid-droplet'))
     liquid.sync(options, [target])
     liquid.update(0)
 
     expect(initialX).toBe('158.7')
-    expect(root.querySelector('ellipse')?.getAttribute('cx')).toBe(initialX)
+    expect(getDropletCx(root.querySelector('.atmos-liquid-droplet'))).toBe(initialX)
 
     liquid.destroy()
     root.remove()
@@ -205,7 +219,7 @@ describe('liquid gathering', () => {
     liquid.update(0)
     // Progress to bulging phase so droplet values become active
     liquid.update(1.0)
-    const initialCy = root.querySelector('ellipse')?.getAttribute('cy')
+    const initialCy = getDropletCy(root.querySelector('.atmos-liquid-droplet'))
     expect(initialCy).not.toBeNull()
 
     // Simulate offscreen (isIntersecting = false)
@@ -221,7 +235,7 @@ describe('liquid gathering', () => {
 
     // Call update, check if the cy remains unchanged (skipped)
     liquid.update(1.0)
-    const afterOffscreenCy = root.querySelector('ellipse')?.getAttribute('cy')
+    const afterOffscreenCy = getDropletCy(root.querySelector('.atmos-liquid-droplet'))
     expect(afterOffscreenCy).toBe(initialCy)
 
     // Simulate onscreen (isIntersecting = true)
@@ -237,7 +251,7 @@ describe('liquid gathering', () => {
 
     // Now update should run again and change the cy value
     liquid.update(1.0)
-    const afterOnscreenCy = root.querySelector('ellipse')?.getAttribute('cy')
+    const afterOnscreenCy = getDropletCy(root.querySelector('.atmos-liquid-droplet'))
     expect(afterOnscreenCy).not.toBe(initialCy)
 
     liquid.destroy()

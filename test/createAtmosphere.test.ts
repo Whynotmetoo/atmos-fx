@@ -239,21 +239,27 @@ describe('createAtmosphere', () => {
       ],
     )
 
-    const droplet = root.querySelector('ellipse')
+    const droplet = root.querySelector('.atmos-liquid-droplet')
     expect(droplet).not.toBeNull()
     expect(droplet?.closest('[filter]')).not.toBeNull()
 
     liquid.update(3.91)
 
-    expect(root.querySelectorAll('ellipse')).toHaveLength(1)
-    expect(root.querySelector('ellipse')).toBe(droplet)
+    expect(root.querySelectorAll('.atmos-liquid-droplet')).toHaveLength(1)
+    expect(root.querySelector('.atmos-liquid-droplet')).toBe(droplet)
     expect(droplet?.closest('[filter]')).toBeNull()
-    expect(droplet?.getAttribute('rx')).toBe('3.0')
-    expect(droplet?.getAttribute('ry')).toBe('10.8')
+
+    // Parse rx/ry equivalence from path d attribute
+    const dVal = droplet?.getAttribute('d') || ''
+    const pts = dVal.split(/[MCZ\s,]+/).filter(Boolean).map(parseFloat)
+    const rxEquivalent = (pts[6] - pts[0]).toFixed(1)
+    const ryEquivalent = ((pts[11] - pts[1]) / 2).toFixed(1)
+    expect(rxEquivalent).toBe('3.0')
+    expect(ryEquivalent).toBe('10.8')
 
     liquid.update(1.8)
 
-    expect(root.querySelector('ellipse')).toBe(droplet)
+    expect(root.querySelector('.atmos-liquid-droplet')).toBe(droplet)
     expect(droplet?.closest('[filter]')).not.toBeNull()
 
     liquid.destroy()
