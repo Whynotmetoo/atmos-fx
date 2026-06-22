@@ -2,18 +2,19 @@ import type { AtmosphereQuality } from './types'
 
 export type QualityScalingState = {
   dprCap: number
-  densityMultiplier: number
-  disableHighCostFeatures: boolean
   qualityTierOverride?: Exclude<AtmosphereQuality, 'auto'>
 }
 
 export class QualityMonitor {
-  private currentStep = 0 // 0 = normal, 1 = moderate, 2 = severe degradation
+  private currentStep = 0 // 0 = normal, then degraded steps
   private frameTimes: number[] = []
   private frameDurations: number[] = []
   private lastFrameTime?: number
   private consecutiveGoodFrames = 0
   private enabled = true
+
+  private isAuto = true
+  private baseQuality: Exclude<AtmosphereQuality, 'auto'> = 'high'
 
   constructor(enabled: boolean = true) {
     this.enabled = enabled
@@ -23,6 +24,20 @@ export class QualityMonitor {
     this.enabled = enabled
     if (!enabled) {
       this.reset()
+    }
+  }
+
+  setup(isAuto: boolean, baseQuality: Exclude<AtmosphereQuality, 'auto'>) {
+    this.isAuto = isAuto
+    this.baseQuality = baseQuality
+    
+    // Clamp currentStep if maxStep has decreased
+    const maxStep = this.getMaxStep()
+    if (this.currentStep > maxStep) {
+      this.currentStep = maxStep
+      this.frameTimes = []
+      this.frameDurations = []
+      this.consecutiveGoodFrames = 0
     }
   }
 
@@ -50,6 +65,8 @@ export class QualityMonitor {
     // Skip tracking if the tab was suspended/backgrounded (interval > 100ms)
     // to avoid penalizing performance for browser throttling.
     if (interval > 100) {
+      this.frameTimes = []
+      this.frameDurations = []
       this.consecutiveGoodFrames = 0
       return
     }
@@ -71,8 +88,10 @@ export class QualityMonitor {
       this.consecutiveGoodFrames += 1
     }
 
-    // Check for degradation trigger (at least 30 frames needed to sample)
-    if (this.frameTimes.length >= 30) {
+    const maxStep = this.getMaxStep()
+
+    // Robust check: require a FULL sliding window of 60 frames to trigger degradation.
+    if (this.frameTimes.length >= 60) {
       let slowCount = 0
       for (let i = 0; i < this.frameTimes.length; i++) {
         const fInterval = this.frameTimes[i]
@@ -85,7 +104,7 @@ export class QualityMonitor {
       const slowRatio = slowCount / this.frameTimes.length
       if (slowRatio >= 0.30) {
         // Degrade quality step
-        if (this.currentStep < 2) {
+        if (this.currentStep < maxStep) {
           this.currentStep++
           this.frameTimes = []
           this.frameDurations = []
@@ -111,30 +130,49 @@ export class QualityMonitor {
     if (this.currentStep === 0 || !this.enabled) {
       return {
         dprCap: 2.0,
-        densityMultiplier: 1.0,
-        disableHighCostFeatures: false,
       }
     }
 
-    if (this.currentStep === 1) {
-      return {
-        dprCap: 1.5,
-        densityMultiplier: 0.7,
-        disableHighCostFeatures: false,
-        qualityTierOverride: 'medium',
+    if (this.isAuto) {
+      if (this.baseQuality === 'high') {
+        switch (this.currentStep) {
+          case 1: return { dprCap: 2.0, qualityTierOverride: 'medium' }
+          case 2: return { dprCap: 2.0, qualityTierOverride: 'low' }
+          case 3: return { dprCap: 1.5, qualityTierOverride: 'low' }
+          default: return { dprCap: 1.0, qualityTierOverride: 'low' }
+        }
+      } else if (this.baseQuality === 'medium') {
+        switch (this.currentStep) {
+          case 1: return { dprCap: 2.0, qualityTierOverride: 'low' }
+          case 2: return { dprCap: 1.5, qualityTierOverride: 'low' }
+          default: return { dprCap: 1.0, qualityTierOverride: 'low' }
+        }
+      } else {
+        // baseQuality === 'low'
+        switch (this.currentStep) {
+          case 1: return { dprCap: 1.5, qualityTierOverride: 'low' }
+          default: return { dprCap: 1.0, qualityTierOverride: 'low' }
+        }
       }
-    }
-
-    // Step 2: Severe degradation
-    return {
-      dprCap: 1.0,
-      densityMultiplier: 0.4,
-      disableHighCostFeatures: true,
-      qualityTierOverride: 'low',
+    } else {
+      // Manual quality
+      switch (this.currentStep) {
+        case 1: return { dprCap: 1.5 }
+        default: return { dprCap: 1.0 }
+      }
     }
   }
 
   getCurrentStep(): number {
     return this.currentStep
+  }
+
+  private getMaxStep(): number {
+    if (this.isAuto) {
+      if (this.baseQuality === 'high') return 4
+      if (this.baseQuality === 'medium') return 3
+      return 2
+    }
+    return 2
   }
 }
