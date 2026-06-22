@@ -254,7 +254,6 @@ export function createAtmosphere(
   const resizeLayerAndRenderer = () => {
     const scaling = qualityMonitor.getScalingState()
     const size = canvasLayer?.resize(scaling.dprCap)
-    const effectiveOptions = getEffectiveOptions()
 
     if (size) {
       const base = normalizedOptions.quality === 'auto'
@@ -262,6 +261,7 @@ export function createAtmosphere(
         : normalizedOptions.quality
       qualityMonitor.setup(normalizedOptions.quality === 'auto', base)
 
+      const effectiveOptions = getEffectiveOptions()
       const targets = collisionTargetManager.refresh()
       renderer?.resize(size)
       renderer?.setCollisionTargets(targets)
