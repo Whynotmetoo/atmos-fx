@@ -602,6 +602,26 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
         continue
       }
 
+      // Physics-based clipping: if splash particle enters target card bounds, destroy it
+      let hitCard = false
+      for (let i = 0; i < this.collisionTargets.length; i++) {
+        const target = this.collisionTargets[i]!
+        if (
+          splash.x >= target.x &&
+          splash.x <= target.right &&
+          splash.y >= target.y &&
+          splash.y <= target.bottom
+        ) {
+          hitCard = true
+          break
+        }
+      }
+
+      if (hitCard) {
+        splash.active = false
+        continue
+      }
+
       const lifeProgress = splash.age / splash.lifetime
       const alpha = splash.alpha * (1 - lifeProgress)
 
