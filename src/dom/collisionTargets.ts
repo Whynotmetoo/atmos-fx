@@ -8,6 +8,7 @@ export type CollisionTargetRect = {
   height: number
   right: number
   bottom: number
+  borderRadius?: number
 }
 
 export type CollisionTargetManager = {
@@ -29,7 +30,16 @@ function toRootRelativeRect(
   const width = Math.max(0, targetRect.width)
   const height = Math.max(0, targetRect.height)
 
-  return {
+  let borderRadius = 0
+  if (element.ownerDocument.defaultView) {
+    const style = element.ownerDocument.defaultView.getComputedStyle(element)
+    const radiusStr = style.borderTopLeftRadius || style.borderRadius
+    if (radiusStr) {
+      borderRadius = parseFloat(radiusStr) || 0
+    }
+  }
+
+  const rect: CollisionTargetRect = {
     element,
     x,
     y,
@@ -38,6 +48,12 @@ function toRootRelativeRect(
     right: x + width,
     bottom: y + height,
   }
+
+  if (borderRadius > 0) {
+    rect.borderRadius = borderRadius
+  }
+
+  return rect
 }
 
 function getScrollableWindow(root: HTMLElement): (Window & typeof globalThis) | undefined {

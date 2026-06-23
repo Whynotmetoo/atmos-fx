@@ -531,7 +531,23 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
         recycleParticle(particle, this.size, this.options, isBackground)
       }
 
-      if (isBackground) {
+      let drawBehind = false
+      if (!isBackground) {
+        for (let i = 0; i < this.collisionTargets.length; i++) {
+          const target = this.collisionTargets[i]!
+          if (
+            particle.x >= target.x &&
+            particle.x <= target.right &&
+            particle.y > target.y &&
+            particle.y < target.bottom
+          ) {
+            drawBehind = true
+            break
+          }
+        }
+      }
+
+      if (isBackground || drawBehind) {
         if (this.backgroundLayer) {
           this.writeParticle(this.backgroundLayer, activeBackgroundHailCount, particle.x, particle.y, particle.alpha, particle.radius)
           activeBackgroundHailCount += 1

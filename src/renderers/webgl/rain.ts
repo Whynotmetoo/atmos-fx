@@ -568,7 +568,23 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
         recycleParticle(particle, this.size, this.options, index < backgroundCount)
       }
 
-      if (index < backgroundCount) {
+      let drawBehind = false
+      if (index >= backgroundCount) {
+        for (let i = 0; i < this.collisionTargets.length; i++) {
+          const target = this.collisionTargets[i]!
+          if (
+            particle.x >= target.x &&
+            particle.x <= target.right &&
+            particle.y > target.y &&
+            particle.y < target.bottom
+          ) {
+            drawBehind = true
+            break
+          }
+        }
+      }
+
+      if (index < backgroundCount || drawBehind) {
         backgroundInstanceCount += this.writeParticle(this.backgroundLayer, backgroundInstanceCount, particle)
       } else {
         foregroundInstanceCount += this.writeParticle(this.foregroundLayer, foregroundInstanceCount, particle)
