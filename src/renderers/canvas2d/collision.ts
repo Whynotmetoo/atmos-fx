@@ -52,8 +52,9 @@ export function findTopEdgeCollision(
 
     const progress = (target.y - previousY) / (nextY - previousY)
     const hitX = previousX + (nextX - previousX) * progress
+    const r = target.borderRadius ?? 0
 
-    if (hitX >= target.x && hitX <= target.right && progress < nearestProgress) {
+    if (hitX >= target.x + r && hitX <= target.right - r && progress < nearestProgress) {
       nearestProgress = progress
       nearestCollision = {
         x: hitX,
@@ -99,7 +100,8 @@ export function findTargetCollision(
       const progress = (target.y - previousY) / (nextY - previousY)
       if (progress >= 0 && progress <= 1 && progress < nearestProgress) {
         const hitX = previousX + (nextX - previousX) * progress
-        if (hitX >= target.x && hitX <= target.right) {
+        const r = target.borderRadius ?? 0
+        if (hitX >= target.x + r && hitX <= target.right - r) {
           nearestProgress = progress
           nearestCollision = {
             x: hitX,
@@ -116,7 +118,8 @@ export function findTargetCollision(
       const progress = (target.x - previousX) / (nextX - previousX)
       if (progress >= 0 && progress <= 1 && progress < nearestProgress) {
         const hitY = previousY + (nextY - previousY) * progress
-        if (hitY >= target.y && hitY <= target.bottom) {
+        const r = target.borderRadius ?? 0
+        if (hitY >= target.y + r && hitY <= target.bottom - r) {
           nearestProgress = progress
           nearestCollision = {
             x: target.x,
@@ -133,7 +136,8 @@ export function findTargetCollision(
       const progress = (target.right - previousX) / (nextX - previousX)
       if (progress >= 0 && progress <= 1 && progress < nearestProgress) {
         const hitY = previousY + (nextY - previousY) * progress
-        if (hitY >= target.y && hitY <= target.bottom) {
+        const r = target.borderRadius ?? 0
+        if (hitY >= target.y + r && hitY <= target.bottom - r) {
           nearestProgress = progress
           nearestCollision = {
             x: target.right,

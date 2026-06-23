@@ -100,4 +100,27 @@ describe('findTargetCollision', () => {
     // Since 85 is above target.y (100), it should not collide.
     expect(findTargetCollision(20, 80, 60, 90, [target])).toBeUndefined()
   })
+
+  it('respects borderRadius to reduce collision boundaries on top and side edges', () => {
+    const roundedTarget: CollisionTargetRect = {
+      ...target,
+      borderRadius: 10,
+    }
+
+    // Top edge check: x=40, right=160. Offset is 10, so active collision range is [50, 150].
+    // Crossing at x=45 (within the 10px corner zone) -> should not collide.
+    expect(findTopEdgeCollision(45, 80, 45, 120, [roundedTarget])).toBeUndefined()
+    expect(findTargetCollision(45, 80, 45, 120, [roundedTarget])).toBeUndefined()
+
+    // Crossing at x=70 (safe zone) -> should collide.
+    expect(findTopEdgeCollision(70, 80, 70, 120, [roundedTarget])).toBeDefined()
+    expect(findTargetCollision(70, 80, 70, 120, [roundedTarget])).toBeDefined()
+
+    // Side edge check: y=100, bottom=160. Offset is 10, so active collision range is [110, 150].
+    // Crossing at y=105 (within the 10px corner zone) -> should not collide.
+    expect(findTargetCollision(20, 105, 60, 105, [roundedTarget])).toBeUndefined()
+
+    // Crossing at y=130 (safe zone) -> should collide.
+    expect(findTargetCollision(20, 130, 60, 130, [roundedTarget])).toBeDefined()
+  })
 })

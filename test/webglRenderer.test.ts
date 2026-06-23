@@ -556,4 +556,112 @@ describe('WebGL renderer foundation', () => {
     expect(webglRenderer.getActiveSplashCount()).toBe(0)
     renderer.destroy()
   })
+
+  it('routes foreground particles to background layer when overlapping card targets', () => {
+    // 1. Snow Test
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'snow',
+        particle: 'snow',
+      })
+      const webglRenderer = renderer as any
+      const backgroundCount = Math.floor(webglRenderer.particles.length * 0.42)
+      
+      const target = { x: 100, y: 100, width: 100, height: 100, right: 200, bottom: 200 }
+      renderer.setCollisionTargets([target])
+
+      for (let i = 0; i < webglRenderer.particles.length; i++) {
+        webglRenderer.particles[i].x = 500
+        webglRenderer.particles[i].y = -100
+      }
+
+      const fgParticle = webglRenderer.particles[backgroundCount]
+      fgParticle.x = 150
+      fgParticle.y = 150
+      fgParticle.drift = 0
+      fgParticle.vx = 0
+      fgParticle.vy = 0
+
+      const writeParticleSpy = vi.spyOn(webglRenderer, 'writeParticle')
+      renderer.render(16)
+
+      const calls = writeParticleSpy.mock.calls
+      const fgCall = calls.find((call: any) => call[0] === webglRenderer.backgroundLayer && call[2] === 150 && call[3] === 150)
+      expect(fgCall).toBeDefined()
+
+      renderer.destroy()
+    }
+
+    // 2. Hail Test
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'hail',
+        particle: 'hail',
+      })
+      const webglRenderer = renderer as any
+      const backgroundCount = Math.floor(webglRenderer.particles.length * 0.42)
+      
+      const target = { x: 100, y: 100, width: 100, height: 100, right: 200, bottom: 200 }
+      renderer.setCollisionTargets([target])
+
+      for (let i = 0; i < webglRenderer.particles.length; i++) {
+        webglRenderer.particles[i].x = 500
+        webglRenderer.particles[i].y = -100
+        webglRenderer.particles[i].vx = 0
+        webglRenderer.particles[i].vy = 0
+      }
+
+      const fgParticle = webglRenderer.particles[backgroundCount]
+      fgParticle.x = 150
+      fgParticle.y = 150
+
+      const writeParticleSpy = vi.spyOn(webglRenderer, 'writeParticle')
+      renderer.render(16)
+
+      const calls = writeParticleSpy.mock.calls
+      const fgCall = calls.find((call: any) => call[0] === webglRenderer.backgroundLayer && call[2] === 150 && call[3] > 150)
+      expect(fgCall).toBeDefined()
+
+      renderer.destroy()
+    }
+
+    // 3. Rain Test
+    {
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: 'rain',
+        particle: 'rain',
+      })
+      const webglRenderer = renderer as any
+      const backgroundCount = Math.floor(webglRenderer.particles.length * 0.6)
+      
+      const target = { x: 100, y: 100, width: 100, height: 100, right: 200, bottom: 200 }
+      renderer.setCollisionTargets([target])
+
+      for (let i = 0; i < webglRenderer.particles.length; i++) {
+        webglRenderer.particles[i].x = 500
+        webglRenderer.particles[i].y = -100
+        webglRenderer.particles[i].vx = 0
+        webglRenderer.particles[i].vy = 0
+      }
+
+      const fgParticle = webglRenderer.particles[backgroundCount]
+      fgParticle.x = 150
+      fgParticle.y = 150
+
+      const writeParticleSpy = vi.spyOn(webglRenderer, 'writeParticle')
+      renderer.render(16)
+
+      const calls = writeParticleSpy.mock.calls
+      const fgCall = calls.find((call: any) => call[0] === webglRenderer.backgroundLayer && call[2] === fgParticle)
+      expect(fgCall).toBeDefined()
+
+      renderer.destroy()
+    }
+  })
 })

@@ -437,7 +437,23 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
       }
 
       const flakeX = particle.x + Math.sin(particle.phase) * particle.drift
-      if (isBackground) {
+      let drawBehind = false
+      if (!isBackground) {
+        for (let i = 0; i < this.collisionTargets.length; i++) {
+          const target = this.collisionTargets[i]!
+          if (
+            flakeX >= target.x &&
+            flakeX <= target.right &&
+            particle.y > target.y &&
+            particle.y < target.bottom
+          ) {
+            drawBehind = true
+            break
+          }
+        }
+      }
+
+      if (isBackground || drawBehind) {
         this.writeParticle(this.backgroundLayer, activeBackgroundCount, flakeX, particle.y, particle.alpha, particle.radius)
         activeBackgroundCount += 1
       } else {
