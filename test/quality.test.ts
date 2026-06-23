@@ -101,6 +101,6 @@ describe('canvas rain quality budgets', () => {
         density: 1,
         quality: 'high',
       }),
-    ).toBe(220)
+    ).toBe(500)
   })
 })

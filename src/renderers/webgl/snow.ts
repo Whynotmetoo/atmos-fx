@@ -401,9 +401,11 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
         }
 
         if (collision && (collision.type === 'left' || collision.type === 'right')) {
-          particle.vx = 0
-          particle.drift = Math.max(0.05, particle.drift * 0.08)
           const target = collision.target
+          const bounceSpeed = randomRange(0, 20)
+          particle.vx = collision.type === 'left' ? -bounceSpeed : bounceSpeed
+          particle.vy *= randomRange(0.7, 0.9)
+          particle.drift = Math.max(0.05, particle.drift * 0.12)
           const drawXNew = collision.type === 'left' ? target.x - particle.radius - 1 : target.right + particle.radius + 1
           particle.x = drawXNew - Math.sin(particle.phase) * particle.drift
         }

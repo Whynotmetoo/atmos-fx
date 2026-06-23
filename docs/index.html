@@ -1071,18 +1071,6 @@
             <input type="range" id="wind" min="-1.5" max="1.5" step="0.05" value="-0.12" />
           </div>
 
-          <!-- Slider Snow Accumulation -->
-          <div class="control-group" id="snow-accum-control" style="display: none;">
-            <div class="control-label"><span data-i18n-key="control-snow-accum">Snow Accumulation</span> <span class="val" id="snowAccumulation-val">0.55</span></div>
-            <input type="range" id="snowAccumulation" min="0" max="1.0" step="0.05" value="0.55" />
-          </div>
-
-          <!-- Slider Hail Bounce -->
-          <div class="control-group" id="hail-bounce-control" style="display: none;">
-            <div class="control-label"><span data-i18n-key="control-hail-bounce">Hail Bounce</span> <span class="val" id="hailBounce-val">0.50</span></div>
-            <input type="range" id="hailBounce" min="0" max="1.0" step="0.05" value="0.50" />
-          </div>
-
           <!-- Checkbox switches in a compact row -->
           <div class="checkbox-grid-row">
             <div class="switch-container">
@@ -1310,16 +1298,7 @@ onUnmounted(() => {
                 <td><code>number</code> <span class="api-badge">0.72</span></td>
                 <td data-i18n-key="api-desc-contentOpacity">Global opacity-mode content fade for AtmosCards.</td>
               </tr>
-              <tr>
-                <td><code>snowAccumulation</code></td>
-                <td><code>number</code> (0 to 1) <span class="api-badge">0.55</span></td>
-                <td data-i18n-key="api-desc-snowAccumulation">Controls snow buildup intensity.</td>
-              </tr>
-              <tr>
-                <td><code>hailBounce</code></td>
-                <td><code>number</code> (0 to 1) <span class="api-badge">0.5</span></td>
-                <td data-i18n-key="api-desc-hailBounce">Controls hail bounce restitution scalar.</td>
-              </tr>
+
               <tr>
                 <td><code>bottomCollision</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>

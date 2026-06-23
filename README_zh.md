@@ -155,8 +155,6 @@ onUnmounted(() => {
 | `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | 子组件在根容器中的集成模式。 |
 | `surfaceOpacity` | `number` | `0.14` | 全局玻璃表面透明度基准值。 |
 | `contentOpacity` | `number` | `0.72` | 全局透明模式下的内容淡化程度。 |
-| `snowAccumulation` | `number` | `0.55` | 控制积雪强度，范围为 0 到 1。 |
-| `hailBounce` | `number` | `0.5` | 控制冰雹反弹恢复系数，范围为 0 到 1。 |
 | `bottomCollision` | `boolean` | `true` | 决定粒子是否与容器底部边缘发生碰撞。 |
 | `collisionSelector` | `string` | `[data-atmos-collision]` | 用于查找顶部边缘着陆表面的 CSS 选择器。 |
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | 用于跳过透明度处理的不透明子级元素的 CSS 选择器。 |

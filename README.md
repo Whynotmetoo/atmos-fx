@@ -130,8 +130,6 @@ onUnmounted(() => {
 | `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | The root integration mode for children components. |
 | `surfaceOpacity` | `number` | `0.14` | Global glass surface opacity base for AtmosCards. |
 | `contentOpacity` | `number` | `0.72` | Global opacity-mode content fade for AtmosCards. |
-| `snowAccumulation` | `number` | `0.55` | Controls snow buildup intensity (0 to 1). |
-| `hailBounce` | `number` | `0.5` | Controls hail bounce restitution scalar (0 to 1). |
 | `bottomCollision` | `boolean` | `true` | Determines whether particles collide with the bottom edge of the container. |
 | `collisionSelector` | `string` | `[data-atmos-collision]` | Query selector for discovering top-edge landing surfaces. |
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | Query selector for elements that skip transparency blurs. |

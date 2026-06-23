@@ -17,7 +17,6 @@ export const reactAtmosFxProps: AtmosFxProps = {
   quality: 'high',
   contentOpacity: 0.66,
   surfaceOpacity: 0.18,
-  snowAccumulation: 0.6,
   liquidGatheringPoint: 0.5,
   className: 'weather',
   role: 'region',

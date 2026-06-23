@@ -98,8 +98,6 @@ const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
     "api-desc-transparency": "The root integration mode for children components.",
     "api-desc-surfaceOpacity": "Global glass surface opacity base for AtmosCards.",
     "api-desc-contentOpacity": "Global opacity-mode content fade for AtmosCards.",
-    "api-desc-snowAccumulation": "Controls snow buildup intensity.",
-    "api-desc-hailBounce": "Controls hail bounce restitution scalar.",
     "api-desc-bottomCollision": "Determines whether particles collide with the bottom edge of the container.",
     "api-desc-collisionSelector": "Query selector for discovering top-edge landing surfaces. Defaults to [data-atmos-collision].",
     "api-desc-opaqueSelector": "Query selector for elements that skip transparency blurs. Defaults to [data-atmos-opaque].",
@@ -221,8 +219,6 @@ zh: {
   "api-desc-transparency": "子组件在根容器中的集成模式。",
   "api-desc-surfaceOpacity": "全局玻璃表面透明度基准值。",
   "api-desc-contentOpacity": "全局透明模式下的内容淡化程度。",
-  "api-desc-snowAccumulation": "控制积雪强度，范围为 0 到 1。",
-  "api-desc-hailBounce": "控制冰雹反弹恢复系数，范围为 0 到 1。",
   "api-desc-bottomCollision": "决定粒子是否与容器底部边缘发生碰撞。",
   "api-desc-collisionSelector": "用于查找顶边碰撞落面的查询选择器。默认为 [data-atmos-collision]。",
   "api-desc-opaqueSelector": "用于指定不进行背景模糊处理的元素的查询选择器。默认为 [data-atmos-opaque]。",
@@ -368,8 +364,6 @@ interface PlaygroundState {
   transparency: string
   surfaceOpacity: number
   contentOpacity: number
-  snowAccumulation: number
-  hailBounce: number
   bottomCollision: boolean
   liquidDripping: boolean
   color: string
@@ -385,8 +379,6 @@ const playgroundState: PlaygroundState = {
   transparency: 'glass',
   surfaceOpacity: 48,
   contentOpacity: 0.72,
-  snowAccumulation: 0.55,
-  hailBounce: 0.50,
   bottomCollision: true,
   liquidDripping: true,
   color: 'rgba(220, 235, 255, 0.72)'
@@ -444,11 +436,6 @@ function updateReactCodePreview() {
   if (p.bottomCollision) {
     props.push(`bottomCollision={true}`)
   }
-  if (p.preset === 'snow') {
-    props.push(`snowAccumulation={${p.snowAccumulation.toFixed(2)}}`)
-  } else if (p.preset === 'hail') {
-    props.push(`hailBounce={${p.hailBounce.toFixed(2)}}`)
-  }
   if (p.transparency === 'glass') {
     const mappedAlpha = 0.3 - (p.surfaceOpacity / 100) * 0.22
     props.push(`surfaceOpacity={${mappedAlpha.toFixed(2)}}`)
@@ -479,8 +466,6 @@ function updateReactCodePreview() {
 
 function applyPlayground() {
   // Display preset conditional options
-  ;(document.querySelector('#snow-accum-control') as HTMLElement).style.display = playgroundState.preset === 'snow' ? 'flex' : 'none'
-  ;(document.querySelector('#hail-bounce-control') as HTMLElement).style.display = playgroundState.preset === 'hail' ? 'flex' : 'none'
   ;(document.querySelector('#liquid-dripping-container') as HTMLElement).style.display = playgroundState.preset === 'rain' ? 'flex' : 'none'
 
   // Display transparency conditional options
@@ -491,8 +476,6 @@ function applyPlayground() {
   syncSliderValue('density')
   syncSliderValue('speed')
   syncSliderValue('wind')
-  syncSliderValue('snowAccumulation')
-  syncSliderValue('hailBounce')
   syncSliderValue('surfaceOpacity')
   syncSliderValue('contentOpacity')
 
@@ -556,8 +539,6 @@ function applyPlayground() {
     transparency: playgroundState.transparency,
     surfaceOpacity: 0.3 - (playgroundState.surfaceOpacity / 100) * 0.22,
     contentOpacity: playgroundState.contentOpacity,
-    snowAccumulation: playgroundState.snowAccumulation,
-    hailBounce: playgroundState.hailBounce,
     bottomCollision: playgroundState.bottomCollision,
     liquidDripping: playgroundState.liquidDripping,
     color: playgroundState.color
@@ -565,7 +546,7 @@ function applyPlayground() {
 }
 
 // Bind sliders listeners
-const sliders = ['density', 'speed', 'wind', 'snowAccumulation', 'hailBounce', 'surfaceOpacity', 'contentOpacity']
+const sliders = ['density', 'speed', 'wind', 'surfaceOpacity', 'contentOpacity']
 sliders.forEach(id => {
   document.querySelector(`#${id}`)?.addEventListener('input', (e) => {
     playgroundState[id] = Number((e.target as HTMLInputElement).value)
