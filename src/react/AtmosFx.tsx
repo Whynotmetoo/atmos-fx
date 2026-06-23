@@ -35,8 +35,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
     transparency,
     contentOpacity,
     surfaceOpacity,
-    snowAccumulation,
-    hailBounce,
     bottomCollision,
     collisionSelector,
     opaqueSelector,
@@ -97,14 +95,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.surfaceOpacity = surfaceOpacity
       }
 
-      if (snowAccumulation !== undefined) {
-        nextOptions.snowAccumulation = snowAccumulation
-      }
-
-      if (hailBounce !== undefined) {
-        nextOptions.hailBounce = hailBounce
-      }
-
       if (bottomCollision !== undefined) {
         nextOptions.bottomCollision = bottomCollision
       }
@@ -153,8 +143,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
       transparency,
       contentOpacity,
       surfaceOpacity,
-      snowAccumulation,
-      hailBounce,
       bottomCollision,
       collisionSelector,
       opaqueSelector,

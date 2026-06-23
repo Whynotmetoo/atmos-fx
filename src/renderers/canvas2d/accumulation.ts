@@ -14,6 +14,9 @@ export type AccumulationParticle = {
   onSurface?: boolean
   target?: CollisionTargetRect | null
   age?: number
+  offsetY?: number
+  initialRadius?: number
+  initialAlpha?: number
 }
 
 export class AccumulationPool {
@@ -44,6 +47,9 @@ export class AccumulationPool {
         onSurface: false,
         target: null,
         age: 0,
+        offsetY: 0,
+        initialRadius: 0,
+        initialAlpha: 0,
       })
     }
 
@@ -64,29 +70,82 @@ export class AccumulationPool {
       return
     }
 
-    const particle = this.particles[this.cursor]
+    // Find the best slot to overwrite:
+    // 1. First preference: an inactive particle
+    // 2. Second preference: the active particle with the lowest alpha
+    let bestIndex = -1
+    let lowestAlpha = Infinity
+
+    for (let i = 0; i < this.particles.length; i++) {
+      const p = this.particles[i]
+      if (!p.active) {
+        bestIndex = i
+        break
+      }
+      if (p.alpha < lowestAlpha) {
+        lowestAlpha = p.alpha
+        bestIndex = i
+      }
+    }
+
+    if (bestIndex === -1) {
+      bestIndex = this.cursor
+      this.cursor = (this.cursor + 1) % this.maxSize
+    }
+
+    const particle = this.particles[bestIndex]
+
+    // Compute vertical stacking offset relative to the surface.
+    // If a new particle lands near an existing one horizontally, it stacks on top of it.
+    let startOffsetY = 0
+    if (target) {
+      for (let i = 0; i < this.particles.length; i++) {
+        const p = this.particles[i]
+        if (p.active && p.onSurface && p.target === target && i !== bestIndex) {
+          const dx = Math.abs(p.x - x)
+          const minDist = (p.radius + radius) * 1.0
+          if (dx < minDist) {
+            startOffsetY = Math.max(startOffsetY, (p.offsetY ?? 0) + p.radius * 1.3)
+          }
+        }
+      }
+    } else {
+      for (let i = 0; i < this.particles.length; i++) {
+        const p = this.particles[i]
+        if (p.active && p.onSurface && p.target === null && i !== bestIndex) {
+          const dx = Math.abs(p.x - x)
+          const minDist = (p.radius + radius) * 1.0
+          if (dx < minDist) {
+            startOffsetY = Math.max(startOffsetY, (p.offsetY ?? 0) + p.radius * 1.3)
+          }
+        }
+      }
+    }
+
     particle.active = true
     particle.x = x
-    particle.y = y
+    particle.offsetY = startOffsetY
+    particle.y = y - startOffsetY
     particle.radius = radius
+    particle.initialRadius = radius
     particle.alpha = alpha
+    particle.initialAlpha = alpha
     particle.depth = depth
     particle.vx = 0
     particle.vy = 0
     particle.onSurface = true
     particle.target = target
     particle.age = 0
-
-    this.cursor = (this.cursor + 1) % this.maxSize
   }
 
   update(
     deltaSeconds: number,
-    options: { snowAccumulation?: number; wind?: number; speed?: number; bottomCollision?: boolean },
+    options: { snowAccumulation?: number; wind?: number; speed?: number; bottomCollision?: boolean; hailBounce?: number },
     collisionTargets: readonly CollisionTargetRect[],
     size: CanvasLayerSize,
   ) {
     const isSnow = options.snowAccumulation !== undefined && options.snowAccumulation > 0
+    const accumulationVal = options.snowAccumulation ?? 0.55
 
     // 1. Physics update for collapse, sliding off, and gravity fall
     for (let i = 0; i < this.particles.length; i++) {
@@ -99,10 +158,21 @@ export class AccumulationPool {
 
       if (p.onSurface) {
         // Slow packing down / melting
-        p.alpha = Math.max(0.12, p.alpha - 0.008 * deltaSeconds)
+        const baseMeltRate = isSnow ? 0.015 : 0.045
+        const meltRate = baseMeltRate * Math.max(0.15, 1.2 - accumulationVal)
+
+        p.alpha -= meltRate * deltaSeconds
+        if (p.alpha <= 0.0) {
+          p.active = false
+          continue
+        }
+
+        // Shrink particle as it melts
+        const ratio = p.initialAlpha && p.initialAlpha > 0 ? p.alpha / p.initialAlpha : 1.0
+        p.radius = (p.initialRadius ?? p.radius) * Math.max(0.4, ratio)
 
         if (p.target) {
-          // Sync coordinate with target in case it moved
+          // Sync coordinate with target in case it moved/scrolled
           const currentTarget = collisionTargets.find(
             (t) =>
               Math.abs(t.x - p.target!.x) < 4 &&
@@ -111,11 +181,14 @@ export class AccumulationPool {
           )
           if (currentTarget) {
             p.target = currentTarget
-            p.y = currentTarget.y
+            p.y = currentTarget.y - (p.offsetY ?? 0)
           } else {
             p.onSurface = false
             p.target = null
           }
+        } else {
+          // Sync bottom boundary coordinate if no target
+          p.y = size.height - (p.offsetY ?? 0)
         }
 
         // Slide / falloff collapse if close to the edge of the card
@@ -167,21 +240,39 @@ export class AccumulationPool {
           if (collision.type === 'top') {
             // Land on card top
             p.x = collision.x
-            p.y = collision.y
             p.vy = 0
             p.vx = 0
             p.onSurface = true
             p.target = collision.target
+            p.initialAlpha = p.alpha
+            p.initialRadius = p.radius
+
+            // Find starting offsetY stack height on the landed surface
+            let startOffsetY = 0
+            for (let j = 0; j < this.particles.length; j++) {
+              const other = this.particles[j]
+              if (other.active && other.onSurface && other.target === p.target && other !== p) {
+                const dx = Math.abs(other.x - p.x)
+                const minDist = (other.radius + p.radius) * 1.0
+                if (dx < minDist) {
+                  startOffsetY = Math.max(startOffsetY, (other.offsetY ?? 0) + other.radius * 1.3)
+                }
+              }
+            }
+            p.offsetY = startOffsetY
+            p.y = collision.y - startOffsetY
           } else {
             // Card side wall collision
             if (isSnow) {
-              // Snow slides down card wall vertically
-              p.vx = 0
+              // Snow bounces off card wall with a very small random horizontal speed
+              const bounceSpeed = Math.random() * 20
+              p.vx = collision.type === 'left' ? -bounceSpeed : bounceSpeed
+              p.vy = p.vy * (0.7 + Math.random() * 0.2)
               p.x = collision.type === 'left' ? collision.target.x - p.radius - 1 : collision.target.right + p.radius + 1
               p.y = collision.y
             } else {
               // Hail bounces off card wall horizontally
-              const bounceFactor = 0.22
+              const bounceFactor = 0.48
               p.vx = - (p.vx ?? 0) * bounceFactor
               p.vy = p.vy * 0.75
               p.x = collision.type === 'left' ? collision.target.x - p.radius : collision.target.right + p.radius
@@ -195,12 +286,28 @@ export class AccumulationPool {
             if (options.bottomCollision) {
               const progress = (size.height - previousY) / (nextY - previousY || 1)
               p.x = previousX + (nextX - previousX) * progress
-              p.y = size.height
               p.vy = 0
               p.vx = 0
               p.onSurface = true
               p.target = null
+              p.initialAlpha = p.alpha
+              p.initialRadius = p.radius
               landedBottom = true
+
+              // Find starting offsetY stack height on container bottom
+              let startOffsetY = 0
+              for (let j = 0; j < this.particles.length; j++) {
+                const other = this.particles[j]
+                if (other.active && other.onSurface && other.target === null && other !== p) {
+                  const dx = Math.abs(other.x - p.x)
+                  const minDist = (other.radius + p.radius) * 1.0
+                  if (dx < minDist) {
+                    startOffsetY = Math.max(startOffsetY, (other.offsetY ?? 0) + other.radius * 1.3)
+                  }
+                }
+              }
+              p.offsetY = startOffsetY
+              p.y = size.height - startOffsetY
             } else {
               p.active = false
             }
@@ -218,37 +325,73 @@ export class AccumulationPool {
       }
     }
 
-    // 2. Overlap settling and spreading
+    // 2. Gravity settling of offsetY (particles settle down towards the card)
     for (let i = 0; i < this.particles.length; i++) {
-      const p1 = this.particles[i]
-      if (!p1.active || !p1.onSurface) {
-        continue
+      const p = this.particles[i]
+      if (p.active && p.onSurface) {
+        const settleSpeed = isSnow ? 15 : 45
+        p.offsetY = Math.max(0, (p.offsetY ?? 0) - settleSpeed * deltaSeconds)
       }
+    }
 
-      for (let j = i + 1; j < this.particles.length; j++) {
-        const p2 = this.particles[j]
-        if (!p2.active || !p2.onSurface || p1.target !== p2.target) {
+    // 3. 2D Overlap settling, stacking and spreading
+    const iterations = 3
+    for (let iter = 0; iter < iterations; iter++) {
+      for (let i = 0; i < this.particles.length; i++) {
+        const p1 = this.particles[i]
+        if (!p1.active || !p1.onSurface) {
           continue
         }
 
-        const dx = p2.x - p1.x
-        const dy = p2.y - p1.y
-        const minHorizontalDist = (p1.radius + p2.radius) * 0.95
+        for (let j = i + 1; j < this.particles.length; j++) {
+          const p2 = this.particles[j]
+          if (!p2.active || !p2.onSurface || p1.target !== p2.target) {
+            continue
+          }
 
-        if (Math.abs(dx) < minHorizontalDist && Math.abs(dy) < 5) {
-          const overlap = minHorizontalDist - Math.abs(dx)
-          const dir = dx === 0 ? (Math.random() > 0.5 ? 1 : -1) : Math.sign(dx)
-          const shift = dir * overlap * 0.3
+          const dx = p2.x - p1.x
+          const dy = (p2.offsetY ?? 0) - (p1.offsetY ?? 0)
+          
+          const minDist = (p1.radius + p2.radius) * 0.88 // 12% overlap for dense stack
+          const distSqr = dx * dx + dy * dy
 
-          p2.x += shift
-          p1.x -= shift
+          if (distSqr < minDist * minDist) {
+            const dist = Math.sqrt(distSqr) || 0.001
+            const overlap = minDist - dist
 
-          if (p1.target) {
-            p1.x = Math.max(p1.target.x - 2, Math.min(p1.target.right + 2, p1.x))
-            p2.x = Math.max(p1.target.x - 2, Math.min(p1.target.right + 2, p2.x))
+            const nx = dx / dist
+            const ny = dy / dist
+
+            const shiftX = nx * overlap * 0.5
+            const shiftY = ny * overlap * 0.5
+
+            p2.x += shiftX
+            p1.x -= shiftX
+
+            p2.offsetY = (p2.offsetY ?? 0) + shiftY
+            p1.offsetY = (p1.offsetY ?? 0) - shiftY
+
+            // Clamp X coordinates to target width
+            if (p1.target) {
+              p1.x = Math.max(p1.target.x - 2, Math.min(p1.target.right + 2, p1.x))
+              p2.x = Math.max(p1.target.x - 2, Math.min(p1.target.right + 2, p2.x))
+            } else {
+              p1.x = Math.max(0, Math.min(size.width, p1.x))
+              p2.x = Math.max(0, Math.min(size.width, p2.x))
+            }
+          }
+        }
+      }
+
+      // Clamp offsetY to >= 0 and sync position
+      for (let i = 0; i < this.particles.length; i++) {
+        const p = this.particles[i]
+        if (p.active && p.onSurface) {
+          p.offsetY = Math.max(0, p.offsetY ?? 0)
+          if (p.target) {
+            p.y = p.target.y - p.offsetY
           } else {
-            p1.x = Math.max(0, Math.min(size.width, p1.x))
-            p2.x = Math.max(0, Math.min(size.width, p2.x))
+            p.y = size.height - p.offsetY
           }
         }
       }

@@ -17,8 +17,6 @@ export type AtmosphereOptions = {
   transparency?: TransparencyMode
   contentOpacity?: number
   surfaceOpacity?: number
-  snowAccumulation?: number
-  hailBounce?: number
   bottomCollision?: boolean
   collisionSelector?: string
   opaqueSelector?: string
@@ -33,7 +31,10 @@ export type AtmosphereOptions = {
 
 export type NormalizedAtmosphereOptions = Required<
   Omit<AtmosphereOptions, 'liquidGatheringPoint'>
-> & Pick<AtmosphereOptions, 'liquidGatheringPoint'>
+> & Pick<AtmosphereOptions, 'liquidGatheringPoint'> & {
+  snowAccumulation: number
+  hailBounce: number
+}
 
 export type AtmosphereController = {
   start(): void

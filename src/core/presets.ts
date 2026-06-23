@@ -24,7 +24,10 @@ export const DEFAULT_OPTIONS = {
   styleNonce: '',
   autoScaleQuality: true,
 } satisfies Required<Omit<AtmosphereOptions, 'liquidGatheringPoint'>> &
-  Pick<AtmosphereOptions, 'liquidGatheringPoint'>
+  Pick<AtmosphereOptions, 'liquidGatheringPoint'> & {
+    snowAccumulation: number
+    hailBounce: number
+  }
 
 export const PRESET_OPTIONS = {
   rain: {
@@ -52,7 +55,13 @@ export const PRESET_OPTIONS = {
     hailBounce: 0.5,
     liquidDripping: false,
   },
-} satisfies Record<AtmospherePreset, Partial<AtmosphereOptions>>
+} satisfies Record<
+  AtmospherePreset,
+  Partial<AtmosphereOptions> & {
+    snowAccumulation?: number
+    hailBounce?: number
+  }
+>
 
 export function resolvePresetOptions(preset: AtmospherePreset): Partial<AtmosphereOptions> {
   return PRESET_OPTIONS[preset]

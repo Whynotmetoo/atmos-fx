@@ -52,7 +52,7 @@ describe('normalizeAtmosphereOptions', () => {
         surfaceOpacity: -1,
         snowAccumulation: 2,
         hailBounce: -1,
-      }),
+      } as any),
     ).toMatchObject({
       density: 1,
       contentOpacity: 1,
@@ -72,7 +72,7 @@ describe('normalizeAtmosphereOptions', () => {
         surfaceOpacity: undefined,
         snowAccumulation: undefined,
         hailBounce: undefined,
-      }),
+      } as any),
     ).toMatchObject({
       density: 0.65,
       contentOpacity: 0.72,

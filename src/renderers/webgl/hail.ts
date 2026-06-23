@@ -506,10 +506,11 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
           }
         } else {
           // Side collision (left or right)
-          if (particle.bounces < 2 && bounceFactor > 0.05) {
+          const sideBounceFactor = bounceFactor * 2.2
+          if (particle.bounces < 2 && sideBounceFactor > 0.05) {
             particle.x = collision.type === 'left' ? collision.x - particle.radius : collision.x + particle.radius
             particle.y = collision.y
-            particle.vx = -particle.vx * bounceFactor
+            particle.vx = -particle.vx * sideBounceFactor
             particle.vy = particle.vy * 0.75
             particle.bounces += 1
           } else {
