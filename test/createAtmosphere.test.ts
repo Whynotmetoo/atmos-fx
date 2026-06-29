@@ -484,7 +484,7 @@ describe('createAtmosphere', () => {
     expect(foregroundCanvas?.height).toBe(200)
   })
 
-  it('syncs a resized auto-quality tier to the renderer', () => {
+  it('keeps auto quality independent of container resize', () => {
     const updateOptions = vi.fn()
     const renderer: Canvas2DRenderer = {
       backend: 'webgl',
@@ -507,7 +507,7 @@ describe('createAtmosphere', () => {
     expect(createRendererSpy).toHaveBeenCalledWith(
       expect.any(Object),
       expect.any(Object),
-      expect.objectContaining({ quality: 'low' }),
+      expect.objectContaining({ quality: 'medium' }),
     )
 
     updateOptions.mockClear()
@@ -525,9 +525,8 @@ describe('createAtmosphere', () => {
 
     controller.resize()
 
-    expect(updateOptions).toHaveBeenCalledWith(
-      expect.objectContaining({ quality: 'high' }),
-    )
+    expect(renderer.resize).toHaveBeenCalled()
+    expect(updateOptions).not.toHaveBeenCalled()
 
     controller.destroy()
   })

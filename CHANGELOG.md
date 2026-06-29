@@ -8,7 +8,7 @@ The project follows semantic versioning once published.
 
 - Defined `density` as a linear particles-per-unit-area multiplier and removed the fixed minimum particle jump above zero.
 - Increased rain, snow, and hail per-area base particle rates by 25% across every quality tier.
-- Fixed container resizes so changes to the resolved `quality: 'auto'` tier are synchronized to the active renderer.
+- Redesigned `quality: 'auto'` to start at medium and adapt from measured frame performance independently of container dimensions, with viewport-wide reseeding on tier changes.
 
 ## [0.1.4] - 2026-06-17
 

@@ -284,6 +284,35 @@ describe('WebGL renderer foundation', () => {
     renderer?.destroy()
   })
 
+  it.each(['rain', 'snow', 'hail'] as const)(
+    'seeds newly promoted %s particles across the viewport',
+    (particle) => {
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.75)
+      const context = createWebGLContext()
+      const renderer = createRenderer(createCanvases(context), size, {
+        ...options,
+        preset: particle,
+        particle,
+        quality: 'medium',
+      })
+      const initialCount = renderer.getStats().particleCount
+
+      renderer.updateOptions({
+        ...options,
+        preset: particle,
+        particle,
+        quality: 'high',
+      })
+
+      const webglRenderer = renderer as any
+      expect(renderer.getStats().particleCount).toBeGreaterThan(initialCount)
+      expect(webglRenderer.particles.some((item: any) => item.y > 0)).toBe(true)
+
+      renderer.destroy()
+      randomSpy.mockRestore()
+    },
+  )
+
   it('spawns accumulation when WebGL snow lands on collision targets', () => {
     const context = createWebGLContext()
     const renderer = createRenderer(createCanvases(context), size, {

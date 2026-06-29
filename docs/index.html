@@ -1094,7 +1094,7 @@
             <div class="control-group">
               <div class="control-label" data-i18n-key="control-quality">Quality</div>
               <select class="option-select" id="quality">
-                <option value="auto" data-i18n-key="control-quality-auto">Auto (Responsive)</option>
+                <option value="auto" data-i18n-key="control-quality-auto">Auto (Adaptive)</option>
                 <option value="high" selected data-i18n-key="control-quality-high">High</option>
                 <option value="medium" data-i18n-key="control-quality-medium">Medium</option>
                 <option value="low" data-i18n-key="control-quality-low">Low</option>
@@ -1281,7 +1281,12 @@ onUnmounted(() => {
               <tr>
                 <td><code>quality</code></td>
                 <td><code>'auto' | 'low' | 'medium' | 'high'</code></td>
-                <td data-i18n-key="api-desc-quality">Limits particle count and device pixel ratio density. Defaults to <code>auto</code>.</td>
+                <td data-i18n-key="api-desc-quality">Manual tiers set particle rate; <code>auto</code> starts at medium and adapts to measured frame performance.</td>
+              </tr>
+              <tr>
+                <td><code>autoScaleQuality</code></td>
+                <td><code>boolean</code> <span class="api-badge">true</span></td>
+                <td data-i18n-key="api-desc-autoScaleQuality">Enables frame-performance adaptation. When disabled, <code>auto</code> stays at medium and manual tiers keep the full DPR cap.</td>
               </tr>
               <tr>
                 <td><code>transparency</code></td>

@@ -55,6 +55,12 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
+function resolveBudgetQuality(quality: AtmosphereQuality): Exclude<AtmosphereQuality, 'auto'> {
+  // Controllers normally resolve auto before reaching a renderer. Keep direct
+  // budget calls aligned with auto's medium starting tier.
+  return quality === 'auto' ? 'medium' : quality
+}
+
 function calculateAreaScaledBudget(
   width: number,
   height: number,
@@ -73,27 +79,13 @@ function calculateAreaScaledBudget(
   return clamp(budget, 0, maximum)
 }
 
-export function resolveAutoQuality(width: number, height: number): Exclude<AtmosphereQuality, 'auto'> {
-  const area = width * height
-
-  if (width < 520 || height < 420 || area < 320_000) {
-    return 'low'
-  }
-
-  if (area < 1_100_000) {
-    return 'medium'
-  }
-
-  return 'high'
-}
-
 export function calculateRainParticleBudget({
   width,
   height,
   density,
   quality,
 }: ParticleBudgetInput): number {
-  const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
+  const resolvedQuality = resolveBudgetQuality(quality)
 
   return calculateAreaScaledBudget(
     width,
@@ -110,7 +102,7 @@ export function calculateSnowParticleBudget({
   density,
   quality,
 }: ParticleBudgetInput): number {
-  const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
+  const resolvedQuality = resolveBudgetQuality(quality)
 
   return calculateAreaScaledBudget(
     width,
@@ -127,7 +119,7 @@ export function calculateHailParticleBudget({
   density,
   quality,
 }: ParticleBudgetInput): number {
-  const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
+  const resolvedQuality = resolveBudgetQuality(quality)
 
   return calculateAreaScaledBudget(
     width,
@@ -144,7 +136,7 @@ export function calculateAccumulationBudget({
   density,
   quality,
 }: ParticleBudgetInput): number {
-  const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
+  const resolvedQuality = resolveBudgetQuality(quality)
   const base = resolvedQuality === 'low' ? 90 : resolvedQuality === 'medium' ? 180 : 360
 
   return calculateAreaScaledBudget(

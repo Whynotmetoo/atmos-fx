@@ -151,7 +151,8 @@ onUnmounted(() => {
 | `speed` | `number` | `1.0` | 非负的重力和垂直下落速度系数。 |
 | `wind` | `number` | `-0.12` | 影响水平方向摆动和粒子漂移的系数。 |
 | `color` | `string` | `'#dcebffb7'` | CSS 颜色字符串，代表降水粒子的颜色。 |
-| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | 限制粒子数量和设备像素比渲染精度。 |
+| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | 手动档位决定粒子密度；`auto` 从中档开始，并根据实测帧性能自动调节。 |
+| `autoScaleQuality` | `boolean` | `true` | 开关基于帧性能的自适应调节。关闭后，`auto` 固定为中档，手动档位保持完整 DPR 上限。 |
 | `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | 子组件在根容器中的集成模式。 |
 | `surfaceOpacity` | `number` | `0.14` | 全局玻璃表面透明度基准值。 |
 | `contentOpacity` | `number` | `0.72` | 全局透明模式下的内容淡化程度。 |
@@ -206,7 +207,7 @@ onUnmounted(() => {
 
 ## Performance Notes
 
-* 响应式页面建议优先使用 `quality: 'auto'`。
+* 需要自适应性能调节时建议使用 `quality: 'auto'`。容器面积只改变粒子总量，不再决定 quality 档位。
 * 默认使用 WebGL 渲染；如果 WebGL 初始化失败，会自动静默降级为一个 dummy Canvas 2D context。
 * 透明表面可以露出背景层的降水效果，同时前景降水仍然会与选定的 DOM 表面发生碰撞。
 * 有意识地设置碰撞表面；目标元素的矩形区域会在动画帧循环之外刷新。
