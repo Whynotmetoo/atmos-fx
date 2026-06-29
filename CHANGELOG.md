@@ -4,6 +4,12 @@ All notable changes to atmos-fx will be documented in this file.
 
 The project follows semantic versioning once published.
 
+## [Unreleased]
+
+- Defined `density` as a linear particles-per-unit-area multiplier and removed the fixed minimum particle jump above zero.
+- Increased rain, snow, and hail per-area base particle rates by 25% across every quality tier.
+- Fixed container resizes so changes to the resolved `quality: 'auto'` tier are synchronized to the active renderer.
+
 ## [0.1.4] - 2026-06-17
 
 - **Performance:** Optimized collision detection logic by sorting target rects and using binary search to dramatically reduce overhead when rendering high numbers of particles with many collision surfaces.

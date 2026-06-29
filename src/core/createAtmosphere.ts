@@ -264,6 +264,7 @@ export function createAtmosphere(
       const effectiveOptions = getEffectiveOptions()
       const targets = collisionTargetManager.refresh()
       renderer?.resize(size)
+      renderer?.updateOptions(effectiveOptions)
       renderer?.setCollisionTargets(targets)
       liquidDripsController.sync(effectiveOptions, targets)
     }

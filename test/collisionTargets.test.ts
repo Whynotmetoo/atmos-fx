@@ -56,6 +56,30 @@ describe('collision targets', () => {
     ])
   })
 
+  it('clamps oversized pill radii to the target dimensions', () => {
+    const root = document.createElement('section')
+    const target = document.createElement('div')
+    root.append(target)
+    target.dataset.atmosCollision = ''
+    target.style.borderTopLeftRadius = '99px'
+
+    root.getBoundingClientRect = vi.fn(() => rect(0, 0, 320, 180))
+    target.getBoundingClientRect = vi.fn(() => rect(40, 60, 140, 8))
+
+    expect(collectCollisionTargetRects(root, '[data-atmos-collision]')).toEqual([
+      {
+        element: target,
+        x: 40,
+        y: 60,
+        width: 140,
+        height: 8,
+        right: 180,
+        bottom: 68,
+        borderRadius: 4,
+      },
+    ])
+  })
+
   it('updates selectors and notifies with refreshed rects', () => {
     const root = document.createElement('section')
     const firstTarget = document.createElement('article')

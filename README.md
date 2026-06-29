@@ -122,7 +122,7 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Applies preset default physical and visual values. (Alias: `mode`) |
 | `particle` | `'rain' \| 'snow' \| 'hail'` | (Inherits preset) | Overrides preset particle rendering without overwriting speed/wind presets. |
-| `density` | `number` | `0.65` | Scales preallocated particle budget and spawn count (0 to 1). |
+| `density` | `number` | `0.65` | Controls particles per unit area (0 disables particles; 1 uses the full quality-tier rate). |
 | `speed` | `number` | `1.0` | Scalar multiplier for gravity and vertical fall speed. |
 | `wind` | `number` | `-0.12` | Affects horizontal sway and particle drift. |
 | `color` | `string` | `'#dcebffb7'` | CSS color representation for precipitation particles. |

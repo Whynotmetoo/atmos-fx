@@ -10,49 +10,67 @@ export type ParticleBudgetInput = {
 const REFERENCE_AREA = 1280 * 720
 
 const QUALITY_BASE = {
-  low: 300,
-  medium: 700,
-  high: 1200,
+  low: 375,
+  medium: 875,
+  high: 1500,
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
 const SNOW_QUALITY_BASE = {
-  low: 200,
-  medium: 500,
-  high: 900,
+  low: 250,
+  medium: 625,
+  high: 1125,
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
 const HAIL_QUALITY_BASE = {
-  low: 100,
-  medium: 220,
-  high: 400,
+  low: 125,
+  medium: 275,
+  high: 500,
 } satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
-const QUALITY_LIMITS = {
-  low: { min: 40, max: 1200 },
-  medium: { min: 80, max: 3000 },
-  high: { min: 120, max: 8000 },
-} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
+const QUALITY_MAX = {
+  low: 1200,
+  medium: 3000,
+  high: 8000,
+} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
-const SNOW_QUALITY_LIMITS = {
-  low: { min: 32, max: 1000 },
-  medium: { min: 72, max: 2500 },
-  high: { min: 110, max: 6000 },
-} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
+const SNOW_QUALITY_MAX = {
+  low: 1000,
+  medium: 2500,
+  high: 6000,
+} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
-const HAIL_QUALITY_LIMITS = {
-  low: { min: 18, max: 500 },
-  medium: { min: 36, max: 1200 },
-  high: { min: 54, max: 3000 },
-} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
+const HAIL_QUALITY_MAX = {
+  low: 500,
+  medium: 1200,
+  high: 3000,
+} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
-const ACCUMULATION_QUALITY_LIMITS = {
-  low: { min: 40, max: 120 },
-  medium: { min: 80, max: 240 },
-  high: { min: 150, max: 500 },
-} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, { min: number; max: number }>
+const ACCUMULATION_QUALITY_MAX = {
+  low: 120,
+  medium: 240,
+  high: 500,
+} satisfies Record<Exclude<AtmosphereQuality, 'auto'>, number>
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
+}
+
+function calculateAreaScaledBudget(
+  width: number,
+  height: number,
+  density: number,
+  base: number,
+  maximum: number,
+): number {
+  if (width <= 0 || height <= 0 || density <= 0) {
+    return 0
+  }
+
+  const areaScale = (width * height) / REFERENCE_AREA
+  const densityScale = clamp(density, 0, 1)
+  const budget = Math.round(base * areaScale * densityScale)
+
+  return clamp(budget, 0, maximum)
 }
 
 export function resolveAutoQuality(width: number, height: number): Exclude<AtmosphereQuality, 'auto'> {
@@ -75,17 +93,15 @@ export function calculateRainParticleBudget({
   density,
   quality,
 }: ParticleBudgetInput): number {
-  if (width <= 0 || height <= 0 || density <= 0) {
-    return 0
-  }
-
   const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
-  const areaScale = Math.sqrt((width * height) / REFERENCE_AREA)
-  const densityScale = 0.25 + clamp(density, 0, 1) * 0.75
-  const limits = QUALITY_LIMITS[resolvedQuality]
-  const budget = Math.round(QUALITY_BASE[resolvedQuality] * areaScale * densityScale)
 
-  return clamp(budget, limits.min, limits.max)
+  return calculateAreaScaledBudget(
+    width,
+    height,
+    density,
+    QUALITY_BASE[resolvedQuality],
+    QUALITY_MAX[resolvedQuality],
+  )
 }
 
 export function calculateSnowParticleBudget({
@@ -94,17 +110,15 @@ export function calculateSnowParticleBudget({
   density,
   quality,
 }: ParticleBudgetInput): number {
-  if (width <= 0 || height <= 0 || density <= 0) {
-    return 0
-  }
-
   const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
-  const areaScale = Math.sqrt((width * height) / REFERENCE_AREA)
-  const densityScale = 0.2 + clamp(density, 0, 1) * 0.8
-  const limits = SNOW_QUALITY_LIMITS[resolvedQuality]
-  const budget = Math.round(SNOW_QUALITY_BASE[resolvedQuality] * areaScale * densityScale)
 
-  return clamp(budget, limits.min, limits.max)
+  return calculateAreaScaledBudget(
+    width,
+    height,
+    density,
+    SNOW_QUALITY_BASE[resolvedQuality],
+    SNOW_QUALITY_MAX[resolvedQuality],
+  )
 }
 
 export function calculateHailParticleBudget({
@@ -113,17 +127,15 @@ export function calculateHailParticleBudget({
   density,
   quality,
 }: ParticleBudgetInput): number {
-  if (width <= 0 || height <= 0 || density <= 0) {
-    return 0
-  }
-
   const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
-  const areaScale = Math.sqrt((width * height) / REFERENCE_AREA)
-  const densityScale = 0.18 + clamp(density, 0, 1) * 0.82
-  const limits = HAIL_QUALITY_LIMITS[resolvedQuality]
-  const budget = Math.round(HAIL_QUALITY_BASE[resolvedQuality] * areaScale * densityScale)
 
-  return clamp(budget, limits.min, limits.max)
+  return calculateAreaScaledBudget(
+    width,
+    height,
+    density,
+    HAIL_QUALITY_BASE[resolvedQuality],
+    HAIL_QUALITY_MAX[resolvedQuality],
+  )
 }
 
 export function calculateAccumulationBudget({
@@ -132,16 +144,14 @@ export function calculateAccumulationBudget({
   density,
   quality,
 }: ParticleBudgetInput): number {
-  if (width <= 0 || height <= 0 || density <= 0) {
-    return 0
-  }
-
   const resolvedQuality = quality === 'auto' ? resolveAutoQuality(width, height) : quality
-  const areaScale = Math.sqrt((width * height) / REFERENCE_AREA)
-  const densityScale = 0.25 + clamp(density, 0, 1) * 0.75
-  const limits = ACCUMULATION_QUALITY_LIMITS[resolvedQuality]
   const base = resolvedQuality === 'low' ? 90 : resolvedQuality === 'medium' ? 180 : 360
-  const budget = Math.round(base * areaScale * densityScale)
 
-  return clamp(budget, limits.min, limits.max)
+  return calculateAreaScaledBudget(
+    width,
+    height,
+    density,
+    base,
+    ACCUMULATION_QUALITY_MAX[resolvedQuality],
+  )
 }

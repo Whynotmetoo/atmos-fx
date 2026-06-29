@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAtmosphere } from '../src/core/createAtmosphere'
 import { normalizeAtmosphereOptions } from '../src/core/options'
 import { createLiquidDripsController } from '../src/dom/liquid'
+import * as rendererFactory from '../src/renderers/createRenderer'
+import type { Canvas2DRenderer } from '../src/renderers/canvas2d/types'
 
 function createRoot() {
   const root = document.createElement('section')
@@ -480,6 +482,54 @@ describe('createAtmosphere', () => {
     expect(backgroundCanvas?.height).toBe(200)
     expect(foregroundCanvas?.width).toBe(400)
     expect(foregroundCanvas?.height).toBe(200)
+  })
+
+  it('syncs a resized auto-quality tier to the renderer', () => {
+    const updateOptions = vi.fn()
+    const renderer: Canvas2DRenderer = {
+      backend: 'webgl',
+      resize: vi.fn(),
+      updateOptions,
+      setCollisionTargets: vi.fn(),
+      render: vi.fn(),
+      clear: vi.fn(),
+      destroy: vi.fn(),
+      getStats: vi.fn(() => ({ backend: 'webgl' as const, particleCount: 0 })),
+    }
+    const createRendererSpy = vi
+      .spyOn(rendererFactory, 'createRenderer')
+      .mockReturnValue(renderer)
+    const root = createRoot()
+    const controller = createAtmosphere(root, { quality: 'auto' })
+
+    controller.start()
+
+    expect(createRendererSpy).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      expect.objectContaining({ quality: 'low' }),
+    )
+
+    updateOptions.mockClear()
+    root.getBoundingClientRect = vi.fn(() => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 1440,
+      bottom: 900,
+      width: 1440,
+      height: 900,
+      toJSON: () => ({}),
+    }))
+
+    controller.resize()
+
+    expect(updateOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ quality: 'high' }),
+    )
+
+    controller.destroy()
   })
 
   it('resizes the canvas layer when the window changes size', () => {
