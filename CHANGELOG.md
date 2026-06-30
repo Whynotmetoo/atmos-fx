@@ -6,7 +6,7 @@ The project follows semantic versioning once published.
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-06-29
+## [0.2.0] - 2026-06-30
 
 - **Breaking:** Removed `snowAccumulation` and `hailBounce` from the public options and React props. Snow and hail now use internally tuned accumulation and bounce behavior.
 - **Liquid:** Added global, per-card, and data-attribute control over the rainwater gathering point. Reworked gathering timing, wave motion, droplet geometry, acceleration, pinch-off, and splash transitions for more natural card dripping.
