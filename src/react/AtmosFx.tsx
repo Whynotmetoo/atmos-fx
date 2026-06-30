@@ -32,6 +32,7 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
     wind,
     color,
     quality,
+    autoScaleQuality,
     transparency,
     contentOpacity,
     surfaceOpacity,
@@ -81,6 +82,10 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
 
       if (quality !== undefined) {
         nextOptions.quality = quality
+      }
+
+      if (autoScaleQuality !== undefined) {
+        nextOptions.autoScaleQuality = autoScaleQuality
       }
 
       if (transparency !== undefined) {
@@ -140,6 +145,7 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
       wind,
       color,
       quality,
+      autoScaleQuality,
       transparency,
       contentOpacity,
       surfaceOpacity,

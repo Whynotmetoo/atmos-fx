@@ -104,6 +104,24 @@ describe('Atmosphere React adapter', () => {
     })
   })
 
+  it('plumbs autoScaleQuality to createAtmosphere instead of the root element', async () => {
+    const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
+
+    await act(async () => {
+      reactRoot.render(<AtmosFx quality="auto" autoScaleQuality={false} />)
+    })
+
+    expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
+      quality: 'auto',
+      autoScaleQuality: false,
+    }))
+    expect(host.firstElementChild?.hasAttribute('autoScaleQuality')).toBe(false)
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
   it('plumbs mode prop as preset to createAtmosphere', async () => {
     const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
     await act(async () => {
