@@ -735,6 +735,7 @@
 
       table {
         width: 100%;
+        min-width: 760px;
         border-collapse: collapse;
         text-align: left;
         font-size: 0.9rem;
@@ -901,12 +902,21 @@
             <span id="current-lang-label">EN</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px; opacity: 0.6;"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
-          <div id="lang-dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 6px; background: var(--bg-panel-solid); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 100; min-width: 108px; overflow: hidden; backdrop-filter: blur(12px);">
+          <div id="lang-dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 6px; background: var(--bg-panel-solid); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 100; min-width: 168px; overflow: hidden; backdrop-filter: blur(12px);">
             <button class="lang-dropdown-item" data-lang="en" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
               English <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
             </button>
-            <button class="lang-dropdown-item" data-lang="zh" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+            <button class="lang-dropdown-item" data-lang="zh-CN" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
               简体中文 <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
+            </button>
+            <button class="lang-dropdown-item" data-lang="ja" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+              日本語 <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
+            </button>
+            <button class="lang-dropdown-item" data-lang="es" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+              Español <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
+            </button>
+            <button class="lang-dropdown-item" data-lang="pt-BR" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+              Português (Brasil) <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
             </button>
           </div>
         </div>
@@ -1250,104 +1260,104 @@ onUnmounted(() => {
             <tbody>
               <tr>
                 <td><code>preset</code></td>
-                <td><code>'rain' | 'snow' | 'hail'</code></td>
-                <td data-i18n-key="api-desc-preset">Applies preset default physical and visual values.</td>
+                <td><code>'rain' | 'snow' | 'hail'</code> <span class="api-badge">rain</span></td>
+                <td data-i18n-key="api-desc-preset">Selects the rain, snow, or hail baseline, including particle type, density, speed, wind, color, and liquid behavior. Explicit options override preset values; <code>mode</code> is its React-only alias.</td>
               </tr>
               <tr>
                 <td><code>particle</code></td>
                 <td><code>'rain' | 'snow' | 'hail'</code></td>
-                <td data-i18n-key="api-desc-particle">Overrides preset particle rendering without overwriting speed/wind presets.</td>
+                <td data-i18n-key="api-desc-particle">Changes only the rendered precipitation type while preserving the selected preset's other values. Updating it at runtime recreates the weather renderer, so use <code>preset</code> for a complete behavior switch.</td>
               </tr>
               <tr>
                 <td><code>density</code></td>
                 <td><code>number</code> (0 to 1) <span class="api-badge">0.65</span></td>
-                <td data-i18n-key="api-desc-density">Controls particles per unit area. 0 disables particles; 1 uses the full quality-tier rate.</td>
+                <td data-i18n-key="api-desc-density">Controls particles per unit area and is clamped from 0 to 1. Zero allocates no falling particles; one uses the full rate for the active quality tier, subject to its capacity cap.</td>
               </tr>
               <tr>
                 <td><code>speed</code></td>
-                <td><code>number</code> (0 to 10) <span class="api-badge">1.0</span></td>
-                <td data-i18n-key="api-desc-speed">Scalar multiplier for gravity and vertical fall speed.</td>
+                <td><code>number</code> (≥ 0) <span class="api-badge">1.0</span></td>
+                <td data-i18n-key="api-desc-speed">Sets a non-negative multiplier for precipitation motion and liquid animation timing. Negative values become zero, while larger values produce faster falling and more frequent liquid cycles.</td>
               </tr>
               <tr>
                 <td><code>wind</code></td>
-                <td><code>number</code> (-1.5 to 1.5) <span class="api-badge">-0.12</span></td>
-                <td data-i18n-key="api-desc-wind">Affects horizontal sway and particle drift.</td>
+                <td><code>number</code> <span class="api-badge">-0.12</span></td>
+                <td data-i18n-key="api-desc-wind">Applies signed horizontal force to particle drift and sway. Negative values move left, positive values move right, and larger magnitudes create stronger lateral motion.</td>
               </tr>
               <tr>
                 <td><code>color</code></td>
-                <td><code>string</code> <span class="api-badge">#dcebffb7</span></td>
-                <td data-i18n-key="api-desc-color">CSS color representation for precipitation particles.</td>
+                <td><code>string</code> <span class="api-badge">rgba(220, 235, 255, 0.72)</span></td>
+                <td data-i18n-key="api-desc-color">Accepts a browser-supported CSS color for precipitation and rain liquid. The color's alpha channel is preserved, so translucent colors can soften the effect without changing density.</td>
               </tr>
               <tr>
                 <td><code>quality</code></td>
-                <td><code>'auto' | 'low' | 'medium' | 'high'</code></td>
-                <td data-i18n-key="api-desc-quality">Manual tiers set particle rate; <code>auto</code> starts at medium and adapts to measured frame performance.</td>
+                <td><code>'auto' | 'low' | 'medium' | 'high'</code> <span class="api-badge">auto</span></td>
+                <td data-i18n-key="api-desc-quality">Manual low, medium, and high tiers select different per-area particle rates. Auto starts at medium, promotes after 180 consecutive good frames, and degrades when at least 30% of a 60-frame window is slow before reducing DPR.</td>
               </tr>
               <tr>
                 <td><code>autoScaleQuality</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-autoScaleQuality">Enables frame-performance adaptation. When disabled, <code>auto</code> stays at medium and manual tiers keep the full DPR cap.</td>
+                <td data-i18n-key="api-desc-autoScaleQuality">Enables frame-performance monitoring for quality and DPR adjustment. When disabled, <code>auto</code> remains at medium and manual tiers retain the full DPR cap.</td>
               </tr>
               <tr>
                 <td><code>transparency</code></td>
-                <td><code>'glass' | 'opacity' | 'none'</code></td>
-                <td data-i18n-key="api-desc-transparency">The root integration mode for children components.</td>
+                <td><code>'glass' | 'opacity' | 'none'</code> <span class="api-badge">glass</span></td>
+                <td data-i18n-key="api-desc-transparency">Sets the root integration mode and mirrors it to <code>data-atmos-transparency</code>. The built-in glass rules use this value; <code>AtmosCard</code> props or data attributes still choose each surface's treatment.</td>
               </tr>
               <tr>
                 <td><code>surfaceOpacity</code></td>
-                <td><code>number</code> <span class="api-badge">0.14</span></td>
-                <td data-i18n-key="api-desc-surfaceOpacity">Global glass surface opacity base for AtmosCards.</td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.14</span></td>
+                <td data-i18n-key="api-desc-surfaceOpacity">Sets the glass surface background base and is clamped from 0 to 1. It updates the <code>--atmos-fx-surface-opacity</code> CSS variable used by managed glass elements.</td>
               </tr>
               <tr>
                 <td><code>contentOpacity</code></td>
-                <td><code>number</code> <span class="api-badge">0.72</span></td>
-                <td data-i18n-key="api-desc-contentOpacity">Global opacity-mode content fade for AtmosCards.</td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.72</span></td>
+                <td data-i18n-key="api-desc-contentOpacity">Sets the fallback opacity for elements marked with <code>data-atmos-opacity</code> and is clamped from 0 to 1. Per-element data values or the <code>AtmosCard</code> opacity prop take precedence.</td>
               </tr>
 
               <tr>
                 <td><code>bottomCollision</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-bottomCollision">Determines whether particles collide with the bottom edge of the container.</td>
+                <td data-i18n-key="api-desc-bottomCollision">Enables collision with the atmosphere root's bottom edge. It affects precipitation and accumulation independently of DOM targets selected by <code>collisionSelector</code>.</td>
               </tr>
               <tr>
                 <td><code>collisionSelector</code></td>
                 <td><code>string</code></td>
-                <td data-i18n-key="api-desc-collisionSelector">Query selector for discovering top-edge landing surfaces. Defaults to <code>[data-atmos-collision]</code>.</td>
+                <td data-i18n-key="api-desc-collisionSelector">Selects DOM elements used as precipitation and liquid collision targets; the default is <code>[data-atmos-collision]</code>. Matching elements are observed for DOM and size changes, and their top, side, and rounded-corner geometry is refreshed outside the render loop.</td>
               </tr>
               <tr>
                 <td><code>opaqueSelector</code></td>
                 <td><code>string</code></td>
-                <td data-i18n-key="api-desc-opaqueSelector">Query selector for elements that skip transparency blurs. Defaults to <code>[data-atmos-opaque]</code>.</td>
+                <td data-i18n-key="api-desc-opaqueSelector">Selects elements that must remain opaque; the default is <code>[data-atmos-opaque]</code>. Matches are managed automatically as the subtree changes and are excluded from library-applied blur and opacity treatment.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-globalLiquidDripping">Globally toggles the water condensation and dripping animation (only in Rain mode).</td>
+                <td data-i18n-key="api-desc-globalLiquidDripping">Enables rainwater condensation, gathering, detachment, falling, and splash animation on collision targets. It only runs for rain and can be disabled per target with <code>data-atmos-liquid-dripping="false"</code>.</td>
               </tr>
               <tr>
                 <td><code>liquidGatheringPoint</code></td>
                 <td><code>number</code> (0.33 to 0.66)</td>
-                <td data-i18n-key="api-desc-globalLiquidGatheringPoint">Sets the liquid gathering point from 0.33 to 0.66. Defaults to stable-random per card.</td>
+                <td data-i18n-key="api-desc-globalLiquidGatheringPoint">Sets the horizontal liquid gathering position as a normalized value from 0.33 to 0.66. When omitted, each card receives a stable random point; a card prop or data attribute can override it.</td>
               </tr>
               <tr>
                 <td><code>pauseWhenHidden</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-pauseWhenHidden">Automatically pause animation when document is hidden or the root element is out of the viewport.</td>
+                <td data-i18n-key="api-desc-pauseWhenHidden">Pauses the scheduler when the owner document is hidden or the atmosphere root leaves the viewport. Turning it off keeps rendering active, but does not override reduced-motion behavior.</td>
               </tr>
               <tr>
                 <td><code>respectReducedMotion</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-respectReducedMotion">Honors OS <code>prefers-reduced-motion</code> settings.</td>
+                <td data-i18n-key="api-desc-respectReducedMotion">Pauses the effect when the operating system requests reduced motion. Disable it only when your product provides an equivalent user-controlled motion preference.</td>
               </tr>
               <tr>
                 <td><code>injectStyles</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-injectStyles">Whether default stylesheet rules are automatically injected.</td>
+                <td data-i18n-key="api-desc-injectStyles">Injects the library's default layer, glass, opacity, and opaque rules into the owner document. Set it to false when loading <code>atmos-fx/styles.css</code> yourself or supplying equivalent styles.</td>
               </tr>
               <tr>
                 <td><code>styleNonce</code></td>
                 <td><code>string</code></td>
-                <td data-i18n-key="api-desc-styleNonce">CSP nonce for the injected style tag.</td>
+                <td data-i18n-key="api-desc-styleNonce">Adds a CSP nonce to the automatically injected style element. It is relevant only when <code>injectStyles</code> is enabled and your Content Security Policy requires a nonce.</td>
               </tr>
             </tbody>
           </table>
@@ -1367,27 +1377,27 @@ onUnmounted(() => {
               <tr>
                 <td><code>transMode</code></td>
                 <td><code>'glass' | 'opacity' | 'solid'</code></td>
-                <td data-i18n-key="api-desc-transMode">Specifies card integration style. glass: default frosted glass effect; opacity: translucent mode; solid: default element style without transparency, fully customizable.</td>
+                <td data-i18n-key="api-desc-transMode">Maps the card to glass, opacity, or solid integration. Glass opts into managed blur when the root uses glass mode, opacity applies the <code>opacity</code> prop, and solid marks the card opaque; every mode remains a collision target.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-liquidDripping">Toggles the water droplets condensation, bulging, and dripping animation (only in Rain mode).</td>
+                <td data-i18n-key="api-desc-liquidDripping">Enables or disables rain liquid animation for this card. The global <code>liquidDripping</code> option must also be enabled, and non-rain presets ignore it.</td>
               </tr>
               <tr>
                 <td><code>liquidGatheringPoint</code></td>
                 <td><code>number</code> (0.33 to 0.66)</td>
-                <td data-i18n-key="api-desc-liquidGatheringPoint">Overrides this card's liquid gathering point from 0.33 to 0.66.</td>
+                <td data-i18n-key="api-desc-liquidGatheringPoint">Overrides the global or stable-random gathering point for this card. Values are normalized across its width and clamped from 0.33 to 0.66.</td>
               </tr>
               <tr>
                 <td><code>asChild</code></td>
                 <td><code>boolean</code> <span class="api-badge">false</span></td>
-                <td data-i18n-key="api-desc-asChild">Merges the AtmosCard properties directly onto the underlying child element instead of rendering a wrapper node. You can also use asChild when you want to avoid rendering an extra wrapper element.</td>
+                <td data-i18n-key="api-desc-asChild">Clones the single React child and merges <code>AtmosCard</code> attributes, styles, event handlers, and refs onto it. Use it to avoid an extra div while retaining collision and transparency behavior.</td>
               </tr>
               <tr>
                 <td><code>opacity</code></td>
                 <td><code>number</code> (0 to 1)</td>
-                <td data-i18n-key="api-desc-opacity">Component-level custom backdrop opacity override (specifically used in opacity mode).</td>
+                <td data-i18n-key="api-desc-opacity">Sets this card's element opacity in opacity mode and is expected from 0 to 1. When omitted in that mode, <code>AtmosCard</code> uses 0.72; it has no effect in glass or solid mode.</td>
               </tr>
             </tbody>
           </table>
@@ -1395,20 +1405,20 @@ onUnmounted(() => {
 
         <h3 class="section-subtitle" data-i18n-key="api-vanilla-title" style="margin-top: 24px;">Vanilla JS createAtmosphere Options</h3>
         <p data-i18n-key="api-vanilla-desc" style="margin-bottom: 16px; color: var(--muted); font-size: 0.95rem;">
-          <code>createAtmosphere(element, options)</code> returns a controller with methods to start, pause, resume, and destroy the atmosphere. The <code>options</code> object accepts exactly the same parameters as the <code>AtmosFx</code> Props (excluding the <code>mode</code> alias).
+          <code>createAtmosphere(element, options)</code> attaches the effect to an existing <code>HTMLElement</code> and returns a lifecycle controller. Its options match <code>AtmosFx</code> props except for the React-only <code>mode</code> alias.
         </p>
 
         <h4 data-i18n-key="api-vanilla-data-attr-title" style="font-size: 1rem; margin-bottom: 8px;">Define HTML with data attributes for inner cards:</h4>
         <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; margin-bottom: 32px; display: flex; flex-direction: column; gap: 8px;">
-          <li><code>data-atmos-opaque</code> <span data-i18n-key="api-data-opaque">keeps an element out of automatic glass or opacity treatment.</span></li>
-          <li><code>data-atmos-opacity="0.64"</code> <span data-i18n-key="api-data-opacity">applies a per-element opacity value.</span></li>
-          <li><code>data-atmos-glass</code> <span data-i18n-key="api-data-glass">opts nested elements into the glass surface style.</span></li>
-          <li><code>data-atmos-collision</code> <span data-i18n-key="api-data-collision">makes the element's top edge a precipitation collision surface.</span></li>
-          <li><code>data-atmos-liquid-dripping="true"</code> <span data-i18n-key="api-data-liquid-dripping">toggles the water condensation and dripping animation (only in Rain mode).</span></li>
-          <li><code>data-atmos-liquid-gathering-point="0.5"</code> <span data-i18n-key="api-data-liquid-gathering-point">sets this card's liquid gathering point from 0.33 to 0.66.</span></li>
+          <li><code>data-atmos-opaque</code> <span data-i18n-key="api-data-opaque">keeps an element fully opaque and removes library-applied blur and shadow. Use it for controls or content that must remain visually solid.</span></li>
+          <li><code>data-atmos-opacity="0.64"</code> <span data-i18n-key="api-data-opacity">applies an element-specific opacity from 0 to 1. Invalid values fall back to <code>contentOpacity</code>, and changes are observed automatically.</span></li>
+          <li><code>data-atmos-glass</code> <span data-i18n-key="api-data-glass">opts an element into the built-in glass surface while transparency is glass. It adds the managed background, border, shadow, blur, and stacking behavior.</span></li>
+          <li><code>data-atmos-collision</code> <span data-i18n-key="api-data-collision">registers an element as a DOM collision target for foreground precipitation. Top and side boundaries use its root-relative bounding box and rounded-corner inset.</span></li>
+          <li><code>data-atmos-liquid-dripping="true"</code> <span data-i18n-key="api-data-liquid-dripping">enables or disables condensation and dripping for one collision target. It only takes effect for rain when global <code>liquidDripping</code> is enabled.</span></li>
+          <li><code>data-atmos-liquid-gathering-point="0.5"</code> <span data-i18n-key="api-data-liquid-gathering-point">sets this target's horizontal gathering point as a normalized value from 0.33 to 0.66. It overrides the global value and is clamped when outside the range.</span></li>
         </ul>
 
-        <h3 class="section-subtitle" data-i18n-key="methods-title" style="margin-top: 24px;">Controller Methods</h2>
+        <h3 class="section-subtitle" data-i18n-key="methods-title" style="margin-top: 24px;">Controller Methods</h3>
         <div class="method-example-wrapper">
           <p data-i18n-key="methods-intro">For direct vanilla JavaScript control, initialize the atmosphere and use the available methods:</p>
           <pre><code class="language-typescript">import { createAtmosphere } from 'atmos-fx'
@@ -1440,31 +1450,66 @@ controller.destroy()</code></pre>
             <tbody>
               <tr>
                 <td><code>start()</code></td>
-                <td data-i18n-key="method-desc-start">Initializes canvas layers, starts the requestAnimationFrame loop and rendering.</td>
+                <td data-i18n-key="method-desc-start">Creates or reuses the rendering layers and starts the scheduler when automatic pause rules allow it. Calling <code>start()</code> after <code>stop()</code> restarts the existing controller without creating a new instance.</td>
               </tr>
               <tr>
                 <td><code>stop()</code></td>
-                <td data-i18n-key="method-desc-stop">Stops the animation loop and clears canvases. Does not remove layers.</td>
+                <td data-i18n-key="method-desc-stop">Stops scheduling, clears rendered weather, and resets adaptive quality samples. Layers and listeners remain attached so <code>start()</code> can resume the same controller.</td>
               </tr>
               <tr>
                 <td><code>pause()</code></td>
-                <td data-i18n-key="method-desc-pause">Pauses the animation execution while keeping the active frame buffer.</td>
+                <td data-i18n-key="method-desc-pause">Manually pauses a running controller while preserving the current frame and particle state. Automatic visibility changes do not cancel this manual pause.</td>
               </tr>
               <tr>
                 <td><code>resume()</code></td>
-                <td data-i18n-key="method-desc-resume">Resumes execution from a paused state.</td>
+                <td data-i18n-key="method-desc-resume">Releases a manual pause and restarts rendering when visibility and reduced-motion rules allow it. It has no effect unless the controller is paused.</td>
               </tr>
               <tr>
                 <td><code>resize()</code></td>
-                <td data-i18n-key="method-desc-resize">Manually triggers context bounds measurement and canvas resizing.</td>
+                <td data-i18n-key="method-desc-resize">Immediately remeasures root and collision geometry and resizes both canvases. <code>ResizeObserver</code> and window events already handle common layout changes, so call it after unobserved layout transitions when needed.</td>
               </tr>
               <tr>
                 <td><code>update(options)</code></td>
-                <td data-i18n-key="method-desc-update">Dynamically updates atmosphere parameters on the fly without resetting state.</td>
+                <td data-i18n-key="method-desc-update">Merges a partial options object into the controller and applies it without creating a new controller. Changing particle type recreates the renderer, while ordinary visual and physics changes update the active one.</td>
               </tr>
               <tr>
                 <td><code>destroy()</code></td>
-                <td data-i18n-key="method-desc-destroy">Cleans up DOM nodes, listeners, context properties, and cancels loops.</td>
+                <td data-i18n-key="method-desc-destroy">Permanently stops the controller and removes its layers, observers, listeners, managed element state, and data attributes. The controller cannot be started or updated again after <code>destroy()</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="section-subtitle" data-i18n-key="exports-title" style="margin-top: 24px;">Core Utilities and TypeScript Exports</h3>
+        <p data-i18n-key="exports-intro" style="margin-bottom: 16px; color: var(--muted); font-size: 0.95rem;">The root package also exposes normalization helpers, preset metadata, and public TypeScript types for integrations that need to build configuration tooling.</p>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n-key="export-th-export">Export</th>
+                <th data-i18n-key="method-th-desc">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>normalizeAtmosphereOptions(options?)</code></td>
+                <td data-i18n-key="export-desc-normalize">Resolves defaults, preset values, clamped ranges, and internal normalized fields into a complete options object. It does not create DOM nodes or start rendering.</td>
+              </tr>
+              <tr>
+                <td><code>DEFAULT_OPTIONS</code></td>
+                <td data-i18n-key="export-desc-defaults">Contains the library-wide fallback options used when neither a preset nor an explicit option supplies a value. Treat it as read-only metadata rather than mutating it at runtime.</td>
+              </tr>
+              <tr>
+                <td><code>PRESET_OPTIONS</code></td>
+                <td data-i18n-key="export-desc-presets">Maps rain, snow, and hail to their preset-specific option overrides. It is useful for displaying preset metadata or composing custom controls.</td>
+              </tr>
+              <tr>
+                <td><code>resolvePresetOptions(preset)</code></td>
+                <td data-i18n-key="export-desc-resolve-preset">Returns the option overrides for one preset name. The returned values are preset metadata only and still need normalization before use as a complete configuration.</td>
+              </tr>
+              <tr>
+                <td><code>type exports</code></td>
+                <td data-i18n-key="export-desc-types">Includes <code>AtmosphereOptions</code>, <code>AtmosphereController</code>, normalized option and union types, plus <code>AtmosFxProps</code> and <code>AtmosCardProps</code>. Import them with type-only imports so they do not affect runtime bundles.</td>
               </tr>
             </tbody>
           </table>

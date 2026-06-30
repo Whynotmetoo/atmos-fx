@@ -6,9 +6,18 @@ The project follows semantic versioning once published.
 
 ## [Unreleased]
 
-- Defined `density` as a linear particles-per-unit-area multiplier and removed the fixed minimum particle jump above zero.
-- Increased rain, snow, and hail per-area base particle rates by 25% across every quality tier.
-- Redesigned `quality: 'auto'` to start at medium and adapt from measured frame performance independently of container dimensions, with viewport-wide reseeding on tier changes.
+## [0.2.0] - 2026-06-29
+
+- **Breaking:** Removed `snowAccumulation` and `hailBounce` from the public options and React props. Snow and hail now use internally tuned accumulation and bounce behavior.
+- **Liquid:** Added global, per-card, and data-attribute control over the rainwater gathering point. Reworked gathering timing, wave motion, droplet geometry, acceleration, pinch-off, and splash transitions for more natural card dripping.
+- **Collision:** Added side-wall responses for rain, snow, hail, and falling accumulation. Rounded collision surfaces now use effective corner insets, and foreground particles that miss a rounded top edge route behind the card instead of crossing its content.
+- **Accumulation:** Rebuilt snow and hail accumulation with two-dimensional stacking, settling, overlap resolution, melting, side falloff, and collisions while falling.
+- **Adaptive quality:** Added frame-time monitoring, viewport auto-pause, and card-level liquid visibility tracking. `quality: 'auto'` now starts at medium, adapts from measured performance independently of container size, and reseeds particles across the viewport when tiers change.
+- **Density:** Defined `density` as a linear particles-per-unit-area multiplier with a true zero-particle state. Increased rain, snow, and hail base rates by 25% across all quality tiers while leaving accumulation rates unchanged.
+- **WebGL:** Moved rain streak expansion to GPU instancing, separated splash rendering, and tightened WebGL resource cleanup during renderer rebuilds and destruction.
+- **Performance:** Throttled collision refresh work, removed hot-path allocations from liquid and accumulation updates, and skipped offscreen liquid DOM work without freezing droplets that are still falling above the viewport.
+- **Fixes:** Prevented rain splashes from drawing over card content, kept auto-quality changes synchronized with renderer state, and forwarded `autoScaleQuality` correctly through the React adapter.
+- **Documentation:** Expanded API guidance, synchronized defaults and runtime behavior, and added Japanese, Spanish, and Brazilian Portuguese README translations.
 
 ## [0.1.4] - 2026-06-17
 

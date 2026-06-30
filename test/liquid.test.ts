@@ -27,7 +27,7 @@ describe('liquid gathering', () => {
     return pts.length > 1 ? pts[1].toFixed(1) : null
   }
 
-  it('scales Gathering with card width and caps it at 4000ms', () => {
+  it('scales Gathering with card width and caps it at 5500ms', () => {
     expect(getLiquidGatheringDuration(150)).toBe(1670)
     expect(getLiquidGatheringDuration(300)).toBe(2090)
     expect(getLiquidGatheringDuration(600)).toBe(2930)

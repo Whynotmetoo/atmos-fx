@@ -1,255 +1,13 @@
 import { createAtmosphere } from '../src/index.ts'
+import {
+  LANGUAGE_SHORT_LABELS,
+  resolveLanguage,
+  TRANSLATIONS,
+  type Language,
+} from './locales'
 
 const showcaseRoot = document.querySelector('#showcase-stage') as HTMLElement
 const playgroundRoot = document.querySelector('#playground-stage') as HTMLElement
-
-// Translations Dictionary
-const TRANSLATIONS: Record<'en' | 'zh', Record<string, string>> = {
-  en: {
-    "nav-brand": "atmos-fx",
-    "intro-desc": "A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.",
-    "showcase-hero-eyebrow": "DOM-aware atmosphere lab",
-    "showcase-hero-title": "atmos-fx",
-    "showcase-hero-desc": "A high-performance DOM-aware WebGL atmosphere engine for weather animations, card overlays, and creative styling.",
-    "showcase-deck-title": "Live controls",
-    "showcase-deck-density": "Density",
-    "showcase-deck-wind": "Wind",
-    "showcase-deck-transparency": "Transparency",
-    "showcase-deck-particle": "Particle",
-    "showcase-deck-collision": "Collision",
-    "showcase-deck-collision-val": "bottom + DOM",
-    "showcase-forecast-title": "Translucent Layering",
-    "showcase-forecast-desc": "Background particles render underneath text content, preserving perfect readability.",
-    "showcase-ticket-title": "Collision Physics",
-    "showcase-ticket-val-rain": "Splashing",
-    "showcase-ticket-val-snow": "Accumulating",
-    "showcase-ticket-val-hail": "Bouncing",
-    "showcase-tilt-title": "Wind Vector Force",
-    "showcase-tilt-east": "Drifting East",
-    "showcase-tilt-west": "Drifting West",
-    "showcase-micro-1-title": "Interactive Glass Card",
-    "showcase-micro-1-desc": "Generates dynamic backdrop blur and registers collision top-edges.",
-    "showcase-micro-2-title": "Solid Opaque Island",
-    "showcase-micro-2-desc": "Opaque cards block precipitation without any blur shaders.",
-    "showcase-micro-3-title": "Faded Opacity Card",
-    "showcase-micro-3-desc": "Fades particle density beneath text overlays dynamically.",
-    "showcase-micro-4-title": "Physical Ledge Rail",
-    "showcase-micro-4-desc": "Acts as a landing shelf for snow accumulation and hail bounces.",
-    "playground-title": "Playground",
-    "playground-info-desc": "Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.",
-    "form-placeholder": "Type here...",
-    "form-submit": "Submit",
-    "control-weather-preset": "Weather Preset",
-    "control-preset-rain": "Rain",
-    "control-preset-snow": "Snow",
-    "control-preset-hail": "Hail",
-    "control-density": "Density",
-    "control-speed": "Speed",
-    "control-wind": "Wind",
-    "control-snow-accum": "Snow Accumulation",
-    "control-hail-bounce": "Hail Bounce",
-    "control-bottom-collision": "Bottom Collision",
-    "control-liquid-dripping": "Liquid Dripping",
-    "control-quality": "Quality",
-    "control-quality-auto": "Auto (Adaptive)",
-    "control-quality-high": "High",
-    "control-quality-medium": "Medium",
-    "control-quality-low": "Low",
-    "control-transparency": "Transparency Mode",
-    "control-transparency-glass": "Glass (Standard Blurs)",
-    "control-transparency-opacity": "Opacity (Translucent)",
-    "control-transparency-none": "None (Solid Cards)",
-    "control-surface-opacity": "Alpha",
-    "control-content-opacity": "Content Opacity",
-    "control-color": "Precipitation Color",
-    "quick-start-title": "Quick Start",
-    "quick-start-step1": "1. Install package via npm:",
-    "quick-start-step2": "2. Import and wrap your app with AtmosFx and AtmosCard:",
-    "quick-start-step3": "3. Or use Vanilla JavaScript directly:",
-    "quick-start-step3-html": "Define HTML with data attributes for inner cards:",
-    "quick-start-step3-js": "Initialize and start the atmosphere:",
-    "quick-start-step4": "4. Vue Example:",
-    "api-ref-title": "API Reference",
-    "api-atmosfx-title": "AtmosFx Component Config / Props",
-    "api-atmoscard-title": "AtmosCard Card Config / Props",
-    "th-option": "Option",
-    "th-type": "Type / Values",
-    "th-desc": "Description",
-    "api-vanilla-title": "Vanilla JS createAtmosphere Options",
-    "api-vanilla-desc": "createAtmosphere(element, options) returns a controller with methods to start, pause, resume, and destroy the atmosphere. The options object accepts exactly the same parameters as the AtmosFx Props (excluding the mode alias).",
-    "api-vanilla-data-attr-title": "Define HTML with data attributes for inner cards:",
-    "api-data-opaque": "keeps an element out of automatic glass or opacity treatment.",
-    "api-data-opacity": "applies a per-element opacity value.",
-    "api-data-glass": "opts nested elements into the glass surface style.",
-    "api-data-collision": "makes the element's top edge a precipitation collision surface.",
-    "api-data-liquid-dripping": "toggles the water condensation and dripping animation (only in Rain mode).",
-    "api-data-liquid-gathering-point": "sets this card's liquid gathering point from 0.33 to 0.66.",
-    "methods-title": "Controller Methods",
-    "methods-intro": "For direct vanilla JavaScript control, initialize the atmosphere and use the available methods:",
-    "method-th-method": "Method",
-    "method-th-desc": "Description",
-    "api-desc-preset": "Applies preset default physical and visual values.",
-    "api-desc-particle": "Overrides preset particle rendering without overwriting speed/wind presets.",
-    "api-desc-density": "Controls particles per unit area. 0 disables particles; 1 uses the full quality-tier rate.",
-    "api-desc-speed": "Scalar multiplier for gravity and vertical fall speed.",
-    "api-desc-wind": "Affects horizontal sway and particle drift.",
-    "api-desc-color": "CSS color representation for precipitation particles.",
-    "api-desc-quality": "Manual tiers set particle rate; auto starts at medium and adapts to measured frame performance.",
-    "api-desc-autoScaleQuality": "Enables frame-performance adaptation. When disabled, auto stays at medium and manual tiers keep the full DPR cap.",
-    "api-desc-transparency": "The root integration mode for children components.",
-    "api-desc-surfaceOpacity": "Global glass surface opacity base for AtmosCards.",
-    "api-desc-contentOpacity": "Global opacity-mode content fade for AtmosCards.",
-    "api-desc-bottomCollision": "Determines whether particles collide with the bottom edge of the container.",
-    "api-desc-collisionSelector": "Query selector for discovering top-edge landing surfaces. Defaults to [data-atmos-collision].",
-    "api-desc-opaqueSelector": "Query selector for elements that skip transparency blurs. Defaults to [data-atmos-opaque].",
-    "api-desc-globalLiquidDripping": "Globally toggles the water condensation and dripping animation (only in Rain mode).",
-    "api-desc-globalLiquidGatheringPoint": "Sets the liquid gathering point from 0.33 to 0.66. Defaults to stable-random per card.",
-    "api-desc-pauseWhenHidden": "Automatically pause animation when document is hidden or the root element is out of the viewport.",
-    "api-desc-respectReducedMotion": "Honors OS prefers-reduced-motion settings.",
-    "api-desc-injectStyles": "Whether default stylesheet rules are automatically injected.",
-    "api-desc-styleNonce": "CSP nonce for the injected style tag.",
-    "api-desc-transMode": "Specifies card integration style. glass: default frosted glass effect; opacity: translucent mode; solid: default element style without transparency, fully customizable.",
-    "api-desc-liquidDripping": "Toggles the water condensation and dripping animation.",
-    "api-desc-liquidGatheringPoint": "Overrides this card's liquid gathering point from 0.33 to 0.66.",
-    "api-desc-asChild": "Merges the AtmosCard properties directly onto the underlying child element instead of rendering a wrapper node.",
-    "api-desc-opacity": "Component-level custom backdrop opacity override (specifically used in opacity mode).",
-    "method-desc-start": "Initializes canvas layers, starts the requestAnimationFrame loop and rendering.",
-    "method-desc-stop": "Stops the animation loop and clears canvases. Does not remove layers.",
-    "method-desc-pause": "Pauses the animation execution while keeping the active frame buffer.",
-    "method-desc-resume": "Resumes execution from a paused state.",
-    "method-desc-resize": "Manually triggers context bounds measurement and canvas resizing.",
-    "method-desc-update": "Dynamically updates atmosphere parameters on the fly without resetting state.",
-    "method-desc-destroy": "Cleans up DOM nodes, listeners, context properties, and cancels loops.",
-    "best-practices-title": "Design & UI Guidelines",
-    "bp-intro": "To ensure visually realistic atmosphere effects, keep the following guidelines in mind when designing with AtmosCard:",
-    "bp-dripping": "Particle Layering & Dripping: Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable AtmosCard elements. If liquidDripping is enabled, accumulated rainwater will drip down and correctly collide with any collidable cards positioned below it.",
-    "bp-blocking": "Avoid Wide Blocking Cards: A very wide collidable AtmosCard will act like an umbrella, blocking most foreground rain. This prevents rain from reaching elements below, significantly reducing their splash animations. Unless this is intended, avoid overly wide collision surfaces.",
-    "bp-nesting": "Avoid Nesting Cards: Unless you have a highly specific visual effect in mind, avoid nesting an AtmosCard inside another AtmosCard. This can cause conflicting collision bounds and visual behaviors that defy natural physics.",
-    "footer-text": "© 2026 Carson Ye. Built with passion and curiosity."
-  },
-zh: {
-  "nav-brand": "atmos-fx",
-  "intro-desc": "一个能感知页面结构的高性能 WebGL 氛围引擎，用于天气动画、卡片叠层与创意视觉效果。",
-  "showcase-hero-eyebrow": "DOM-aware 氛围实验室",
-  "showcase-hero-title": "atmos-fx",
-  "showcase-hero-desc": "一个能感知页面结构的高性能 WebGL 氛围引擎，用于天气动画、卡片叠层与创意视觉效果。",
-  "showcase-deck-title": "实时控制",
-  "showcase-deck-density": "密度",
-  "showcase-deck-wind": "风向",
-  "showcase-deck-transparency": "透明度",
-  "showcase-deck-particle": "粒子",
-  "showcase-deck-collision": "碰撞",
-  "showcase-deck-collision-val": "底部 + DOM",
-  "showcase-forecast-title": "半透明叠层",
-  "showcase-forecast-desc": "粒子在文字内容下方渲染，保留氛围感的同时不影响阅读。",
-  "showcase-ticket-title": "碰撞物理",
-  "showcase-ticket-val-rain": "溅落",
-  "showcase-ticket-val-snow": "堆积",
-  "showcase-ticket-val-hail": "回弹",
-  "showcase-tilt-title": "风向偏移",
-  "showcase-tilt-east": "向东飘移",
-  "showcase-tilt-west": "向西飘移",
-  "showcase-micro-1-title": "交互式玻璃卡片",
-  "showcase-micro-1-desc": "生成动态背景模糊，并将卡片顶边注册为碰撞表面。",
-  "showcase-micro-2-title": "不透明内容岛",
-  "showcase-micro-2-desc": "不透明卡片可以遮挡降水粒子，无需额外的模糊着色器。",
-  "showcase-micro-3-title": "半透明内容卡片",
-  "showcase-micro-3-desc": "在文字叠层下方动态降低粒子密度，提升内容可读性。",
-  "showcase-micro-4-title": "物理承载边缘",
-  "showcase-micro-4-desc": "作为粒子的落点，可承接积雪，也能触发冰雹回弹。",
-  "playground-title": "Playground",
-  "playground-info-desc": "展示实时状态读数与配置日志，并会根据透明度和碰撞选项即时更新。",
-  "form-placeholder": "输入一些内容...",
-  "form-submit": "提交",
-  "control-weather-preset": "天气预设",
-  "control-preset-rain": "雨",
-  "control-preset-snow": "雪",
-  "control-preset-hail": "冰雹",
-  "control-density": "密度",
-  "control-speed": "速度",
-  "control-wind": "风向",
-  "control-snow-accum": "积雪",
-  "control-hail-bounce": "冰雹回弹",
-  "control-bottom-collision": "底部碰撞",
-  "control-liquid-dripping": "液滴下落",
-  "control-quality": "渲染质量",
-  "control-quality-auto": "自动性能调节",
-  "control-quality-high": "高",
-  "control-quality-medium": "中",
-  "control-quality-low": "低",
-  "control-transparency": "透明模式",
-  "control-transparency-glass": "玻璃模式（标准模糊）",
-  "control-transparency-opacity": "透明度模式（半透明）",
-  "control-transparency-none": "关闭透明（实体卡片）",
-  "control-surface-opacity": "通透度",
-  "control-content-opacity": "内容透明度",
-  "control-color": "降水颜色",
-  "quick-start-title": "快速开始",
-  "quick-start-step1": "1. 使用 npm 安装：",
-  "quick-start-step2": "2. 引入 AtmosFx 和 AtmosCard，并包裹你的应用：",
-  "quick-start-step3": "3. 也可以直接使用原生 JavaScript：",
-  "quick-start-step3-html": "使用 data attributes 为内部卡片定义 HTML：",
-  "quick-start-step3-js": "初始化并启动引擎：",
-  "quick-start-step4": "4. Vue 示例：",
-  "api-ref-title": "API 参考",
-  "api-atmosfx-title": "AtmosFx 组件配置 / Props",
-  "api-atmoscard-title": "AtmosCard 卡片配置 / Props",
-  "th-option": "配置项",
-  "th-type": "类型 / 可选值",
-  "th-desc": "说明",
-  "api-vanilla-title": "Vanilla JS createAtmosphere Options",
-  "api-vanilla-desc": "createAtmosphere(element, options) 会返回一个 controller，包含控制状态的方法。options 对象接受与 AtmosFx Props 完全相同的参数（除了 mode 别名）。",
-  "api-vanilla-data-attr-title": "使用 data attributes 为内部卡片定义 HTML：",
-  "api-data-opaque": "让元素跳过自动玻璃化或透明度处理。",
-  "api-data-opacity": "为单个元素设置独立透明度。",
-  "api-data-glass": "让嵌套元素启用玻璃表面样式。",
-  "api-data-collision": "让元素顶部边缘成为降水粒子的碰撞表面。",
-  "api-data-liquid-dripping": "开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。",
-  "api-data-liquid-gathering-point": "设置当前卡片的液体汇合点，范围为 0.33 到 0.66。",
-  "methods-title": "控制器方法",
-  "methods-intro": "使用原生 JavaScript 时，可以先初始化 atmosphere，再调用以下控制器方法：",
-  "method-th-method": "方法",
-  "method-th-desc": "说明",
-  "api-desc-preset": "应用预设的默认物理和视觉效果参数。",
-  "api-desc-particle": "覆盖预设的粒子渲染类型，但不影响速度和风向的预设设置。",
-  "api-desc-density": "控制单位面积内的粒子数量；0 表示关闭粒子，1 表示使用当前渲染质量档位的完整密度。",
-  "api-desc-speed": "重力和垂直下落速度的乘数因子。",
-  "api-desc-wind": "影响粒子的水平摇摆和飘移风向。",
-  "api-desc-color": "降水粒子的 CSS 颜色。",
-  "api-desc-quality": "手动档位决定粒子密度；auto 从中档开始，并根据实测帧性能自动调节。",
-  "api-desc-autoScaleQuality": "开关基于帧性能的自适应调节。关闭后，auto 固定为中档，手动档位保持完整 DPR 上限。",
-  "api-desc-transparency": "子组件在根容器中的集成模式。",
-  "api-desc-surfaceOpacity": "全局玻璃表面透明度基准值。",
-  "api-desc-contentOpacity": "全局透明模式下的内容淡化程度。",
-  "api-desc-bottomCollision": "决定粒子是否与容器底部边缘发生碰撞。",
-  "api-desc-collisionSelector": "用于查找顶边碰撞落面的查询选择器。默认为 [data-atmos-collision]。",
-  "api-desc-opaqueSelector": "用于指定不进行背景模糊处理的元素的查询选择器。默认为 [data-atmos-opaque]。",
-  "api-desc-globalLiquidDripping": "全局控制水滴在卡片上冷凝、聚集并滴落的动画（仅在雨模式下有效）。",
-  "api-desc-globalLiquidGatheringPoint": "设置液体汇合点，范围为 0.33 到 0.66；默认按卡片稳定随机。",
-  "api-desc-pauseWhenHidden": "当 document 不可见或根元素滑出视口时自动暂停动画。",
-  "api-desc-respectReducedMotion": "遵循操作系统的 prefers-reduced-motion 设置。",
-  "api-desc-injectStyles": "是否自动注入默认样式规则。",
-  "api-desc-styleNonce": "注入 style 标签时使用的 CSP nonce。",
-  "api-desc-transMode": "指定卡片透明融合样式。glass：默认毛玻璃效果；opacity：半透明模式；solid：保持元素默认样式（无透明处理），用户可完全自定义。",
-  "api-desc-liquidDripping": "控制水滴在卡片上冷凝、聚集并滴落的动画。",
-  "api-desc-liquidGatheringPoint": "覆盖当前卡片的液体汇合点，范围为 0.33 到 0.66。",
-  "api-desc-asChild": "将 AtmosCard 的属性直接合并到其子元素上，而不是渲染一个包装 DOM 节点。",
-  "api-desc-opacity": "组件级别的自定义背景透明度覆盖（专门用于 opacity 模式）。",
-  "method-desc-start": "初始化 Canvas 图层，并启动 requestAnimationFrame 渲染循环。",
-  "method-desc-stop": "停止动画循环并清空 Canvas，但不移除 DOM 图层。",
-  "method-desc-pause": "暂停动画执行，同时保留当前帧画面。",
-  "method-desc-resume": "从暂停状态恢复动画执行。",
-  "method-desc-resize": "手动触发容器边界测量与 Canvas 尺寸重置。",
-  "method-desc-update": "在不重置状态的前提下，实时动态更新氛围参数。",
-  "method-desc-destroy": "清理 DOM 节点、监听器、上下文属性并取消动画循环。",
-  "best-practices-title": "设计与 UI 最佳实践",
-  "bp-intro": "为确保最佳的视觉效果，在使用 AtmosCard 时请遵循以下指南：",
-  "bp-dripping": "粒子分层与滴落：粒子分为前景和背景渲染。前景粒子会被可碰撞的 AtmosCard 阻挡。如果开启了 liquidDripping（液滴下落），积聚的雨水会向下滴落，并继续与下方任何可碰撞的卡片发生物理碰撞。",
-  "bp-blocking": "避免过宽的遮挡卡片：如果设置了一个非常宽的可碰撞 AtmosCard，它会像伞一样挡住大部分前景雨水。这会导致下方的元素无法接触到雨水，其表面的雨水溅落动画会大幅减少。除非出于特定的视觉设计意图，否则尽量避免设置过宽的碰撞表面。",
-  "bp-nesting": "避免卡片嵌套：除非有特意设计的视觉效果，否则尽量避免出现 AtmosCard 包裹 AtmosCard 的情况。这会导致冲突的碰撞边界与不符合自然物理常识的动画效果。",
-  "footer-text": "© 2026 Carson Ye. Built with passion and curiosity."
-  }
-}
 
 // ----------------------------------------------------
 // 1. Showcase Stage State & Setup
@@ -598,11 +356,11 @@ document.querySelector('#color-selector')?.addEventListener('click', (e) => {
 
 
 // ----------------------------------------------------
-// 3. Bilingual Language Switching Logic
+// 3. Language Switching Logic
 // ----------------------------------------------------
-let currentLang: 'en' | 'zh' = 'en'
+let currentLang: Language = 'en'
 
-function setLanguage(lang: 'en' | 'zh') {
+function setLanguage(lang: Language) {
   currentLang = lang
   document.documentElement.lang = lang
 
@@ -628,7 +386,7 @@ function setLanguage(lang: 'en' | 'zh') {
   // Update dropdown checkmarks and button label
   const currentLangLabel = document.querySelector('#current-lang-label')
   if (currentLangLabel) {
-    currentLangLabel.textContent = lang.toUpperCase()
+    currentLangLabel.textContent = LANGUAGE_SHORT_LABELS[lang]
   }
 
   document.querySelectorAll('.lang-dropdown-item').forEach(item => {
@@ -639,10 +397,10 @@ function setLanguage(lang: 'en' | 'zh') {
     }
   })
 
-  // Show/hide Xiaohongshu icon based on language (only for Chinese 'zh')
+  // Show/hide Xiaohongshu icon based on language (only for Simplified Chinese)
   const xhsLink = document.querySelector('#xhs-link') as HTMLElement
   if (xhsLink) {
-    xhsLink.style.display = lang === 'zh' ? 'flex' : 'none'
+    xhsLink.style.display = lang === 'zh-CN' ? 'flex' : 'none'
   }
 
   // Refresh readouts
@@ -673,7 +431,7 @@ document.addEventListener('click', () => {
 document.querySelectorAll('.lang-dropdown-item').forEach(item => {
   item.addEventListener('click', (e) => {
     e.stopPropagation()
-    const selectedLang = item.getAttribute('data-lang') as 'en' | 'zh'
+    const selectedLang = item.getAttribute('data-lang') as Language
     if (selectedLang) {
       setLanguage(selectedLang)
     }
@@ -684,6 +442,4 @@ document.querySelectorAll('.lang-dropdown-item').forEach(item => {
 })
 
 // Initialize language based on browser preference
-const browserLang = navigator.language || 'en'
-const initialLang = browserLang.startsWith('zh') ? 'zh' : 'en'
-setLanguage(initialLang)
+setLanguage(resolveLanguage(navigator.language || 'en'))
