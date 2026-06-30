@@ -1,7 +1,7 @@
 # <img src="./docs/favicon.svg" width="36" height="36" align="center" alt="atmos-fx icon" /> atmos-fx
 
 <div>
-    <a href="README.md">English</a> · <b>简体中文</b>
+    <a href="README.md">English</a> · <b>简体中文</b> · <a href="README_ja.md">日本語</a> · <a href="README_es.md">Español</a> · <a href="README_pt-BR.md">Português (Brasil)</a>
 </div>
 <br>
 atmos-fx是一个面向创意界面的 DOM 感知氛围特效 TypeScript 库，用来把类似天气的视觉效果真正融入 DOM，而不是只作为一个脱离内容的背景层。受 Apple Weather 启发：子级 UI 可以呈现玻璃质感、保持不透明，或作为粒子的碰撞表面。
@@ -150,21 +150,21 @@ onUnmounted(() => {
 | `density` | `number` | `0.65` | 控制单位面积内的粒子数量；0 表示关闭粒子，1 表示使用当前 quality 档位的完整密度。 |
 | `speed` | `number` | `1.0` | 非负的重力和垂直下落速度系数。 |
 | `wind` | `number` | `-0.12` | 影响水平方向摆动和粒子漂移的系数。 |
-| `color` | `string` | `'#dcebffb7'` | CSS 颜色字符串，代表降水粒子的颜色。 |
+| `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | 浏览器支持的 CSS 颜色，用于降水和雨水液体，并保留 alpha 通道。 |
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | 手动档位决定粒子密度；`auto` 从中档开始，并根据实测帧性能自动调节。 |
 | `autoScaleQuality` | `boolean` | `true` | 开关基于帧性能的自适应调节。关闭后，`auto` 固定为中档，手动档位保持完整 DPR 上限。 |
-| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | 子组件在根容器中的集成模式。 |
-| `surfaceOpacity` | `number` | `0.14` | 全局玻璃表面透明度基准值。 |
-| `contentOpacity` | `number` | `0.72` | 全局透明模式下的内容淡化程度。 |
+| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | 设置根容器的融合模式；单个表面仍通过 `AtmosCard` 或 data attributes 配置。 |
+| `surfaceOpacity` | `number` | `0.14` | 玻璃表面的背景透明度基准，限制在 `0` 到 `1`。 |
+| `contentOpacity` | `number` | `0.72` | `data-atmos-opacity` 元素的默认透明度，限制在 `0` 到 `1`。 |
 | `bottomCollision` | `boolean` | `true` | 决定粒子是否与容器底部边缘发生碰撞。 |
-| `collisionSelector` | `string` | `[data-atmos-collision]` | 用于查找顶部边缘着陆表面的 CSS 选择器。 |
+| `collisionSelector` | `string` | `[data-atmos-collision]` | 查找 DOM 碰撞目标的选择器，其顶边、侧边和圆角几何会影响前景粒子。 |
 | `opaqueSelector` | `string` | `[data-atmos-opaque]` | 用于跳过透明度处理的不透明子级元素的 CSS 选择器。 |
 | `liquidDripping` | `boolean` | `true` | 全局开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。 |
 | `liquidGatheringPoint` | `number` | 随机 | 设置水平汇合点，范围为 `0.33` 到 `0.66`；默认按卡片稳定随机。 |
 | `pauseWhenHidden` | `boolean` | `true` | 当 document 不可见或根元素滑出视口时自动暂停动画。 |
 | `respectReducedMotion`| `boolean` | `true` | 遵循操作系统的 `prefers-reduced-motion` 设置。 |
-| `injectStyles` | `boolean` | `true` | 是否自动注入默认样式规则。 |
-| `styleNonce` | `string` | `undefined` | 注入 style 标签时使用的 CSP nonce。 |
+| `injectStyles` | `boolean` | `true` | 自动注入默认规则；自行加载 `atmos-fx/styles.css` 时可关闭。 |
+| `styleNonce` | `string` | `''` | 应用于自动注入 style 标签的 CSP nonce。 |
 
 ### `AtmosCard` Props
 
@@ -174,7 +174,7 @@ onUnmounted(() => {
 | `liquidDripping` | `boolean` | `true` | 开关水汽凝结与滴落动画。 |
 | `liquidGatheringPoint` | `number` | 继承 / 随机 | 覆盖当前卡片的汇合点，范围为 `0.33` 到 `0.66`。 |
 | `asChild` | `boolean` | `false` | 将属性合并到底层子元素上以避免额外渲染一层包装元素。 |
-| `opacity` | `number` | `undefined` | 组件级别的自定义背景透明度覆盖值（0 到 1）。 |
+| `opacity` | `number` | opacity 模式下为 `0.72` | `transMode="opacity"` 使用的元素透明度；glass 和 solid 模式会忽略它。 |
 
 ### Vanilla JS `createAtmosphere` Options
 
@@ -187,7 +187,7 @@ onUnmounted(() => {
 - `data-atmos-opaque` 让元素跳过自动玻璃化或透明度处理。
 - `data-atmos-opacity="0.64"` 为单个元素设置独立透明度。
 - `data-atmos-glass` 让嵌套元素启用玻璃表面样式。
-- `data-atmos-collision` 让元素顶部边缘成为降水粒子的碰撞表面。
+- `data-atmos-collision` 让元素成为前景降水的顶边和侧边碰撞表面。
 - `data-atmos-liquid-dripping="true"` 开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。
 - `data-atmos-liquid-gathering-point="0.5"` 设置当前卡片的液体汇合点，范围为 `0.33` 到 `0.66`。
 
@@ -196,7 +196,7 @@ onUnmounted(() => {
 为了获得更真实自然的氛围效果，使用 `AtmosCard` 设计界面时建议遵循以下原则：
 
 * **粒子分层与滴落**：粒子会在前景层和背景层中渲染。前景粒子会被可碰撞的 `AtmosCard` 元素阻挡。如果某个卡片启用了 `liquidDripping`，聚集的雨水会向下滴落，并与下方任何可碰撞的 `AtmosCard` 正确发生碰撞。
-* **按宽度调整 Gathering**：卡片越宽，Gathering 越长（`900ms + 2ms × CSS 像素宽度`，最大 `4000ms`；`300px` 对应 `1500ms`）；后续滴落阶段保持固定时长。
+* **按宽度调整 Gathering**：卡片越宽，Gathering 越长（`1250ms + 2.8ms × CSS 像素宽度`，最大 `5500ms`；`300px` 对应 `2090ms`）；后续滴落阶段保持固定时长。
 * **避免过宽的阻挡卡片**：非常宽的可碰撞 `AtmosCard` 会像一把伞一样，挡住大部分前景雨滴。这会阻止雨滴到达下方元素，从而明显削弱它们的雨滴溅落动画。除非你有意实现这种“雨伞”效果，否则应避免使用过宽的碰撞表面。
 * **避免嵌套卡片**：除非你有非常明确的视觉效果需求，否则不要将一个 `AtmosCard` 直接嵌套在另一个 `AtmosCard` 中。这可能导致碰撞边界和视觉行为相互冲突，产生不符合自然物理直觉的效果。
 * **卡片模式（`transMode`）**：
@@ -212,7 +212,7 @@ onUnmounted(() => {
 * 透明表面可以露出背景层的降水效果，同时前景降水仍然会与选定的 DOM 表面发生碰撞。
 * 有意识地设置碰撞表面；目标元素的矩形区域会在动画帧循环之外刷新。
 * 碰撞和滴落物理使用目标元素的轴对齐包围盒（AABB）。旋转元素（例如使用 `transform: rotate()`）会基于其外层包围矩形计算碰撞，而不是基于旋转后的视觉边界。
-* 积雪效果会受到 quality、density 以及配置的堆积强度限制。
+* 积雪和冰雹堆积使用有容量上限的粒子池，其容量会随 quality 和 density 调整。
 * 生产环境中建议保持 `respectReducedMotion` 启用。
 
 ## Development
@@ -224,7 +224,7 @@ npm run build
 npm test
 ```
 
-当前实现包含项目基础结构、核心生命周期框架、WebGL 雨 / 雪 / 冰雹渲染器、静默 dummy Canvas 2D 降级方案、玻璃效果编排、雨滴顶部边缘碰撞溅起效果、卡片底部雨水汇聚与带张力拉伸 / 回弹的滴落物理、受限积雪、冰雹轻量反弹与受限堆积，以及一个静态 docs playground。
+当前实现包含核心生命周期、WebGL 雨 / 雪 / 冰雹渲染器、自适应质量调节、静默 dummy Canvas 2D 降级方案、玻璃效果编排、带圆角处理的顶边与侧边碰撞、卡片底部雨水汇聚与滴落物理、二维积雪和冰雹堆积，以及静态 docs playground。
 
 ## Local Smoke Test
 

@@ -52,8 +52,8 @@ function easeInOutQuad(x: number): number {
   return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
 }
 
-// Gathering scales with card width. A 300px card uses a 1500ms baseline
-// timing, while wider cards add 2ms per pixel until the 4000ms cap.
+// Gathering scales with card width. A 300px card takes 2090ms, while wider
+// cards add 2.8ms per pixel on top of the 1250ms base until the 5500ms cap.
 const GATHERING_BASE_MS = 1250
 const GATHERING_MS_PER_PX = 2.8
 const MAX_GATHERING_DURATION_MS = 5500
