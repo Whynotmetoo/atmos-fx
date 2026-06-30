@@ -6,6 +6,10 @@ The project follows semantic versioning once published.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-30
+
+- Bump version to 0.3.0.
+
 ## [0.2.0] - 2026-06-30
 
 - **Breaking:** Removed `snowAccumulation` and `hailBounce` from the public options and React props. Snow and hail now use internally tuned accumulation and bounce behavior.
