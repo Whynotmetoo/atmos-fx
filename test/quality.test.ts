@@ -4,13 +4,14 @@ import {
   calculateHailParticleBudget,
   calculateRainParticleBudget,
   calculateSnowParticleBudget,
-  resolveAutoQuality,
 } from '../src/renderers/canvas2d/quality'
 
 describe('canvas rain quality budgets', () => {
-  it('uses low auto quality for small containers', () => {
-    expect(resolveAutoQuality(390, 844)).toBe('low')
-    expect(resolveAutoQuality(1440, 900)).toBe('high')
+  it('uses medium as the auto budget baseline regardless of dimensions', () => {
+    const referenceInput = { width: 1280, height: 720, density: 1 }
+
+    expect(calculateRainParticleBudget({ ...referenceInput, quality: 'auto' })).toBe(875)
+    expect(calculateRainParticleBudget({ ...referenceInput, quality: 'medium' })).toBe(875)
   })
 
   it('returns no particles for empty or disabled rain', () => {
@@ -33,16 +34,72 @@ describe('canvas rain quality budgets', () => {
     ).toBe(0)
   })
 
-  it('keeps mobile auto budgets in the low-quality range', () => {
-    const budget = calculateRainParticleBudget({
+  it('scales density continuously from zero', () => {
+    const input = {
+      width: 1280,
+      height: 720,
+      quality: 'high' as const,
+    }
+
+    expect(calculateRainParticleBudget({ ...input, density: 0 })).toBe(0)
+    expect(calculateRainParticleBudget({ ...input, density: 0.001 })).toBe(2)
+    expect(calculateRainParticleBudget({ ...input, density: 0.01 })).toBe(15)
+    expect(calculateRainParticleBudget({ ...input, density: 0.5 })).toBe(750)
+    expect(calculateRainParticleBudget({ ...input, density: 1 })).toBe(1500)
+  })
+
+  it('keeps particle density proportional to container area before caps', () => {
+    const halfAreaBudget = calculateRainParticleBudget({
+      width: 640,
+      height: 720,
+      density: 0.5,
+      quality: 'high',
+    })
+    const referenceAreaBudget = calculateRainParticleBudget({
+      width: 1280,
+      height: 720,
+      density: 0.5,
+      quality: 'high',
+    })
+
+    expect(halfAreaBudget).toBe(375)
+    expect(referenceAreaBudget).toBe(750)
+  })
+
+  it('uses the configured base rates at the reference area', () => {
+    const input = { width: 1280, height: 720, density: 1 }
+    const qualities = ['low', 'medium', 'high'] as const
+
+    expect(
+      qualities.map((quality) => calculateRainParticleBudget({ ...input, quality })),
+    ).toEqual([375, 875, 1500])
+    expect(
+      qualities.map((quality) => calculateSnowParticleBudget({ ...input, quality })),
+    ).toEqual([250, 625, 1125])
+    expect(
+      qualities.map((quality) => calculateHailParticleBudget({ ...input, quality })),
+    ).toEqual([125, 275, 500])
+    expect(
+      qualities.map((quality) => calculateAccumulationBudget({ ...input, quality })),
+    ).toEqual([90, 180, 360])
+  })
+
+  it('scales auto budgets by area without changing its baseline tier', () => {
+    const mobileBudget = calculateRainParticleBudget({
       width: 390,
       height: 844,
       density: 0.8,
       quality: 'auto',
     })
+    const desktopBudget = calculateRainParticleBudget({
+      width: 780,
+      height: 844,
+      density: 0.8,
+      quality: 'auto',
+    })
 
-    expect(budget).toBeGreaterThanOrEqual(80)
-    expect(budget).toBeLessThanOrEqual(1200)
+    expect(mobileBudget).toBe(250)
+    expect(desktopBudget).toBe(500)
   })
 
   it('caps high-quality desktop budgets', () => {

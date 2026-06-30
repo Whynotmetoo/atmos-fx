@@ -35,7 +35,11 @@ function toRootRelativeRect(
     const style = element.ownerDocument.defaultView.getComputedStyle(element)
     const radiusStr = style.borderTopLeftRadius || style.borderRadius
     if (radiusStr) {
-      borderRadius = parseFloat(radiusStr) || 0
+      const computedRadius = parseFloat(radiusStr) || 0
+
+      // Computed styles preserve oversized declarations such as 99px even
+      // though CSS scales overlapping corner radii down when painting.
+      borderRadius = Math.min(computedRadius, width / 2, height / 2)
     }
   }
 

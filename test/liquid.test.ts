@@ -5,6 +5,7 @@ import {
   getLiquidGatheringDuration,
   getLiquidWaveCenter,
   getWaveSampleProgresses,
+  LIQUID_VISIBILITY_TOP_MARGIN_PX,
 } from '../src/dom/liquid'
 
 describe('liquid gathering', () => {
@@ -178,6 +179,7 @@ describe('liquid gathering', () => {
 
   it('skips dripping updates for off-screen cards', () => {
     let intersectionCallback: IntersectionObserverCallback | undefined
+    let intersectionOptions: IntersectionObserverInit | undefined
     const observeSpy = vi.fn()
     const unobserveSpy = vi.fn()
     const disconnectSpy = vi.fn()
@@ -187,8 +189,12 @@ describe('liquid gathering', () => {
       unobserve = unobserveSpy
       disconnect = disconnectSpy
 
-      constructor(callback: IntersectionObserverCallback) {
+      constructor(
+        callback: IntersectionObserverCallback,
+        options?: IntersectionObserverInit,
+      ) {
         intersectionCallback = callback
+        intersectionOptions = options
       }
     }
 
@@ -214,6 +220,11 @@ describe('liquid gathering', () => {
 
     // Verify it is observed
     expect(observeSpy).toHaveBeenCalledWith(card)
+    expect(intersectionOptions).toEqual({
+      root: null,
+      rootMargin: `${LIQUID_VISIBILITY_TOP_MARGIN_PX}px 0px 0px 0px`,
+      threshold: 0,
+    })
 
     // Under gathering phase at t=0.0
     liquid.update(0)

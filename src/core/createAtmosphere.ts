@@ -6,7 +6,6 @@ import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
 import { QualityMonitor } from './qualityMonitor'
-import { resolveAutoQuality } from '../renderers/canvas2d/quality'
 import type {
   AtmosphereController,
   AtmosphereParticle,
@@ -150,16 +149,18 @@ export function createAtmosphere(
   let manuallyPaused = false
   let lastTime: number | undefined
 
-  const qualityMonitor = new QualityMonitor(normalizedOptions.autoScaleQuality)
+  const qualityMonitor = new QualityMonitor(
+    normalizedOptions.autoScaleQuality,
+    normalizedOptions.quality === 'auto',
+  )
 
   const getEffectiveOptions = (): NormalizedAtmosphereOptions => {
     const scaling = qualityMonitor.getScalingState()
-    
-    let baseQuality = normalizedOptions.quality
-    if (baseQuality === 'auto') {
-      const activeSize = canvasLayer ? canvasLayer.getSize() : { width: 0, height: 0 }
-      baseQuality = resolveAutoQuality(activeSize.width, activeSize.height)
-    }
+
+    // Auto step 0 represents high; every lower auto step supplies an override.
+    const baseQuality = normalizedOptions.quality === 'auto'
+      ? 'high'
+      : normalizedOptions.quality
 
     let finalQuality = baseQuality
     if (scaling.qualityTierOverride) {
@@ -256,11 +257,6 @@ export function createAtmosphere(
     const size = canvasLayer?.resize(scaling.dprCap)
 
     if (size) {
-      const base = normalizedOptions.quality === 'auto'
-        ? resolveAutoQuality(size.width, size.height)
-        : normalizedOptions.quality
-      qualityMonitor.setup(normalizedOptions.quality === 'auto', base)
-
       const effectiveOptions = getEffectiveOptions()
       const targets = collisionTargetManager.refresh()
       renderer?.resize(size)
@@ -450,11 +446,7 @@ export function createAtmosphere(
     start() {
       assertActive()
       const size = ensureCanvasLayer()
-      
-      const base = normalizedOptions.quality === 'auto'
-        ? resolveAutoQuality(size.width, size.height)
-        : normalizedOptions.quality
-      qualityMonitor.setup(normalizedOptions.quality === 'auto', base)
+      qualityMonitor.setup(normalizedOptions.quality === 'auto')
 
       syncDataset()
       syncCollisionTargets()
@@ -511,13 +503,7 @@ export function createAtmosphere(
         injectStyles(ownerDocument, normalizedOptions.styleNonce)
       }
       qualityMonitor.setEnabled(normalizedOptions.autoScaleQuality)
-      qualityMonitor.reset()
-
-      const size = canvasLayer ? canvasLayer.getSize() : { width: 0, height: 0 }
-      const base = normalizedOptions.quality === 'auto'
-        ? resolveAutoQuality(size.width, size.height)
-        : normalizedOptions.quality
-      qualityMonitor.setup(normalizedOptions.quality === 'auto', base)
+      qualityMonitor.setup(normalizedOptions.quality === 'auto')
 
       syncDataset()
       syncCollisionTargets()

@@ -122,11 +122,12 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Applies preset default physical and visual values. (Alias: `mode`) |
 | `particle` | `'rain' \| 'snow' \| 'hail'` | (Inherits preset) | Overrides preset particle rendering without overwriting speed/wind presets. |
-| `density` | `number` | `0.65` | Scales preallocated particle budget and spawn count (0 to 1). |
+| `density` | `number` | `0.65` | Controls particles per unit area (0 disables particles; 1 uses the full quality-tier rate). |
 | `speed` | `number` | `1.0` | Scalar multiplier for gravity and vertical fall speed. |
 | `wind` | `number` | `-0.12` | Affects horizontal sway and particle drift. |
 | `color` | `string` | `'#dcebffb7'` | CSS color representation for precipitation particles. |
-| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Limits particle count and device pixel ratio density. |
+| `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Manual tiers set particle rate; `auto` starts at medium and adapts to measured frame performance. |
+| `autoScaleQuality` | `boolean` | `true` | Enables frame-performance adaptation. When disabled, `auto` stays at medium and manual tiers keep the full DPR cap. |
 | `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | The root integration mode for children components. |
 | `surfaceOpacity` | `number` | `0.14` | Global glass surface opacity base for AtmosCards. |
 | `contentOpacity` | `number` | `0.72` | Global opacity-mode content fade for AtmosCards. |
@@ -180,7 +181,7 @@ To ensure visually realistic atmosphere effects, here are some guidelines to fol
 
 ## Performance Notes
 
-- Prefer `quality: 'auto'` for responsive pages.
+- Prefer `quality: 'auto'` for adaptive performance scaling. Container area changes particle count, but does not select the quality tier.
 - Rendering defaults to WebGL, automatically falling back to a silent dummy Canvas 2D context if WebGL initialization fails.
 - Transparent surfaces can reveal background-layer precipitation while foreground precipitation still collides with selected DOM surfaces.
 - Keep collision surfaces intentional; target rects refresh outside the animation frame loop.

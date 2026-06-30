@@ -15,6 +15,7 @@ export const reactAtmosFxProps: AtmosFxProps = {
   density: 0.7,
   wind: -0.2,
   quality: 'high',
+  autoScaleQuality: false,
   contentOpacity: 0.66,
   surfaceOpacity: 0.18,
   liquidGatheringPoint: 0.5,

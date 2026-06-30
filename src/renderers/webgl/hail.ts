@@ -380,9 +380,10 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
   updateOptions(options: NormalizedAtmosphereOptions) {
     const shouldReseedMotion =
       options.speed !== this.options.speed || options.wind !== this.options.wind
+    const shouldSeedAcrossViewport = options.quality !== this.options.quality
     this.options = options
     this.parsedColor = parseColor(options.color)
-    this.syncBudgets(false)
+    this.syncBudgets(shouldSeedAcrossViewport)
 
     if (shouldReseedMotion) {
       const backgroundCount = Math.floor(this.particles.length * 0.42)
