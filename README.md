@@ -139,20 +139,15 @@ onUnmounted(() => {
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Applies preset default physical and visual values. (Alias: `mode`) |
-| `particle` | `'rain' \| 'snow' \| 'hail'` | (Inherits preset) | Overrides preset particle rendering without overwriting speed/wind presets. |
+| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Applies preset default physical and visual values. |
 | `density` | `number` | `0.65` | Controls particles per unit area (0 disables particles; 1 uses the full quality-tier rate). |
 | `speed` | `number` | `1.0` | Scalar multiplier for gravity and vertical fall speed. |
 | `wind` | `number` | `-0.12` | Affects horizontal sway and particle drift. |
 | `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | Browser-supported CSS color for precipitation and rain liquid; its alpha channel is preserved. |
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Manual tiers set particle rate; `auto` starts at medium and adapts to measured frame performance. |
-| `autoScaleQuality` | `boolean` | `true` | Enables frame-performance adaptation. When disabled, `auto` stays at medium and manual tiers keep the full DPR cap. |
-| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | Sets the root integration mode; individual surfaces are configured with `AtmosCard` or data attributes. |
-| `alpha` | `number` | `0.08` | Glass surface background opacity (alpha), clamped from `0` to `1`. |
-| `opacity` | `number` | `0.72` | Fallback background opacity for elements marked with `data-atmos-opacity`, clamped from `0` to `1`. |
+| `alpha` | `number` | `0.12` | Glass surface background opacity (alpha), clamped from `0` to `1`. |
+| `opacity` | `number` | `0.1` | Fallback background opacity for elements marked with `data-atmos-opacity`, clamped from `0` to `1`. |
 | `bottomCollision` | `boolean` | `true` | Determines whether particles collide with the bottom edge of the container. |
-| `collisionSelector` | `string` | `[data-atmos-collision]` | Query selector for DOM collision targets whose top, side, and rounded-corner geometry affects foreground particles. |
-| `solidSelector` | `string` | `[data-atmos-solid]` | Query selector for elements that skip transparency blurs. |
 | `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
 | `liquidGatheringPoint` | `number` | Random | Sets the horizontal liquid gathering point from `0.33` to `0.66`. The default is stable-random per card. |
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden or the root element is out of the viewport. |
@@ -168,24 +163,24 @@ onUnmounted(() => {
 | `liquidDripping` | `boolean` | `true` | Toggles the water condensation and dripping animation. |
 | `liquidGatheringPoint` | `number` | Inherits / Random | Overrides the liquid gathering point for this card from `0.33` to `0.66`. |
 | `asChild` | `boolean` | `false` | Merges properties onto the underlying child element to avoid rendering an extra wrapper element. |
-| `opacity` | `number` | `0.72` | Background opacity used by `transMode="opacity"`; ignored by glass and solid modes. |
-| `alpha` | `number` | `0.08` | Background opacity (alpha) used by `transMode="glass"`; ignored by opacity and solid modes. |
+| `opacity` | `number` | `0.1` | Background opacity used by `transMode="opacity"`; ignored by glass and solid modes. |
+| `alpha` | `number` | `0.12` | Background opacity (alpha) used by `transMode="glass"`; ignored by opacity and solid modes. |
 
 ### Vanilla JS `createAtmosphere` Options
 
 `createAtmosphere(element, options)` returns a controller with `start()`, `stop()`, `pause()`, `resume()`, `resize()`, `update(options)`, and `destroy()`.
 
-The `options` object accepts exactly the same parameters as the `AtmosFx` Props (excluding the `mode` alias).
+The `options` object accepts exactly the same parameters as the `AtmosFx` Props.
 
 #### Define HTML with data attributes for inner cards:
 
 - `data-atmos-solid` keeps an element fully solid and removes library-applied transparency and blurs.
-- `data-atmos-opacity="0.72"` applies a per-element background opacity value.
-- `data-atmos-alpha="0.08"` applies a per-element glass background opacity (alpha) value.
+- `data-atmos-opacity="0.1"` applies a per-element background opacity value.
+- `data-atmos-alpha="0.12"` applies a per-element glass background opacity (alpha) value.
 - `data-atmos-glass` opts nested elements into the glass surface style.
 - `data-atmos-collision` makes the element a top- and side-edge collision surface for foreground precipitation.
 - `data-atmos-liquid-dripping="true"` toggles the water condensation and dripping animation (only in Rain mode).
-- `data-atmos-liquid-gathering-point="0.5"` sets a card's liquid gathering point from `0.33` to `0.66`.
+- `data-atmos-liquid-gathering-point="0.5"` is an optional override example. Omit it to keep the stable-random per-card default; provided values are clamped from `0.33` to `0.66`.
 
 ## Design & UI Guidelines
 

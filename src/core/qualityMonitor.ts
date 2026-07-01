@@ -13,22 +13,11 @@ export class QualityMonitor {
   private frameDurations: number[] = []
   private lastFrameTime?: number
   private consecutiveGoodFrames = 0
-  private enabled: boolean
   private isAuto: boolean
 
-  constructor(enabled = true, isAuto = true) {
-    this.enabled = enabled
+  constructor(isAuto = true) {
     this.isAuto = isAuto
-    this.currentStep = enabled && isAuto ? 1 : 0
-  }
-
-  setEnabled(enabled: boolean) {
-    if (enabled === this.enabled) {
-      return
-    }
-
-    this.enabled = enabled
-    this.reset()
+    this.currentStep = isAuto ? 1 : 0
   }
 
   setup(isAuto: boolean) {
@@ -41,7 +30,7 @@ export class QualityMonitor {
   }
 
   reset() {
-    this.currentStep = this.enabled && this.isAuto ? 1 : 0
+    this.currentStep = this.isAuto ? 1 : 0
     this.frameTimes = []
     this.frameDurations = []
     this.lastFrameTime = undefined
@@ -49,10 +38,6 @@ export class QualityMonitor {
   }
 
   recordFrame(startTime: number, duration: number, onStateChange: () => void) {
-    if (!this.enabled) {
-      return
-    }
-
     if (this.lastFrameTime === undefined) {
       this.lastFrameTime = startTime
       return
@@ -126,12 +111,6 @@ export class QualityMonitor {
   }
 
   getScalingState(): QualityScalingState {
-    if (!this.enabled) {
-      return this.isAuto
-        ? { dprCap: 2.0, qualityTierOverride: 'medium' }
-        : { dprCap: 2.0 }
-    }
-
     if (this.isAuto) {
       switch (this.currentStep) {
         case 0: return { dprCap: 2.0 }

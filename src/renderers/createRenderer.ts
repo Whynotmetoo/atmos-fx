@@ -30,12 +30,12 @@ export function createRenderer(
   size: CanvasLayerSize,
   options: NormalizedAtmosphereOptions,
 ): Canvas2DRenderer {
-  if (options.particle === 'snow') {
+  if (options.preset === 'snow') {
     const webglRenderer = createWebGLSnowRenderer(canvases, size, options)
     if (webglRenderer) {
       return webglRenderer
     }
-  } else if (options.particle === 'hail') {
+  } else if (options.preset === 'hail') {
     const webglRenderer = createWebGLHailRenderer(canvases, size, options)
     if (webglRenderer) {
       return webglRenderer

@@ -5,12 +5,10 @@ describe('normalizeAtmosphereOptions', () => {
   it('applies rain defaults', () => {
     expect(normalizeAtmosphereOptions()).toMatchObject({
       preset: 'rain',
-      particle: 'rain',
       density: 0.65,
       quality: 'auto',
-      transparency: 'glass',
-      opacity: 0.72,
-      alpha: 0.08,
+      opacity: 0.1,
+      alpha: 0.12,
       snowAccumulation: 0.55,
       hailBounce: 0.5,
       bottomCollision: true,
@@ -27,7 +25,6 @@ describe('normalizeAtmosphereOptions', () => {
       }),
     ).toMatchObject({
       preset: 'snow',
-      particle: 'snow',
       density: 0.2,
       liquidDripping: false,
     })
@@ -36,7 +33,6 @@ describe('normalizeAtmosphereOptions', () => {
   it('applies hail preset defaults', () => {
     expect(normalizeAtmosphereOptions({ preset: 'hail' })).toMatchObject({
       preset: 'hail',
-      particle: 'hail',
       density: 0.46,
       hailBounce: 0.5,
       liquidDripping: false,
@@ -75,8 +71,8 @@ describe('normalizeAtmosphereOptions', () => {
       } as any),
     ).toMatchObject({
       density: 0.65,
-      opacity: 0.72,
-      alpha: 0.08,
+      opacity: 0.1,
+      alpha: 0.12,
       snowAccumulation: 0.55,
       hailBounce: 0.5,
       speed: 1,

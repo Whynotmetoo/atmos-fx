@@ -46,6 +46,5 @@ export function normalizeAtmosphereOptions(
     liquidGatheringPoint: clampOptional(merged.liquidGatheringPoint, 0.33, 0.66),
     injectStyles: merged.injectStyles ?? DEFAULT_OPTIONS.injectStyles,
     styleNonce: merged.styleNonce ?? DEFAULT_OPTIONS.styleNonce,
-    autoScaleQuality: merged.autoScaleQuality ?? DEFAULT_OPTIONS.autoScaleQuality,
   }
 }

@@ -95,25 +95,20 @@ const size: CanvasLayerSize = {
 
 const options: NormalizedAtmosphereOptions = {
   preset: 'rain',
-  particle: 'rain',
   density: 0.7,
   speed: 1,
   wind: -0.12,
   color: 'rgba(220, 235, 255, 0.72)',
   quality: 'medium',
-  transparency: 'glass',
-  opacity: 0.72,
+  opacity: 0.1,
   alpha: 0.14,
   snowAccumulation: 0.55,
   hailBounce: 0.5,
   bottomCollision: false,
-  collisionSelector: '[data-atmos-collision]',
-  solidSelector: '[data-atmos-solid]',
   pauseWhenHidden: true,
   respectReducedMotion: true,
   liquidDripping: true,
   injectStyles: true,
-  autoScaleQuality: true,
   styleNonce: '',
 }
 
@@ -172,7 +167,6 @@ describe('WebGL renderer foundation', () => {
     const renderer = createRenderer(createCanvases(context), size, {
       ...options,
       preset: 'snow',
-      particle: 'snow',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -193,7 +187,6 @@ describe('WebGL renderer foundation', () => {
     const renderer = createRenderer(createCanvases(context), size, {
       ...options,
       preset: 'hail',
-      particle: 'hail',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -214,7 +207,6 @@ describe('WebGL renderer foundation', () => {
     const renderer = createRenderer(createCanvases(context), size, {
       ...options,
       preset: 'rain',
-      particle: 'rain',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -286,21 +278,19 @@ describe('WebGL renderer foundation', () => {
 
   it.each(['rain', 'snow', 'hail'] as const)(
     'seeds newly promoted %s particles across the viewport',
-    (particle) => {
+    (preset) => {
       const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.75)
       const context = createWebGLContext()
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
-        preset: particle,
-        particle,
+        preset,
         quality: 'medium',
       })
       const initialCount = renderer.getStats().particleCount
 
       renderer.updateOptions({
         ...options,
-        preset: particle,
-        particle,
+        preset,
         quality: 'high',
       })
 
@@ -318,7 +308,6 @@ describe('WebGL renderer foundation', () => {
     const renderer = createRenderer(createCanvases(context), size, {
       ...options,
       preset: 'snow',
-      particle: 'snow',
       snowAccumulation: 0.5,
     })
 
@@ -358,7 +347,6 @@ describe('WebGL renderer foundation', () => {
     const renderer = createRenderer(createCanvases(context), size, {
       ...options,
       preset: 'hail',
-      particle: 'hail',
     })
 
     expect(renderer.backend).toBe('webgl')
@@ -416,7 +404,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         preset: 'snow',
-        particle: 'snow',
         color: '#9ccfff',
       })
       expect(renderer.backend).toBe('webgl')
@@ -433,7 +420,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         preset: 'hail',
-        particle: 'hail',
         color: '#9ccfff',
       })
       expect(renderer.backend).toBe('webgl')
@@ -485,7 +471,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         preset: 'snow',
-        particle: 'snow',
         bottomCollision: true,
         snowAccumulation: 0.5,
       })
@@ -520,7 +505,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         preset: 'hail',
-        particle: 'hail',
         bottomCollision: true,
       })
       expect(renderer.backend).toBe('webgl')
@@ -593,7 +577,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         preset: 'snow',
-        particle: 'snow',
       })
       const webglRenderer = renderer as any
       const backgroundCount = Math.floor(webglRenderer.particles.length * 0.42)
@@ -629,7 +612,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         preset: 'hail',
-        particle: 'hail',
       })
       const webglRenderer = renderer as any
       const backgroundCount = Math.floor(webglRenderer.particles.length * 0.42)
@@ -664,7 +646,6 @@ describe('WebGL renderer foundation', () => {
       const renderer = createRenderer(createCanvases(context), size, {
         ...options,
         preset: 'rain',
-        particle: 'rain',
       })
       const webglRenderer = renderer as any
       const backgroundCount = Math.floor(webglRenderer.particles.length * 0.6)

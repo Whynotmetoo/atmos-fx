@@ -2,27 +2,22 @@ import type { AtmosphereOptions, AtmospherePreset } from './types'
 
 export const DEFAULT_OPTIONS = {
   preset: 'rain',
-  particle: 'rain',
   density: 0.65,
   speed: 1,
   wind: -0.12,
   color: 'rgba(220, 235, 255, 0.72)',
   quality: 'auto',
-  transparency: 'glass',
-  opacity: 0.72,
-  alpha: 0.08,
+  opacity: 0.1,
+  alpha: 0.12,
   snowAccumulation: 0.55,
   hailBounce: 0.5,
   bottomCollision: true,
-  collisionSelector: '[data-atmos-collision]',
-  solidSelector: '[data-atmos-solid]',
   pauseWhenHidden: true,
   respectReducedMotion: true,
   liquidDripping: true,
   liquidGatheringPoint: undefined,
   injectStyles: true,
   styleNonce: '',
-  autoScaleQuality: true,
 } satisfies Required<Omit<AtmosphereOptions, 'liquidGatheringPoint'>> &
   Pick<AtmosphereOptions, 'liquidGatheringPoint'> & {
     snowAccumulation: number
@@ -31,7 +26,6 @@ export const DEFAULT_OPTIONS = {
 
 export const PRESET_OPTIONS = {
   rain: {
-    particle: 'rain',
     density: 0.65,
     speed: 1,
     wind: -0.12,
@@ -39,7 +33,6 @@ export const PRESET_OPTIONS = {
     liquidDripping: true,
   },
   snow: {
-    particle: 'snow',
     density: 0.5,
     speed: 0.42,
     wind: 0.16,
@@ -47,7 +40,6 @@ export const PRESET_OPTIONS = {
     liquidDripping: false,
   },
   hail: {
-    particle: 'hail',
     density: 0.46,
     speed: 0.92,
     wind: -0.08,

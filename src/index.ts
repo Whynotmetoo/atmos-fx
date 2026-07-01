@@ -4,12 +4,9 @@ export { DEFAULT_OPTIONS, PRESET_OPTIONS, resolvePresetOptions } from './core/pr
 export type {
   AtmosphereController,
   AtmosphereOptions,
-  AtmosphereParticle,
   AtmospherePreset,
   AtmosphereQuality,
   NormalizedAtmosphereOptions,
-  TransparencyMode,
 } from './core/types'
 export { AtmosFx, AtmosCard } from './react'
 export type { AtmosFxProps, AtmosCardProps } from './react'
-

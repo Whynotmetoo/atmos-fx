@@ -145,20 +145,15 @@ onUnmounted(() => {
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | 应用预设的物理和视觉属性（别名：`mode`）。 |
-| `particle` | `'rain' \| 'snow' \| 'hail'` | （继承预设） | 在不改变风速等物理预设的情况下，覆盖粒子的视觉渲染。 |
+| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | 应用预设的物理和视觉属性。 |
 | `density` | `number` | `0.65` | 控制单位面积内的粒子数量；0 表示关闭粒子，1 表示使用当前 quality 档位的完整密度。 |
 | `speed` | `number` | `1.0` | 非负的重力和垂直下落速度系数。 |
 | `wind` | `number` | `-0.12` | 影响水平方向摆动和粒子漂移的系数。 |
 | `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | 浏览器支持的 CSS 颜色，用于降水和雨水液体，并保留 alpha 通道。 |
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | 手动档位决定粒子密度；`auto` 从中档开始，并根据实测帧性能自动调节。 |
-| `autoScaleQuality` | `boolean` | `true` | 开关基于帧性能的自适应调节。关闭后，`auto` 固定为中档，手动档位保持完整 DPR 上限。 |
-| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | 设置根容器的融合模式；单个表面仍通过 `AtmosCard` 或 data attributes 配置。 |
-| `alpha` | `number` | `0.08` | 玻璃表面的背景不透明度（alpha），限制在 `0` 到 `1`。 |
-| `opacity` | `number` | `0.72` | `data-atmos-opacity` 元素的默认背景不透明度，限制在 `0` 到 `1`。 |
+| `alpha` | `number` | `0.12` | 玻璃表面的背景不透明度（alpha），限制在 `0` 到 `1`。 |
+| `opacity` | `number` | `0.1` | `data-atmos-opacity` 元素的默认背景不透明度，限制在 `0` 到 `1`。 |
 | `bottomCollision` | `boolean` | `true` | 决定粒子是否与容器底部边缘发生碰撞。 |
-| `collisionSelector` | `string` | `[data-atmos-collision]` | 查找 DOM 碰撞目标的选择器，其顶边、侧边和圆角几何会影响前景粒子。 |
-| `solidSelector` | `string` | `[data-atmos-solid]` | 选择必须保持实体显示并跳过透明模糊处理的子级元素。 |
 | `liquidDripping` | `boolean` | `true` | 全局开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。 |
 | `liquidGatheringPoint` | `number` | 随机 | 设置水平汇合点，范围为 `0.33` 到 `0.66`；默认按卡片稳定随机。 |
 | `pauseWhenHidden` | `boolean` | `true` | 当 document 不可见或根元素滑出视口时自动暂停动画。 |
@@ -174,24 +169,24 @@ onUnmounted(() => {
 | `liquidDripping` | `boolean` | `true` | 开关水汽凝结与滴落动画。 |
 | `liquidGatheringPoint` | `number` | 继承 / 随机 | 覆盖当前卡片的汇合点，范围为 `0.33` 到 `0.66`。 |
 | `asChild` | `boolean` | `false` | 将属性合并到底层子元素上以避免额外渲染一层包装元素。 |
-| `opacity` | `number` | `0.72` | `transMode="opacity"` 使用的卡片背景不透明度；glass 和 solid 模式会忽略它。 |
-| `alpha` | `number` | `0.08` | `transMode="glass"` 使用的卡片背景不透明度；opacity 和 solid 模式会忽略它。 |
+| `opacity` | `number` | `0.1` | `transMode="opacity"` 使用的卡片背景不透明度；glass 和 solid 模式会忽略它。 |
+| `alpha` | `number` | `0.12` | `transMode="glass"` 使用的卡片背景不透明度；opacity 和 solid 模式会忽略它。 |
 
 ### Vanilla JS `createAtmosphere` Options
 
 `createAtmosphere(element, options)` 会返回一个 controller，包含 `start()`、`stop()`、`pause()`、`resume()`、`resize()`、`update(options)` 和 `destroy()`。
 
-`options` 对象接受与 `AtmosFx` Props 完全相同的参数（除了 `mode` 别名）。
+`options` 对象接受与 `AtmosFx` Props 完全相同的参数。
 
 #### 使用 data attributes 为内部卡片定义 HTML：
 
 - `data-atmos-solid` 让元素保持实体显示，并移除库提供的透明和模糊处理。
-- `data-atmos-opacity="0.72"` 为单个元素设置独立的背景不透明度。
-- `data-atmos-alpha="0.08"` 为单个玻璃元素设置独立的背景不透明度（alpha）。
+- `data-atmos-opacity="0.1"` 为单个元素设置独立的背景不透明度。
+- `data-atmos-alpha="0.12"` 为单个玻璃元素设置独立的背景不透明度（alpha）。
 - `data-atmos-glass` 让嵌套元素启用玻璃表面样式。
 - `data-atmos-collision` 让元素成为前景降水的顶边和侧边碰撞表面。
 - `data-atmos-liquid-dripping="true"` 开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。
-- `data-atmos-liquid-gathering-point="0.5"` 设置当前卡片的液体汇合点，范围为 `0.33` 到 `0.66`。
+- `data-atmos-liquid-gathering-point="0.5"` 只是可选的覆盖示例。不设置时，每张卡片使用稳定随机默认值；设置后数值会被限制在 `0.33` 到 `0.66`。
 
 ## Design & UI Guidelines
 
