@@ -218,6 +218,8 @@ describe('Atmosphere React adapter', () => {
     const styleEl = document.getElementById('atmos-fx-styles')
     expect(styleEl).not.toBeNull()
     expect(styleEl?.getAttribute('nonce')).toBe('test-nonce')
+    expect(styleEl?.textContent).toContain(':where([data-atmos-glass]):not([data-atmos-solid])')
+    expect(styleEl?.textContent).toContain(':where([data-atmos-opacity]):not([data-atmos-solid])')
 
     await act(async () => {
       reactRoot.unmount()

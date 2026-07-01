@@ -77,7 +77,7 @@ const CSS_CONTENT = `
     position: relative;
     z-index: 2;
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]) {
+  [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]):not([data-atmos-solid]) {
     background: rgba(255, 255, 255, 0.08);
     background: var(--atmos-fx-glass-background);
     box-shadow: var(--atmos-fx-glass-shadow);
@@ -85,19 +85,19 @@ const CSS_CONTENT = `
     -webkit-backdrop-filter: blur(1px) saturate(130%);
     transition: background 0.15s;
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] input:where([data-atmos-glass]),
-  [data-atmos-fx][data-atmos-transparency='glass'] select:where([data-atmos-glass]),
-  [data-atmos-fx][data-atmos-transparency='glass'] textarea:where([data-atmos-glass]) {
+  [data-atmos-fx][data-atmos-transparency='glass'] input:where([data-atmos-glass]):not([data-atmos-solid]),
+  [data-atmos-fx][data-atmos-transparency='glass'] select:where([data-atmos-glass]):not([data-atmos-solid]),
+  [data-atmos-fx][data-atmos-transparency='glass'] textarea:where([data-atmos-glass]):not([data-atmos-solid]) {
     border: 1px solid rgba(255, 255, 255, 0.22);
     border: 1px solid var(--atmos-fx-glass-border-end);
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] input:where([data-atmos-glass])::before,
-  [data-atmos-fx][data-atmos-transparency='glass'] select:where([data-atmos-glass])::before,
-  [data-atmos-fx][data-atmos-transparency='glass'] textarea:where([data-atmos-glass])::before {
+  [data-atmos-fx][data-atmos-transparency='glass'] input:where([data-atmos-glass]):not([data-atmos-solid])::before,
+  [data-atmos-fx][data-atmos-transparency='glass'] select:where([data-atmos-glass]):not([data-atmos-solid])::before,
+  [data-atmos-fx][data-atmos-transparency='glass'] textarea:where([data-atmos-glass]):not([data-atmos-solid])::before {
     display: none !important;
     content: none !important;
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass])::before {
+  [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]):not([data-atmos-solid])::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -116,7 +116,7 @@ const CSS_CONTENT = `
     -webkit-mask-composite: xor;
     mask-composite: exclude;
   }
-  [data-atmos-fx] :where([data-atmos-opacity]) {
+  [data-atmos-fx] :where([data-atmos-opacity]):not([data-atmos-solid]) {
     background: rgba(255, 255, 255, var(--atmos-fx-opacity));
   }
   [data-atmos-fx] :where([data-atmos-solid]) {
