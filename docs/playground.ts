@@ -35,7 +35,7 @@ const showcaseAtmosphere = createAtmosphere(showcaseRoot, {
   bottomCollision: true,
   liquidDripping: true,
   collisionSelector: '[data-atmos-collision]',
-  opaqueSelector: '[data-atmos-opaque]',
+  solidSelector: '[data-atmos-solid]',
   pauseWhenHidden: true
 })
 showcaseAtmosphere.start()
@@ -122,8 +122,8 @@ interface PlaygroundState {
   wind: number
   quality: string
   transparency: string
-  surfaceOpacity: number
-  contentOpacity: number
+  alpha: number
+  opacity: number
   bottomCollision: boolean
   liquidDripping: boolean
   color: string
@@ -135,10 +135,10 @@ const playgroundState: PlaygroundState = {
   density: 0.65,
   speed: 1.00,
   wind: -0.12,
-  quality: 'high',
+  quality: 'auto',
   transparency: 'glass',
-  surfaceOpacity: 48,
-  contentOpacity: 0.72,
+  alpha: 0.08,
+  opacity: 0.72,
   bottomCollision: true,
   liquidDripping: true,
   color: 'rgba(220, 235, 255, 0.72)'
@@ -146,7 +146,7 @@ const playgroundState: PlaygroundState = {
 
 const playgroundAtmosphere = createAtmosphere(playgroundRoot, {
   ...playgroundState,
-  surfaceOpacity: 0.3 - (playgroundState.surfaceOpacity / 100) * 0.22,
+  alpha: playgroundState.alpha,
   pauseWhenHidden: true
 })
 playgroundAtmosphere.start()
@@ -156,11 +156,7 @@ playgroundAtmosphere.start()
 function syncSliderValue(id: string) {
   const valueElement = document.querySelector(`#${id}-val`)
   if (valueElement) {
-    if (id === 'surfaceOpacity') {
-      valueElement.textContent = Number(playgroundState[id]).toFixed(0) + '%'
-    } else {
-      valueElement.textContent = Number(playgroundState[id]).toFixed(2)
-    }
+    valueElement.textContent = Number(playgroundState[id]).toFixed(2)
   }
   const slider = document.querySelector(`#${id}`) as HTMLInputElement
   if (slider) {
@@ -197,13 +193,12 @@ function updateReactCodePreview() {
     props.push(`bottomCollision={true}`)
   }
   if (p.transparency === 'glass') {
-    const mappedAlpha = 0.3 - (p.surfaceOpacity / 100) * 0.22
-    props.push(`surfaceOpacity={${mappedAlpha.toFixed(2)}}`)
+    props.push(`alpha={${p.alpha.toFixed(2)}}`)
   }
 
   const atmosFxPropsStr = props.join('\n' + indent)
 
-  const cardOpacityProp = p.transparency === 'opacity' ? ` opacity={${p.contentOpacity.toFixed(2)}}` : ''
+  const cardOpacityProp = p.transparency === 'opacity' ? ` opacity={${p.opacity.toFixed(2)}}` : ''
 
   const code = `<AtmosFx
   ${atmosFxPropsStr}
@@ -236,8 +231,8 @@ function applyPlayground() {
   syncSliderValue('density')
   syncSliderValue('speed')
   syncSliderValue('wind')
-  syncSliderValue('surfaceOpacity')
-  syncSliderValue('contentOpacity')
+  syncSliderValue('alpha')
+  syncSliderValue('opacity')
 
   // Sync checkboxes
   ;(document.querySelector('#bottomCollision') as HTMLInputElement).checked = playgroundState.bottomCollision
@@ -256,16 +251,16 @@ function applyPlayground() {
     if (!card) return
     card.removeAttribute('data-atmos-glass')
     card.removeAttribute('data-atmos-opacity')
-    card.removeAttribute('data-atmos-opaque')
+    card.removeAttribute('data-atmos-solid')
     card.style.removeProperty('--atmos-fx-opacity')
 
     if (playgroundState.transparency === 'glass') {
       card.setAttribute('data-atmos-glass', '')
     } else if (playgroundState.transparency === 'opacity') {
-      card.setAttribute('data-atmos-opacity', String(playgroundState.contentOpacity))
-      card.style.setProperty('--atmos-fx-opacity', String(playgroundState.contentOpacity))
+      card.setAttribute('data-atmos-opacity', String(playgroundState.opacity))
+      card.style.setProperty('--atmos-fx-opacity', String(playgroundState.opacity))
     } else if (playgroundState.transparency === 'none') {
-      card.setAttribute('data-atmos-opaque', '')
+      card.setAttribute('data-atmos-solid', '')
     }
 
     if (playgroundState.preset === 'rain') {
@@ -297,8 +292,8 @@ function applyPlayground() {
     wind: playgroundState.wind,
     quality: playgroundState.quality,
     transparency: playgroundState.transparency,
-    surfaceOpacity: 0.3 - (playgroundState.surfaceOpacity / 100) * 0.22,
-    contentOpacity: playgroundState.contentOpacity,
+    alpha: playgroundState.alpha,
+    opacity: playgroundState.opacity,
     bottomCollision: playgroundState.bottomCollision,
     liquidDripping: playgroundState.liquidDripping,
     color: playgroundState.color
@@ -306,7 +301,7 @@ function applyPlayground() {
 }
 
 // Bind sliders listeners
-const sliders = ['density', 'speed', 'wind', 'surfaceOpacity', 'contentOpacity']
+const sliders = ['density', 'speed', 'wind', 'alpha', 'opacity']
 sliders.forEach(id => {
   document.querySelector(`#${id}`)?.addEventListener('input', (e) => {
     playgroundState[id] = Number((e.target as HTMLInputElement).value)
