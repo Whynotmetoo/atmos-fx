@@ -167,17 +167,17 @@ describe('createAtmosphere', () => {
     root.append(solid, translucent)
 
     const controller = createAtmosphere(root, {
-      opaqueSelector: '.solid',
-      contentOpacity: 0.55,
-      surfaceOpacity: 0.22,
+      solidSelector: '.solid',
+      opacity: 0.55,
+      alpha: 0.22,
     })
 
     controller.start()
 
-    expect(solid.dataset.atmosOpaque).toBe('managed')
+    expect(solid.dataset.atmosSolid).toBe('managed')
     expect(translucent.style.getPropertyValue('--atmos-fx-opacity')).toBe('0.35')
-    expect(root.style.getPropertyValue('--atmos-fx-content-opacity')).toBe('0.55')
-    expect(root.style.getPropertyValue('--atmos-fx-surface-opacity')).toBe('0.22')
+    expect(root.style.getPropertyValue('--atmos-fx-opacity')).toBe('0.55')
+    expect(root.style.getPropertyValue('--atmos-fx-alpha')).toBe('0.22')
 
     controller.update({ transparency: 'opacity' })
 
@@ -185,10 +185,10 @@ describe('createAtmosphere', () => {
 
     controller.destroy()
 
-    expect(solid.dataset.atmosOpaque).toBeUndefined()
+    expect(solid.dataset.atmosSolid).toBeUndefined()
     expect(translucent.style.getPropertyValue('--atmos-fx-opacity')).toBe('')
-    expect(root.style.getPropertyValue('--atmos-fx-content-opacity')).toBe('')
-    expect(root.style.getPropertyValue('--atmos-fx-surface-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atmos-fx-opacity')).toBe('')
+    expect(root.style.getPropertyValue('--atmos-fx-alpha')).toBe('')
   })
 
   it('creates, gates, and cleans up liquid dripping layer through lifecycle', () => {

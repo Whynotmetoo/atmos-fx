@@ -177,6 +177,8 @@
         z-index: 10;
         padding: 8px 16px;
         border-radius: 12px;
+      }
+      .showcase-nav-actions:not([data-atmos-glass]) {
         border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
@@ -188,6 +190,8 @@
         width: 560px;
         padding: 18px;
         z-index: 2;
+      }
+      .showcase-intro:not([data-atmos-glass]) {
         background: rgba(15, 24, 22, 0.52);
       }
       .showcase-title {
@@ -206,10 +210,11 @@
         line-height: 1.65;
       }
 
-      /* Showcase Cards */
       .showcase-card {
-        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
+      }
+      .showcase-card:not([data-atmos-glass]) {
+        border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
       }
 
@@ -219,9 +224,14 @@
         top: 290px;
         width: 360px;
         padding: 30px;
+        box-shadow: none;
+      }
+      .control-deck:not([data-atmos-glass]) {
         background: rgba(238, 240, 221, 0.88);
         color: #15201d;
-        box-shadow: none;
+      }
+      .control-deck[data-atmos-glass] {
+        color: rgba(255, 255, 255, 0.95);
       }
       .control-deck h3 {
         font-size: 1.1rem;
@@ -232,15 +242,19 @@
       .control-deck .showcase-preset-row {
         display: flex;
         gap: 6px;
-        background: rgba(21, 32, 29, 0.08);
         padding: 4px;
         border-radius: 6px;
+      }
+      .control-deck:not([data-atmos-glass]) .showcase-preset-row {
+        background: rgba(21, 32, 29, 0.08);
+      }
+      .control-deck[data-atmos-glass] .showcase-preset-row {
+        background: rgba(255, 255, 255, 0.06);
       }
       .control-deck .showcase-preset-row button {
         flex: 1;
         background: transparent;
         border: none;
-        color: rgba(21, 32, 29, 0.6);
         padding: 6px 0;
         border-radius: 4px;
         font-size: 0.8rem;
@@ -248,9 +262,19 @@
         cursor: pointer;
         transition: all 0.2s;
       }
-      .control-deck .showcase-preset-row button[aria-pressed="true"] {
+      .control-deck:not([data-atmos-glass]) .showcase-preset-row button {
+        color: rgba(21, 32, 29, 0.6);
+      }
+      .control-deck[data-atmos-glass] .showcase-preset-row button {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .control-deck:not([data-atmos-glass]) .showcase-preset-row button[aria-pressed="true"] {
         background: #15201d;
         color: #eef0dd;
+      }
+      .control-deck[data-atmos-glass] .showcase-preset-row button[aria-pressed="true"] {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
       }
       .control-deck .showcase-slider-row {
         display: grid;
@@ -259,28 +283,51 @@
         gap: 8px;
         font-size: 0.78rem;
       }
-      .control-deck .showcase-slider-row span {
+      .control-deck:not([data-atmos-glass]) .showcase-slider-row span {
         color: rgba(21, 32, 29, 0.7);
+      }
+      .control-deck[data-atmos-glass] .showcase-slider-row span {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .control-deck .showcase-slider-row span {
         font-weight: 600;
+      }
+      .control-deck:not([data-atmos-glass]) .showcase-slider-row strong {
+        color: #15201d;
+      }
+      .control-deck[data-atmos-glass] .showcase-slider-row strong {
+        color: #fff;
       }
       .control-deck .showcase-slider-row strong {
         text-align: right;
         font-family: monospace;
-        color: #15201d;
       }
-      .control-deck .showcase-slider-row input[type="range"] {
+      .control-deck:not([data-atmos-glass]) .showcase-slider-row input[type="range"] {
         accent-color: #15201d;
+      }
+      .control-deck[data-atmos-glass] .showcase-slider-row input[type="range"] {
+        accent-color: #fff;
       }
       .deck-grid {
         display: grid;
         grid-template-columns: 100px 1fr;
         gap: 8px;
         font-size: 0.8rem;
-        color: rgba(21, 32, 29, 0.75);
       }
       .deck-grid strong {
-        color: #15201d;
         text-align: right;
+      }
+      .control-deck:not([data-atmos-glass]) .deck-grid {
+        color: rgba(21, 32, 29, 0.75);
+      }
+      .control-deck[data-atmos-glass] .deck-grid {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .control-deck:not([data-atmos-glass]) .deck-grid strong {
+        color: #15201d;
+      }
+      .control-deck[data-atmos-glass] .deck-grid strong {
+        color: #fff;
       }
 
       .forecast-card {
@@ -289,6 +336,8 @@
         top: 480px;
         width: 280px;
         padding: 20px;
+      }
+      .forecast-card:not([data-atmos-glass]) {
         background: rgba(15, 24, 22, 0.52);
       }
       .forecast-card h3 {
@@ -307,6 +356,8 @@
         bottom: 300px;
         width: 180px;
         padding: 16px;
+      }
+      .floating-ticket:not([data-atmos-glass]) {
         background: rgba(13, 19, 18, 0.6);
       }
       .floating-ticket span {
@@ -323,9 +374,11 @@
       .tilt-card {
         position: absolute;
         right: 440px;
-        top: 380px;
+        top: 420px;
         width: 220px;
         padding: 16px;
+      }
+      .tilt-card:not([data-atmos-glass]) {
         background: rgba(63, 31, 22, 0.42);
       }
       .tilt-card p {
@@ -351,6 +404,8 @@
       .micro-card {
         min-height: 110px;
         padding: 12px;
+      }
+      .micro-card:not([data-atmos-glass]) {
         background: rgba(14, 21, 19, 0.56);
       }
       .micro-card > span {
@@ -370,14 +425,14 @@
         font-size: 0.7rem;
         line-height: 1.3;
       }
-      .micro-2 {
+      .micro-2:not([data-atmos-glass]) {
         background: #f3e8d0;
         color: #17211e;
       }
-      .micro-2 p, .micro-2 > span {
+      .micro-2:not([data-atmos-glass]) p, .micro-2:not([data-atmos-glass]) > span {
         color: rgba(23, 33, 30, 0.65);
       }
-      .micro-3 {
+      .micro-3:not([data-atmos-glass]) {
         background: rgba(112, 217, 255, 0.12);
       }
 
@@ -385,6 +440,8 @@
         position: absolute;
         height: 8px;
         border-radius: 99px;
+      }
+      .collision-rail:not([data-atmos-glass]) {
         background: rgb(244, 240, 230);
         box-shadow: 0 0 20px rgba(112, 217, 255, 0.15);
       }
@@ -395,7 +452,7 @@
       }
       .rail-bottom {
         right: 460px;
-        bottom: 380px;
+        bottom: 420px;
         width: 180px;
       }
 
@@ -446,9 +503,12 @@
 
       #playground-info-card:not([data-atmos-glass]),
       #playground-input-card:not([data-atmos-glass]) {
-        background: var(--bg-panel-solid);
         border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      }
+      #playground-info-card:not([data-atmos-glass]):not([data-atmos-opacity]),
+      #playground-input-card:not([data-atmos-glass]):not([data-atmos-opacity]) {
+        background: var(--bg-panel-solid);
       }
       #playground-info-card,
       #playground-input-card {
@@ -791,15 +851,17 @@
         width: 260px;
         padding: 14px 20px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(15, 24, 22, 0.52);
         color: var(--ink);
         outline: none;
         font-family: inherit;
         font-size: 0.92rem;
         z-index: 2;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
+      }
+      .showcase-input:not([data-atmos-glass]) {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 24, 22, 0.52);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       }
       .showcase-input::placeholder {
         color: var(--muted);
@@ -1024,8 +1086,8 @@
         </div>
 
         <!-- 7. Rails -->
-        <div class="collision-rail rail-top" data-atmos-collision></div>
-        <div class="collision-rail rail-bottom" data-atmos-collision></div>
+        <div class="collision-rail rail-top" data-atmos-collision data-atmos-glass></div>
+        <div class="collision-rail rail-bottom" data-atmos-collision data-atmos-glass></div>
       </div>
     </section>
 
@@ -1122,13 +1184,13 @@
 
           <!-- Opacity Sliders (Conditional display) -->
           <div class="control-group" id="surface-opacity-control">
-            <div class="control-label"><span data-i18n-key="control-surface-opacity">Alpha</span> <span class="val" id="surfaceOpacity-val">48%</span></div>
-            <input type="range" id="surfaceOpacity" min="18" max="82" step="1" value="48" />
+            <div class="control-label"><span data-i18n-key="control-surface-opacity">Alpha</span> <span class="val" id="alpha-val">0.08</span></div>
+            <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.08" />
           </div>
 
           <div class="control-group" id="content-opacity-control" style="display: none;">
-            <div class="control-label"><span data-i18n-key="control-content-opacity">Content Opacity</span> <span class="val" id="contentOpacity-val">0.72</span></div>
-            <input type="range" id="contentOpacity" min="0" max="1" step="0.02" value="0.72" />
+            <div class="control-label"><span data-i18n-key="control-content-opacity">Opacity</span> <span class="val" id="opacity-val">0.72</span></div>
+            <input type="range" id="opacity" min="0" max="1" step="0.02" value="0.72" />
           </div>
 
           <!-- Color presets selector -->
@@ -1227,7 +1289,7 @@ onMounted(() => {
       preset: 'rain',
       density: 0.7,
       wind: -0.15,
-      surfaceOpacity: 0.16,
+      alpha: 0.16,
     })
     controller.start()
   }
@@ -1304,14 +1366,14 @@ onUnmounted(() => {
                 <td data-i18n-key="api-desc-transparency">Sets the root integration mode and mirrors it to <code>data-atmos-transparency</code>. The built-in glass rules use this value; <code>AtmosCard</code> props or data attributes still choose each surface's treatment.</td>
               </tr>
               <tr>
-                <td><code>surfaceOpacity</code></td>
-                <td><code>number</code> (0 to 1) <span class="api-badge">0.14</span></td>
-                <td data-i18n-key="api-desc-surfaceOpacity">Sets the glass surface background base and is clamped from 0 to 1. It updates the <code>--atmos-fx-surface-opacity</code> CSS variable used by managed glass elements.</td>
+                <td><code>alpha</code></td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.08</span></td>
+                <td data-i18n-key="api-desc-alpha">Controls the background opacity of glass elements when using glass transparency mode. Has no effect in other transparency modes.</td>
               </tr>
               <tr>
-                <td><code>contentOpacity</code></td>
+                <td><code>opacity</code></td>
                 <td><code>number</code> (0 to 1) <span class="api-badge">0.72</span></td>
-                <td data-i18n-key="api-desc-contentOpacity">Sets the fallback opacity for elements marked with <code>data-atmos-opacity</code> and is clamped from 0 to 1. Per-element data values or the <code>AtmosCard</code> opacity prop take precedence.</td>
+                <td data-i18n-key="api-desc-opacity">Controls the fallback background opacity for elements marked with <code>data-atmos-opacity</code> in opacity mode.</td>
               </tr>
 
               <tr>
@@ -1325,9 +1387,9 @@ onUnmounted(() => {
                 <td data-i18n-key="api-desc-collisionSelector">Selects DOM elements used as precipitation and liquid collision targets; the default is <code>[data-atmos-collision]</code>. Matching elements are observed for DOM and size changes, and their top, side, and rounded-corner geometry is refreshed outside the render loop.</td>
               </tr>
               <tr>
-                <td><code>opaqueSelector</code></td>
+                <td><code>solidSelector</code></td>
                 <td><code>string</code></td>
-                <td data-i18n-key="api-desc-opaqueSelector">Selects elements that must remain opaque; the default is <code>[data-atmos-opaque]</code>. Matches are managed automatically as the subtree changes and are excluded from library-applied blur and opacity treatment.</td>
+                <td data-i18n-key="api-desc-solidSelector">Selects elements that must remain solid/opaque; the default is <code>[data-atmos-solid]</code>. Matches are managed automatically as the subtree changes and are excluded from library-applied transparency blurs.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
@@ -1352,7 +1414,7 @@ onUnmounted(() => {
               <tr>
                 <td><code>injectStyles</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-injectStyles">Injects the library's default layer, glass, opacity, and opaque rules into the owner document. Set it to false when loading <code>atmos-fx/styles.css</code> yourself or supplying equivalent styles.</td>
+                <td data-i18n-key="api-desc-injectStyles">Injects the library's default layer, glass, opacity, and solid rules into the owner document. Set it to false when loading <code>atmos-fx/styles.css</code> yourself or supplying equivalent styles.</td>
               </tr>
               <tr>
                 <td><code>styleNonce</code></td>
@@ -1377,7 +1439,7 @@ onUnmounted(() => {
               <tr>
                 <td><code>transMode</code></td>
                 <td><code>'glass' | 'opacity' | 'solid'</code></td>
-                <td data-i18n-key="api-desc-transMode">Maps the card to glass, opacity, or solid integration. Glass opts into managed blur when the root uses glass mode, opacity applies the <code>opacity</code> prop, and solid marks the card opaque; every mode remains a collision target.</td>
+                <td data-i18n-key="api-desc-transMode">Maps the card to glass, opacity, or solid integration. Glass opts into managed blur when the root uses glass mode, opacity applies the <code>opacity</code> prop, and solid marks the card solid; every mode remains a collision target.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
@@ -1397,7 +1459,12 @@ onUnmounted(() => {
               <tr>
                 <td><code>opacity</code></td>
                 <td><code>number</code> (0 to 1)</td>
-                <td data-i18n-key="api-desc-opacity">Sets this card's element opacity in opacity mode and is expected from 0 to 1. When omitted in that mode, <code>AtmosCard</code> uses 0.72; it has no effect in glass or solid mode.</td>
+                <td data-i18n-key="api-desc-card-opacity">Sets this card's background opacity in opacity mode and is expected from 0 to 1. When omitted, it uses the global default 0.72.</td>
+              </tr>
+              <tr>
+                <td><code>alpha</code></td>
+                <td><code>number</code> (0 to 1)</td>
+                <td data-i18n-key="api-desc-card-alpha">Sets this card's background opacity in glass mode and is expected from 0 to 1. When omitted, it uses the global default 0.08.</td>
               </tr>
             </tbody>
           </table>
@@ -1410,8 +1477,9 @@ onUnmounted(() => {
 
         <h4 data-i18n-key="api-vanilla-data-attr-title" style="font-size: 1rem; margin-bottom: 8px;">Define HTML with data attributes for inner cards:</h4>
         <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; margin-bottom: 32px; display: flex; flex-direction: column; gap: 8px;">
-          <li><code>data-atmos-opaque</code> <span data-i18n-key="api-data-opaque">keeps an element fully opaque and removes library-applied blur and shadow. Use it for controls or content that must remain visually solid.</span></li>
-          <li><code>data-atmos-opacity="0.64"</code> <span data-i18n-key="api-data-opacity">applies an element-specific opacity from 0 to 1. Invalid values fall back to <code>contentOpacity</code>, and changes are observed automatically.</span></li>
+          <li><code>data-atmos-solid</code> <span data-i18n-key="api-data-solid">keeps an element fully solid and removes library-applied transparency and blurs. Use it for controls or content that must remain visually solid.</span></li>
+          <li><code>data-atmos-opacity="0.72"</code> <span data-i18n-key="api-data-opacity">applies an element-specific background opacity from 0 to 1 in opacity mode. Invalid values fall back to the default opacity, and changes are observed automatically.</span></li>
+          <li><code>data-atmos-alpha="0.08"</code> <span data-i18n-key="api-data-alpha">applies an element-specific background opacity from 0 to 1 in glass mode, overriding the global alpha value.</span></li>
           <li><code>data-atmos-glass</code> <span data-i18n-key="api-data-glass">opts an element into the built-in glass surface while transparency is glass. It adds the managed background, border, shadow, blur, and stacking behavior.</span></li>
           <li><code>data-atmos-collision</code> <span data-i18n-key="api-data-collision">registers an element as a DOM collision target for foreground precipitation. Top and side boundaries use its root-relative bounding box and rounded-corner inset.</span></li>
           <li><code>data-atmos-liquid-dripping="true"</code> <span data-i18n-key="api-data-liquid-dripping">enables or disables condensation and dripping for one collision target. It only takes effect for rain when global <code>liquidDripping</code> is enabled.</span></li>

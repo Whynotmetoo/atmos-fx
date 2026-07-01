@@ -16,8 +16,8 @@ export const reactAtmosFxProps: AtmosFxProps = {
   wind: -0.2,
   quality: 'high',
   autoScaleQuality: false,
-  contentOpacity: 0.66,
-  surfaceOpacity: 0.18,
+  opacity: 0.66,
+  alpha: 0.18,
   liquidGatheringPoint: 0.5,
   className: 'weather',
   role: 'region',
@@ -28,7 +28,7 @@ export function ReactAdapterTypeSmoke() {
   return (
     <AtmosFx ref={rootRef} {...reactAtmosFxProps}>
       <section data-atmos-collision>
-        <button data-atmos-opaque>Action</button>
+        <button data-atmos-solid>Action</button>
       </section>
       <AtmosFx ref={cleanupRef} preset="rain" />
     </AtmosFx>

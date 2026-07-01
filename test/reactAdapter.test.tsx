@@ -177,7 +177,7 @@ describe('Atmosphere React adapter', () => {
     expect(buttonEl?.getAttribute('data-atmos-collision')).toBe('')
     expect(buttonEl?.getAttribute('data-atmos-liquid-dripping')).toBe('true')
     expect(buttonEl?.getAttribute('data-atmos-liquid-gathering-point')).toBe('0.6')
-    expect(buttonEl?.getAttribute('data-atmos-opaque')).toBe('')
+    expect(buttonEl?.getAttribute('data-atmos-solid')).toBe('')
     expect(buttonEl?.className).toBe('base-class extra-class')
     expect(buttonEl?.style.color).toBe('red')
     expect(buttonEl?.style.background).toBe('blue')
@@ -218,6 +218,8 @@ describe('Atmosphere React adapter', () => {
     const styleEl = document.getElementById('atmos-fx-styles')
     expect(styleEl).not.toBeNull()
     expect(styleEl?.getAttribute('nonce')).toBe('test-nonce')
+    expect(styleEl?.textContent).toContain(':where([data-atmos-glass]):not([data-atmos-solid])')
+    expect(styleEl?.textContent).toContain(':where([data-atmos-opacity]):not([data-atmos-solid])')
 
     await act(async () => {
       reactRoot.unmount()

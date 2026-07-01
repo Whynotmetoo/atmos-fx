@@ -87,7 +87,7 @@ const controller = createAtmosphere(document.querySelector('#container'), {
   preset: 'rain',
   density: 0.7,
   wind: -0.15,
-  surfaceOpacity: 0.16,
+  alpha: 0.16,
 })
 
 controller.start()
@@ -122,7 +122,7 @@ onMounted(() => {
       preset: 'rain',
       density: 0.7,
       wind: -0.15,
-      surfaceOpacity: 0.16,
+      alpha: 0.16,
     })
     controller.start()
   }
@@ -149,11 +149,11 @@ onUnmounted(() => {
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | 手動値は粒子密度の段階を決めます。`auto` は medium から始まり、実測したフレーム性能に合わせて調整されます。 |
 | `autoScaleQuality` | `boolean` | `true` | quality と DPR の自動調整を有効にします。false のとき auto は medium のままです。 |
 | `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | ルートの統合モードを設定します。各面の扱いは `AtmosCard` または data 属性で指定します。 |
-| `surfaceOpacity` | `number` | `0.14` | ガラス面の背景濃度です。0 から 1 に収まるよう補正されます。 |
-| `contentOpacity` | `number` | `0.72` | `data-atmos-opacity` 要素の既定透明度です。0 から 1 に収まるよう補正されます。 |
+| `alpha` | `number` | `0.08` | ガラス面の背景不透明度（アルファ値）です。0 から 1 に収まるよう補正されます。 |
+| `opacity` | `number` | `0.72` | `data-atmos-opacity` 要素の既定背景不透明度です。0 から 1 に収まるよう補正されます。 |
 | `bottomCollision` | `boolean` | `true` | ルートコンテナの下端で降水を衝突させるかを決めます。 |
 | `collisionSelector` | `string` | `[data-atmos-collision]` | DOM 衝突面を探すセレクタです。対象の上端、側面、角丸形状が前景粒子に反映されます。 |
-| `opaqueSelector` | `string` | `[data-atmos-opaque]` | ガラスや透明度処理から除外し、不透明のまま保つ要素を探します。 |
+| `solidSelector` | `string` | `[data-atmos-solid]` | ガラスや透明度処理から除外し、ソリッド表示のまま保つ要素を探します。 |
 | `liquidDripping` | `boolean` | `true` | 雨モードの凝結・集約・滴下アニメーションをまとめて切り替えます。 |
 | `liquidGatheringPoint` | `number` | カードごとに固定ランダム | 横方向の集約位置を `0.33` から `0.66` で指定します。 |
 | `pauseWhenHidden` | `boolean` | `true` | document が非表示、またはルートが viewport 外に出たとき自動停止します。 |
@@ -169,7 +169,8 @@ onUnmounted(() => {
 | `liquidDripping` | `boolean` | `true` | このカードだけ雨水の凝結と滴下を切り替えます。 |
 | `liquidGatheringPoint` | `number` | 継承 / 固定ランダム | このカードの集約位置を `0.33` から `0.66` で上書きします。 |
 | `asChild` | `boolean` | `false` | 余分な div を作らず、属性や ref を 1 つの子要素へマージします。 |
-| `opacity` | `number` | opacity モードでは `0.72` | `transMode="opacity"` の要素透明度です。glass と solid では使われません。 |
+| `opacity` | `number` | `0.72` | `transMode="opacity"` のカード背景不透明度です。 |
+| `alpha` | `number` | `0.08` | `transMode="glass"` のカード背景不透明度です。 |
 
 ### Vanilla JS の `createAtmosphere` options
 
@@ -179,8 +180,9 @@ onUnmounted(() => {
 
 #### 内部要素で使える data attributes
 
-- `data-atmos-opaque`: ガラスや透明度処理を外し、不透明に保ちます。
-- `data-atmos-opacity="0.64"`: 要素ごとの透明度を指定します。
+- `data-atmos-solid`: ガラスや透明度処理を外し、ソリッドなまま保ちます。
+- `data-atmos-opacity="0.72"`: 要素ごとの背景透明度を指定します。
+- `data-atmos-alpha="0.08"`: 要素ごとのガラス背景不透明度 (alpha) を指定します。
 - `data-atmos-glass`: 内蔵のガラス面スタイルを有効にします。
 - `data-atmos-collision`: 前景降水が上端と側面で衝突する面にします。
 - `data-atmos-liquid-dripping="true"`: 雨モードで、この面の凝結と滴下を切り替えます。

@@ -86,7 +86,7 @@ const controller = createAtmosphere(document.querySelector('#container'), {
   preset: 'rain',
   density: 0.7,
   wind: -0.15,
-  surfaceOpacity: 0.16,
+  alpha: 0.16,
 })
 
 controller.start()
@@ -120,7 +120,7 @@ onMounted(() => {
       preset: 'rain',
       density: 0.7,
       wind: -0.15,
-      surfaceOpacity: 0.16,
+      alpha: 0.16,
     })
     controller.start()
   }
@@ -148,11 +148,11 @@ onUnmounted(() => {
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Manual tiers set particle rate; `auto` starts at medium and adapts to measured frame performance. |
 | `autoScaleQuality` | `boolean` | `true` | Enables frame-performance adaptation. When disabled, `auto` stays at medium and manual tiers keep the full DPR cap. |
 | `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | Sets the root integration mode; individual surfaces are configured with `AtmosCard` or data attributes. |
-| `surfaceOpacity` | `number` | `0.14` | Glass surface background base, clamped from `0` to `1`. |
-| `contentOpacity` | `number` | `0.72` | Fallback opacity for elements marked with `data-atmos-opacity`, clamped from `0` to `1`. |
+| `alpha` | `number` | `0.08` | Glass surface background opacity (alpha), clamped from `0` to `1`. |
+| `opacity` | `number` | `0.72` | Fallback background opacity for elements marked with `data-atmos-opacity`, clamped from `0` to `1`. |
 | `bottomCollision` | `boolean` | `true` | Determines whether particles collide with the bottom edge of the container. |
 | `collisionSelector` | `string` | `[data-atmos-collision]` | Query selector for DOM collision targets whose top, side, and rounded-corner geometry affects foreground particles. |
-| `opaqueSelector` | `string` | `[data-atmos-opaque]` | Query selector for elements that skip transparency blurs. |
+| `solidSelector` | `string` | `[data-atmos-solid]` | Query selector for elements that skip transparency blurs. |
 | `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
 | `liquidGatheringPoint` | `number` | Random | Sets the horizontal liquid gathering point from `0.33` to `0.66`. The default is stable-random per card. |
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden or the root element is out of the viewport. |
@@ -168,7 +168,8 @@ onUnmounted(() => {
 | `liquidDripping` | `boolean` | `true` | Toggles the water condensation and dripping animation. |
 | `liquidGatheringPoint` | `number` | Inherits / Random | Overrides the liquid gathering point for this card from `0.33` to `0.66`. |
 | `asChild` | `boolean` | `false` | Merges properties onto the underlying child element to avoid rendering an extra wrapper element. |
-| `opacity` | `number` | `0.72` in opacity mode | Element opacity used by `transMode="opacity"`; ignored by glass and solid modes. |
+| `opacity` | `number` | `0.72` | Background opacity used by `transMode="opacity"`; ignored by glass and solid modes. |
+| `alpha` | `number` | `0.08` | Background opacity (alpha) used by `transMode="glass"`; ignored by opacity and solid modes. |
 
 ### Vanilla JS `createAtmosphere` Options
 
@@ -178,8 +179,9 @@ The `options` object accepts exactly the same parameters as the `AtmosFx` Props 
 
 #### Define HTML with data attributes for inner cards:
 
-- `data-atmos-opaque` keeps an element out of automatic glass or opacity treatment.
-- `data-atmos-opacity="0.64"` applies a per-element opacity value.
+- `data-atmos-solid` keeps an element fully solid and removes library-applied transparency and blurs.
+- `data-atmos-opacity="0.72"` applies a per-element background opacity value.
+- `data-atmos-alpha="0.08"` applies a per-element glass background opacity (alpha) value.
 - `data-atmos-glass` opts nested elements into the glass surface style.
 - `data-atmos-collision` makes the element a top- and side-edge collision surface for foreground precipitation.
 - `data-atmos-liquid-dripping="true"` toggles the water condensation and dripping animation (only in Rain mode).

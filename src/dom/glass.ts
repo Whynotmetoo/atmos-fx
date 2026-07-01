@@ -1,10 +1,8 @@
 import type { NormalizedAtmosphereOptions } from '../core/types'
 
 const OPACITY_VARIABLE = '--atmos-fx-opacity'
-const CONTENT_OPACITY_VARIABLE = '--atmos-fx-content-opacity'
-const SURFACE_OPACITY_VARIABLE = '--atmos-fx-surface-opacity'
-const MANAGED_OPAQUE_VALUE = 'managed'
-const MANAGED_CONTAINS_OPAQUE_VALUE = 'managed'
+const ALPHA_VARIABLE = '--atmos-fx-alpha'
+const MANAGED_SOLID_VALUE = 'managed'
 
 function clampOpacity(value: string): string | undefined {
   const parsed = Number.parseFloat(value)
@@ -24,8 +22,8 @@ export type GlassController = {
 export function createGlassController(root: HTMLElement): GlassController {
   const ownerWindow = root.ownerDocument.defaultView
   const trackedOpacityElements = new Set<HTMLElement>()
-  const managedOpaqueElements = new Set<HTMLElement>()
-  const managedOpaqueContainerElements = new Set<HTMLElement>()
+  const trackedAlphaElements = new Set<HTMLElement>()
+  const managedSolidElements = new Set<HTMLElement>()
   let options: NormalizedAtmosphereOptions | undefined
   let observing = false
 
@@ -35,58 +33,58 @@ export function createGlassController(root: HTMLElement): GlassController {
     subtree: true,
   }
 
-  const clearManagedOpaqueElements = (nextElements = new Set<HTMLElement>()) => {
-    for (const element of managedOpaqueElements) {
-      if (!nextElements.has(element) && element.dataset.atmosOpaque === MANAGED_OPAQUE_VALUE) {
-        delete element.dataset.atmosOpaque
+  const clearManagedSolidElements = (nextElements = new Set<HTMLElement>()) => {
+    for (const element of managedSolidElements) {
+      if (!nextElements.has(element) && element.dataset.atmosSolid === MANAGED_SOLID_VALUE) {
+        delete element.dataset.atmosSolid
       }
     }
 
     if (nextElements.size === 0) {
-      managedOpaqueElements.clear()
+      managedSolidElements.clear()
       return
     }
 
-    for (const element of Array.from(managedOpaqueElements)) {
+    for (const element of Array.from(managedSolidElements)) {
       if (!nextElements.has(element)) {
-        managedOpaqueElements.delete(element)
+        managedSolidElements.delete(element)
       }
     }
   }
 
-  const syncOpaqueSelector = () => {
-    if (!options?.opaqueSelector) {
-      clearManagedOpaqueElements()
+  const syncSolidSelector = () => {
+    if (!options?.solidSelector) {
+      clearManagedSolidElements()
       return
     }
 
-    for (const element of managedOpaqueElements) {
-      if (element.dataset.atmosOpaque === MANAGED_OPAQUE_VALUE) {
-        delete element.dataset.atmosOpaque
+    for (const element of managedSolidElements) {
+      if (element.dataset.atmosSolid === MANAGED_SOLID_VALUE) {
+        delete element.dataset.atmosSolid
       }
     }
 
     const nextElements = new Set<HTMLElement>()
 
-    for (const element of root.querySelectorAll(options.opaqueSelector)) {
+    for (const element of root.querySelectorAll(options.solidSelector)) {
       if (!(element instanceof HTMLElement)) {
         continue
       }
 
-      managedOpaqueElements.add(element)
+      managedSolidElements.add(element)
 
-      if (element.dataset.atmosOpaque === undefined) {
-        if (element.dataset.atmosOpaque !== MANAGED_OPAQUE_VALUE) {
-          element.dataset.atmosOpaque = MANAGED_OPAQUE_VALUE
+      if (element.dataset.atmosSolid === undefined) {
+        if (element.dataset.atmosSolid !== MANAGED_SOLID_VALUE) {
+          element.dataset.atmosSolid = MANAGED_SOLID_VALUE
         }
       }
 
-      if (element.dataset.atmosOpaque === MANAGED_OPAQUE_VALUE) {
+      if (element.dataset.atmosSolid === MANAGED_SOLID_VALUE) {
         nextElements.add(element)
       }
     }
 
-    clearManagedOpaqueElements(nextElements)
+    clearManagedSolidElements(nextElements)
   }
 
   const syncOpacityElements = () => {
@@ -122,47 +120,44 @@ export function createGlassController(root: HTMLElement): GlassController {
     }
   }
 
-  const syncOpaqueContainers = () => {
+  const syncAlphaElements = () => {
     const nextElements = new Set<HTMLElement>()
 
-    for (const element of Array.from(root.children)) {
-      if (
-        !(element instanceof HTMLElement) ||
-        element.dataset.atmosLayer !== undefined ||
-        element.dataset.atmosOpaque !== undefined
-      ) {
+    for (const element of root.querySelectorAll('[data-atmos-alpha]')) {
+      if (!(element instanceof HTMLElement)) {
         continue
       }
 
-      if (element.querySelector('[data-atmos-opaque]')) {
-        if (element.dataset.atmosContainsOpaque !== MANAGED_CONTAINS_OPAQUE_VALUE) {
-          element.dataset.atmosContainsOpaque = MANAGED_CONTAINS_OPAQUE_VALUE
+      nextElements.add(element)
+      const alpha = clampOpacity(element.dataset.atmosAlpha ?? '')
+
+      if (alpha === undefined) {
+        element.style.removeProperty(ALPHA_VARIABLE)
+      } else {
+        if (element.style.getPropertyValue(ALPHA_VARIABLE) !== alpha) {
+          element.style.setProperty(ALPHA_VARIABLE, alpha)
         }
-        nextElements.add(element)
       }
     }
 
-    for (const element of managedOpaqueContainerElements) {
-      if (
-        !nextElements.has(element) &&
-        element.dataset.atmosContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE
-      ) {
-        delete element.dataset.atmosContainsOpaque
+    for (const element of trackedAlphaElements) {
+      if (!nextElements.has(element)) {
+        element.style.removeProperty(ALPHA_VARIABLE)
       }
     }
 
-    managedOpaqueContainerElements.clear()
+    trackedAlphaElements.clear()
 
     for (const element of nextElements) {
-      managedOpaqueContainerElements.add(element)
+      trackedAlphaElements.add(element)
     }
   }
 
   const syncDomState = () => {
     stopObserving()
-    syncOpaqueSelector()
+    syncSolidSelector()
     syncOpacityElements()
-    syncOpaqueContainers()
+    syncAlphaElements()
     startObserving()
   }
 
@@ -198,28 +193,25 @@ export function createGlassController(root: HTMLElement): GlassController {
     sync(nextOptions) {
       options = nextOptions
       root.dataset.atmosTransparency = nextOptions.transparency
-      root.style.setProperty(CONTENT_OPACITY_VARIABLE, String(nextOptions.contentOpacity))
-      root.style.setProperty(SURFACE_OPACITY_VARIABLE, String(nextOptions.surfaceOpacity))
+      root.style.setProperty(OPACITY_VARIABLE, String(nextOptions.opacity))
+      root.style.setProperty(ALPHA_VARIABLE, String(nextOptions.alpha))
       syncDomState()
     },
     destroy() {
       stopObserving()
-      clearManagedOpaqueElements()
+      clearManagedSolidElements()
 
       for (const element of trackedOpacityElements) {
         element.style.removeProperty(OPACITY_VARIABLE)
       }
-
-      for (const element of managedOpaqueContainerElements) {
-        if (element.dataset.atmosContainsOpaque === MANAGED_CONTAINS_OPAQUE_VALUE) {
-          delete element.dataset.atmosContainsOpaque
-        }
+      for (const element of trackedAlphaElements) {
+        element.style.removeProperty(ALPHA_VARIABLE)
       }
 
       trackedOpacityElements.clear()
-      managedOpaqueContainerElements.clear()
-      root.style.removeProperty(CONTENT_OPACITY_VARIABLE)
-      root.style.removeProperty(SURFACE_OPACITY_VARIABLE)
+      trackedAlphaElements.clear()
+      root.style.removeProperty(OPACITY_VARIABLE)
+      root.style.removeProperty(ALPHA_VARIABLE)
       delete root.dataset.atmosTransparency
     },
   }
