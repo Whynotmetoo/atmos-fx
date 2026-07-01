@@ -1184,13 +1184,13 @@
 
           <!-- Opacity Sliders (Conditional display) -->
           <div class="control-group" id="surface-opacity-control">
-            <div class="control-label"><span data-i18n-key="control-surface-opacity">Alpha</span> <span class="val" id="alpha-val">0.08</span></div>
-            <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.08" />
+            <div class="control-label"><span data-i18n-key="control-surface-opacity">Alpha</span> <span class="val" id="alpha-val">0.12</span></div>
+            <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.12" />
           </div>
 
           <div class="control-group" id="content-opacity-control" style="display: none;">
-            <div class="control-label"><span data-i18n-key="control-content-opacity">Opacity</span> <span class="val" id="opacity-val">0.72</span></div>
-            <input type="range" id="opacity" min="0" max="1" step="0.02" value="0.72" />
+            <div class="control-label"><span data-i18n-key="control-content-opacity">Opacity</span> <span class="val" id="opacity-val">0.10</span></div>
+            <input type="range" id="opacity" min="0" max="1" step="0.02" value="0.1" />
           </div>
 
           <!-- Color presets selector -->
@@ -1323,12 +1323,7 @@ onUnmounted(() => {
               <tr>
                 <td><code>preset</code></td>
                 <td><code>'rain' | 'snow' | 'hail'</code> <span class="api-badge">rain</span></td>
-                <td data-i18n-key="api-desc-preset">Selects the rain, snow, or hail baseline, including particle type, density, speed, wind, color, and liquid behavior. Explicit options override preset values; <code>mode</code> is its React-only alias.</td>
-              </tr>
-              <tr>
-                <td><code>particle</code></td>
-                <td><code>'rain' | 'snow' | 'hail'</code></td>
-                <td data-i18n-key="api-desc-particle">Changes only the rendered precipitation type while preserving the selected preset's other values. Updating it at runtime recreates the weather renderer, so use <code>preset</code> for a complete behavior switch.</td>
+                <td data-i18n-key="api-desc-preset">Selects the rain, snow, or hail baseline, including particle type, density, speed, wind, color, and liquid behavior. Explicit options override preset values.</td>
               </tr>
               <tr>
                 <td><code>density</code></td>
@@ -1356,40 +1351,20 @@ onUnmounted(() => {
                 <td data-i18n-key="api-desc-quality">Manual low, medium, and high tiers select different per-area particle rates. Auto starts at medium, promotes after 180 consecutive good frames, and degrades when at least 30% of a 60-frame window is slow before reducing DPR.</td>
               </tr>
               <tr>
-                <td><code>autoScaleQuality</code></td>
-                <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-autoScaleQuality">Enables frame-performance monitoring for quality and DPR adjustment. When disabled, <code>auto</code> remains at medium and manual tiers retain the full DPR cap.</td>
-              </tr>
-              <tr>
-                <td><code>transparency</code></td>
-                <td><code>'glass' | 'opacity' | 'none'</code> <span class="api-badge">glass</span></td>
-                <td data-i18n-key="api-desc-transparency">Sets the root integration mode and mirrors it to <code>data-atmos-transparency</code>. The built-in glass rules use this value; <code>AtmosCard</code> props or data attributes still choose each surface's treatment.</td>
-              </tr>
-              <tr>
                 <td><code>alpha</code></td>
-                <td><code>number</code> (0 to 1) <span class="api-badge">0.08</span></td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.12</span></td>
                 <td data-i18n-key="api-desc-alpha">Controls the background opacity of glass elements when using glass transparency mode. Has no effect in other transparency modes.</td>
               </tr>
               <tr>
                 <td><code>opacity</code></td>
-                <td><code>number</code> (0 to 1) <span class="api-badge">0.72</span></td>
+                <td><code>number</code> (0 to 1) <span class="api-badge">0.1</span></td>
                 <td data-i18n-key="api-desc-opacity">Controls the fallback background opacity for elements marked with <code>data-atmos-opacity</code> in opacity mode.</td>
               </tr>
 
               <tr>
                 <td><code>bottomCollision</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
-                <td data-i18n-key="api-desc-bottomCollision">Enables collision with the atmosphere root's bottom edge. It affects precipitation and accumulation independently of DOM targets selected by <code>collisionSelector</code>.</td>
-              </tr>
-              <tr>
-                <td><code>collisionSelector</code></td>
-                <td><code>string</code></td>
-                <td data-i18n-key="api-desc-collisionSelector">Selects DOM elements used as precipitation and liquid collision targets; the default is <code>[data-atmos-collision]</code>. Matching elements are observed for DOM and size changes, and their top, side, and rounded-corner geometry is refreshed outside the render loop.</td>
-              </tr>
-              <tr>
-                <td><code>solidSelector</code></td>
-                <td><code>string</code></td>
-                <td data-i18n-key="api-desc-solidSelector">Selects elements that must remain solid/opaque; the default is <code>[data-atmos-solid]</code>. Matches are managed automatically as the subtree changes and are excluded from library-applied transparency blurs.</td>
+                <td data-i18n-key="api-desc-bottomCollision">Enables collision with the atmosphere root's bottom edge. DOM collision targets use the fixed <code>data-atmos-collision</code> attribute.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
@@ -1439,7 +1414,7 @@ onUnmounted(() => {
               <tr>
                 <td><code>transMode</code></td>
                 <td><code>'glass' | 'opacity' | 'solid'</code></td>
-                <td data-i18n-key="api-desc-transMode">Maps the card to glass, opacity, or solid integration. Glass opts into managed blur when the root uses glass mode, opacity applies the <code>opacity</code> prop, and solid marks the card solid; every mode remains a collision target.</td>
+                <td data-i18n-key="api-desc-transMode">Maps the card to glass, opacity, or solid integration. Glass opts into managed blur, opacity applies the <code>opacity</code> prop, and solid marks the card solid; every mode remains a collision target.</td>
               </tr>
               <tr>
                 <td><code>liquidDripping</code></td>
@@ -1459,12 +1434,12 @@ onUnmounted(() => {
               <tr>
                 <td><code>opacity</code></td>
                 <td><code>number</code> (0 to 1)</td>
-                <td data-i18n-key="api-desc-card-opacity">Sets this card's background opacity in opacity mode and is expected from 0 to 1. When omitted, it uses the global default 0.72.</td>
+                <td data-i18n-key="api-desc-card-opacity">Sets this card's background opacity in opacity mode and is expected from 0 to 1. When omitted, it uses the global default 0.1.</td>
               </tr>
               <tr>
                 <td><code>alpha</code></td>
                 <td><code>number</code> (0 to 1)</td>
-                <td data-i18n-key="api-desc-card-alpha">Sets this card's background opacity in glass mode and is expected from 0 to 1. When omitted, it uses the global default 0.08.</td>
+                <td data-i18n-key="api-desc-card-alpha">Sets this card's background opacity in glass mode and is expected from 0 to 1. When omitted, it uses the global default 0.12.</td>
               </tr>
             </tbody>
           </table>
@@ -1472,18 +1447,18 @@ onUnmounted(() => {
 
         <h3 class="section-subtitle" data-i18n-key="api-vanilla-title" style="margin-top: 24px;">Vanilla JS createAtmosphere Options</h3>
         <p data-i18n-key="api-vanilla-desc" style="margin-bottom: 16px; color: var(--muted); font-size: 0.95rem;">
-          <code>createAtmosphere(element, options)</code> attaches the effect to an existing <code>HTMLElement</code> and returns a lifecycle controller. Its options match <code>AtmosFx</code> props except for the React-only <code>mode</code> alias.
+          <code>createAtmosphere(element, options)</code> attaches the effect to an existing <code>HTMLElement</code> and returns a lifecycle controller. Its options match <code>AtmosFx</code> props.
         </p>
 
         <h4 data-i18n-key="api-vanilla-data-attr-title" style="font-size: 1rem; margin-bottom: 8px;">Define HTML with data attributes for inner cards:</h4>
         <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; margin-bottom: 32px; display: flex; flex-direction: column; gap: 8px;">
           <li><code>data-atmos-solid</code> <span data-i18n-key="api-data-solid">keeps an element fully solid and removes library-applied transparency and blurs. Use it for controls or content that must remain visually solid.</span></li>
-          <li><code>data-atmos-opacity="0.72"</code> <span data-i18n-key="api-data-opacity">applies an element-specific background opacity from 0 to 1 in opacity mode. Invalid values fall back to the default opacity, and changes are observed automatically.</span></li>
-          <li><code>data-atmos-alpha="0.08"</code> <span data-i18n-key="api-data-alpha">applies an element-specific background opacity from 0 to 1 in glass mode, overriding the global alpha value.</span></li>
-          <li><code>data-atmos-glass</code> <span data-i18n-key="api-data-glass">opts an element into the built-in glass surface while transparency is glass. It adds the managed background, border, shadow, blur, and stacking behavior.</span></li>
+          <li><code>data-atmos-opacity="0.1"</code> <span data-i18n-key="api-data-opacity">applies an element-specific background opacity from 0 to 1 in opacity mode. Invalid values fall back to the default opacity, and changes are observed automatically.</span></li>
+          <li><code>data-atmos-alpha="0.12"</code> <span data-i18n-key="api-data-alpha">applies an element-specific background opacity from 0 to 1 in glass mode, overriding the global alpha value.</span></li>
+          <li><code>data-atmos-glass</code> <span data-i18n-key="api-data-glass">opts an element into the built-in glass surface. It adds the managed background, border, shadow, blur, and stacking behavior.</span></li>
           <li><code>data-atmos-collision</code> <span data-i18n-key="api-data-collision">registers an element as a DOM collision target for foreground precipitation. Top and side boundaries use its root-relative bounding box and rounded-corner inset.</span></li>
           <li><code>data-atmos-liquid-dripping="true"</code> <span data-i18n-key="api-data-liquid-dripping">enables or disables condensation and dripping for one collision target. It only takes effect for rain when global <code>liquidDripping</code> is enabled.</span></li>
-          <li><code>data-atmos-liquid-gathering-point="0.5"</code> <span data-i18n-key="api-data-liquid-gathering-point">sets this target's horizontal gathering point as a normalized value from 0.33 to 0.66. It overrides the global value and is clamped when outside the range.</span></li>
+          <li><code>data-atmos-liquid-gathering-point="0.5"</code> <span data-i18n-key="api-data-liquid-gathering-point">is an optional override example. Omit it to keep the stable-random per-card default; when provided, values are clamped from 0.33 to 0.66.</span></li>
         </ul>
 
         <h3 class="section-subtitle" data-i18n-key="methods-title" style="margin-top: 24px;">Controller Methods</h3>
@@ -1548,40 +1523,6 @@ controller.destroy()</code></pre>
           </table>
         </div>
 
-        <h3 class="section-subtitle" data-i18n-key="exports-title" style="margin-top: 24px;">Core Utilities and TypeScript Exports</h3>
-        <p data-i18n-key="exports-intro" style="margin-bottom: 16px; color: var(--muted); font-size: 0.95rem;">The root package also exposes normalization helpers, preset metadata, and public TypeScript types for integrations that need to build configuration tooling.</p>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th data-i18n-key="export-th-export">Export</th>
-                <th data-i18n-key="method-th-desc">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>normalizeAtmosphereOptions(options?)</code></td>
-                <td data-i18n-key="export-desc-normalize">Resolves defaults, preset values, clamped ranges, and internal normalized fields into a complete options object. It does not create DOM nodes or start rendering.</td>
-              </tr>
-              <tr>
-                <td><code>DEFAULT_OPTIONS</code></td>
-                <td data-i18n-key="export-desc-defaults">Contains the library-wide fallback options used when neither a preset nor an explicit option supplies a value. Treat it as read-only metadata rather than mutating it at runtime.</td>
-              </tr>
-              <tr>
-                <td><code>PRESET_OPTIONS</code></td>
-                <td data-i18n-key="export-desc-presets">Maps rain, snow, and hail to their preset-specific option overrides. It is useful for displaying preset metadata or composing custom controls.</td>
-              </tr>
-              <tr>
-                <td><code>resolvePresetOptions(preset)</code></td>
-                <td data-i18n-key="export-desc-resolve-preset">Returns the option overrides for one preset name. The returned values are preset metadata only and still need normalization before use as a complete configuration.</td>
-              </tr>
-              <tr>
-                <td><code>type exports</code></td>
-                <td data-i18n-key="export-desc-types">Includes <code>AtmosphereOptions</code>, <code>AtmosphereController</code>, normalized option and union types, plus <code>AtmosFxProps</code> and <code>AtmosCardProps</code>. Import them with type-only imports so they do not affect runtime bundles.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </section>
 
       <!-- Design Best Practices -->

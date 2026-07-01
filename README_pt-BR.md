@@ -140,20 +140,15 @@ onUnmounted(() => {
 
 | Prop | Tipo | Padrão | Descrição |
 | --- | --- | --- | --- |
-| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Seleciona um conjunto completo de valores físicos e visuais. No React, `mode` funciona como alias. |
-| `particle` | `'rain' \| 'snow' \| 'hail'` | Herda o preset | Troca somente o tipo de partícula, sem substituir speed, wind ou os demais valores do preset. |
+| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Seleciona um conjunto completo de valores físicos e visuais. |
 | `density` | `number` | `0.65` | Controla as partículas por unidade de área. 0 desativa e 1 usa a taxa completa do quality atual. |
 | `speed` | `number` | `1.0` | Multiplica a velocidade do movimento e do ciclo de água. Valores negativos são tratados como 0. |
 | `wind` | `number` | `-0.12` | Aplica movimento horizontal: negativo para a esquerda, positivo para a direita. |
 | `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | Aceita qualquer cor CSS válida para a precipitação e a água. O canal alpha também é preservado. |
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | Os níveis manuais definem a taxa de partículas. `auto` começa em medium e se adapta ao desempenho medido. |
-| `autoScaleQuality` | `boolean` | `true` | Ativa o ajuste automático de quality e DPR. Quando desativado, auto permanece em medium. |
-| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | Define o modo de integração da raiz; cada superfície é configurada com `AtmosCard` ou atributos data. |
-| `alpha` | `number` | `0.08` | Base de opacidade do fundo de vidro, limitada entre `0` e `1`. |
-| `opacity` | `number` | `0.72` | Opacidade de fundo padrão de elementos com `data-atmos-opacity`, limitada entre `0` e `1`. |
+| `alpha` | `number` | `0.12` | Base de opacidade do fundo de vidro, limitada entre `0` e `1`. |
+| `opacity` | `number` | `0.1` | Opacidade de fundo padrão de elementos com `data-atmos-opacity`, limitada entre `0` e `1`. |
 | `bottomCollision` | `boolean` | `true` | Ativa a colisão com a borda inferior do contêiner raiz. |
-| `collisionSelector` | `string` | `[data-atmos-collision]` | Seleciona alvos DOM de colisão. Bordas superiores, laterais e cantos arredondados afetam as partículas em primeiro plano. |
-| `solidSelector` | `string` | `[data-atmos-solid]` | Seleciona elementos que devem continuar sólidos e sem a transparência gerenciada pela biblioteca. |
 | `liquidDripping` | `boolean` | `true` | Controla globalmente a condensação, o agrupamento e o gotejamento no modo chuva. |
 | `liquidGatheringPoint` | `number` | Aleatório estável por card | Define o ponto horizontal de agrupamento entre `0.33` e `0.66`. |
 | `pauseWhenHidden` | `boolean` | `true` | Pausa quando o document fica oculto ou a raiz sai do viewport. |
@@ -169,24 +164,24 @@ onUnmounted(() => {
 | `liquidDripping` | `boolean` | `true` | Ativa ou desativa a animação de água deste card. |
 | `liquidGatheringPoint` | `number` | Herdado / aleatório estável | Sobrescreve entre `0.33` e `0.66` o ponto onde a água se reúne neste card. |
 | `asChild` | `boolean` | `false` | Mescla atributos e refs em um único filho sem criar uma div extra. |
-| `opacity` | `number` | `0.72` | Opacidade de fundo do card no modo opacity, de 0 a 1. |
-| `alpha` | `number` | `0.08` | Opacidade de fundo do card (alpha) em modo glass, de 0 a 1. |
+| `opacity` | `number` | `0.1` | Opacidade de fundo do card no modo opacity, de 0 a 1. |
+| `alpha` | `number` | `0.12` | Opacidade de fundo do card (alpha) em modo glass, de 0 a 1. |
 
 ### Opções de `createAtmosphere` em Vanilla JS
 
 `createAtmosphere(element, options)` retorna um controller com `start()`, `stop()`, `pause()`, `resume()`, `resize()`, `update(options)` e `destroy()`.
 
-`options` aceita os mesmos valores de `AtmosFx`, exceto o alias React `mode`.
+`options` aceita os mesmos valores de `AtmosFx`.
 
 #### Atributos data para elementos internos
 
 - `data-atmos-solid`: mantém o elemento sólido e sem tratamento de vidro.
-- `data-atmos-opacity="0.72"`: define uma opacidade de fundo específica para o elemento.
-- `data-atmos-alpha="0.08"`: define uma opacidade de vidro (alpha) específica para o elemento.
+- `data-atmos-opacity="0.1"`: define uma opacidade de fundo específica para o elemento.
+- `data-atmos-alpha="0.12"`: define uma opacidade de vidro (alpha) específica para o elemento.
 - `data-atmos-glass`: ativa a superfície de vidro incluída.
 - `data-atmos-collision`: transforma o elemento em superfície de colisão superior e lateral.
 - `data-atmos-liquid-dripping="true"`: controla condensação e gotejamento dessa superfície no modo chuva.
-- `data-atmos-liquid-gathering-point="0.5"`: posiciona o ponto de agrupamento entre `0.33` e `0.66`.
+- `data-atmos-liquid-gathering-point="0.5"` é um exemplo de sobrescrita opcional. Quando omitido, cada card mantém seu valor aleatório estável; valores informados são limitados entre `0.33` e `0.66`.
 
 ## Orientações de design
 

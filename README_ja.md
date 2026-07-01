@@ -140,20 +140,15 @@ onUnmounted(() => {
 
 | Prop | 型 | デフォルト | 説明 |
 | --- | --- | --- | --- |
-| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | 物理挙動と見た目の基準をまとめて選びます。React では `mode` も同じ意味で使えます。 |
-| `particle` | `'rain' \| 'snow' \| 'hail'` | preset を継承 | speed や wind はそのままに、描画する粒子だけを差し替えます。 |
+| `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | 物理挙動と見た目の基準をまとめて選びます。 |
 | `density` | `number` | `0.65` | 単位面積あたりの粒子量です。0 で無効、1 で現在の quality における最大密度になります。 |
 | `speed` | `number` | `1.0` | 落下運動と液体アニメーションの速度倍率です。負の値は 0 として扱われます。 |
 | `wind` | `number` | `-0.12` | 水平方向の流れを指定します。負なら左、正なら右へ流れます。 |
 | `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | ブラウザが解釈できる CSS 色を指定します。alpha は降水と雨水表現にも反映されます。 |
 | `quality` | `'auto' \| 'low' \| 'medium' \| 'high'` | `'auto'` | 手動値は粒子密度の段階を決めます。`auto` は medium から始まり、実測したフレーム性能に合わせて調整されます。 |
-| `autoScaleQuality` | `boolean` | `true` | quality と DPR の自動調整を有効にします。false のとき auto は medium のままです。 |
-| `transparency` | `'glass' \| 'opacity' \| 'none'` | `'glass'` | ルートの統合モードを設定します。各面の扱いは `AtmosCard` または data 属性で指定します。 |
-| `alpha` | `number` | `0.08` | ガラス面の背景不透明度（アルファ値）です。0 から 1 に収まるよう補正されます。 |
-| `opacity` | `number` | `0.72` | `data-atmos-opacity` 要素の既定背景不透明度です。0 から 1 に収まるよう補正されます。 |
+| `alpha` | `number` | `0.12` | ガラス面の背景不透明度（アルファ値）です。0 から 1 に収まるよう補正されます。 |
+| `opacity` | `number` | `0.1` | `data-atmos-opacity` 要素の既定背景不透明度です。0 から 1 に収まるよう補正されます。 |
 | `bottomCollision` | `boolean` | `true` | ルートコンテナの下端で降水を衝突させるかを決めます。 |
-| `collisionSelector` | `string` | `[data-atmos-collision]` | DOM 衝突面を探すセレクタです。対象の上端、側面、角丸形状が前景粒子に反映されます。 |
-| `solidSelector` | `string` | `[data-atmos-solid]` | ガラスや透明度処理から除外し、ソリッド表示のまま保つ要素を探します。 |
 | `liquidDripping` | `boolean` | `true` | 雨モードの凝結・集約・滴下アニメーションをまとめて切り替えます。 |
 | `liquidGatheringPoint` | `number` | カードごとに固定ランダム | 横方向の集約位置を `0.33` から `0.66` で指定します。 |
 | `pauseWhenHidden` | `boolean` | `true` | document が非表示、またはルートが viewport 外に出たとき自動停止します。 |
@@ -169,24 +164,24 @@ onUnmounted(() => {
 | `liquidDripping` | `boolean` | `true` | このカードだけ雨水の凝結と滴下を切り替えます。 |
 | `liquidGatheringPoint` | `number` | 継承 / 固定ランダム | このカードの集約位置を `0.33` から `0.66` で上書きします。 |
 | `asChild` | `boolean` | `false` | 余分な div を作らず、属性や ref を 1 つの子要素へマージします。 |
-| `opacity` | `number` | `0.72` | `transMode="opacity"` のカード背景不透明度です。 |
-| `alpha` | `number` | `0.08` | `transMode="glass"` のカード背景不透明度です。 |
+| `opacity` | `number` | `0.1` | `transMode="opacity"` のカード背景不透明度です。 |
+| `alpha` | `number` | `0.12` | `transMode="glass"` のカード背景不透明度です。 |
 
 ### Vanilla JS の `createAtmosphere` options
 
 `createAtmosphere(element, options)` は `start()`、`stop()`、`pause()`、`resume()`、`resize()`、`update(options)`、`destroy()` を持つ controller を返します。
 
-`options` は `mode` を除き、`AtmosFx` Props と同じです。
+`options` は `AtmosFx` Props と同じです。
 
 #### 内部要素で使える data attributes
 
 - `data-atmos-solid`: ガラスや透明度処理を外し、ソリッドなまま保ちます。
-- `data-atmos-opacity="0.72"`: 要素ごとの背景透明度を指定します。
-- `data-atmos-alpha="0.08"`: 要素ごとのガラス背景不透明度 (alpha) を指定します。
+- `data-atmos-opacity="0.1"`: 要素ごとの背景透明度を指定します。
+- `data-atmos-alpha="0.12"`: 要素ごとのガラス背景不透明度 (alpha) を指定します。
 - `data-atmos-glass`: 内蔵のガラス面スタイルを有効にします。
 - `data-atmos-collision`: 前景降水が上端と側面で衝突する面にします。
 - `data-atmos-liquid-dripping="true"`: 雨モードで、この面の凝結と滴下を切り替えます。
-- `data-atmos-liquid-gathering-point="0.5"`: 集約位置を `0.33` から `0.66` で指定します。
+- `data-atmos-liquid-gathering-point="0.5"` は任意の上書き例です。省略時はカードごとの固定ランダム値を使い、指定値は `0.33` から `0.66` に補正されます。
 
 ## デザインの指針
 

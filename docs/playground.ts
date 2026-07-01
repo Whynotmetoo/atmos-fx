@@ -27,15 +27,12 @@ const showcaseState: ShowcaseState = {
 
 const showcaseAtmosphere = createAtmosphere(showcaseRoot, {
   preset: showcaseState.preset,
-  particle: showcaseState.preset,
   density: showcaseState.density,
   wind: showcaseState.wind,
   speed: 1.0,
   quality: 'high',
   bottomCollision: true,
   liquidDripping: true,
-  collisionSelector: '[data-atmos-collision]',
-  solidSelector: '[data-atmos-solid]',
   pauseWhenHidden: true
 })
 showcaseAtmosphere.start()
@@ -86,7 +83,6 @@ function applyShowcase() {
   // Push updates to controller
   showcaseAtmosphere.update({
     preset: showcaseState.preset,
-    particle: showcaseState.preset,
     density: showcaseState.density,
     wind: showcaseState.wind
   })
@@ -121,7 +117,7 @@ interface PlaygroundState {
   speed: number
   wind: number
   quality: string
-  transparency: string
+  surfaceMode: string
   alpha: number
   opacity: number
   bottomCollision: boolean
@@ -136,17 +132,25 @@ const playgroundState: PlaygroundState = {
   speed: 1.00,
   wind: -0.12,
   quality: 'auto',
-  transparency: 'glass',
-  alpha: 0.08,
-  opacity: 0.72,
+  surfaceMode: 'glass',
+  alpha: 0.12,
+  opacity: 0.1,
   bottomCollision: true,
   liquidDripping: true,
   color: 'rgba(220, 235, 255, 0.72)'
 }
 
 const playgroundAtmosphere = createAtmosphere(playgroundRoot, {
-  ...playgroundState,
+  preset: playgroundState.preset,
+  density: playgroundState.density,
+  speed: playgroundState.speed,
+  wind: playgroundState.wind,
+  quality: playgroundState.quality,
   alpha: playgroundState.alpha,
+  opacity: playgroundState.opacity,
+  bottomCollision: playgroundState.bottomCollision,
+  liquidDripping: playgroundState.liquidDripping,
+  color: playgroundState.color,
   pauseWhenHidden: true
 })
 playgroundAtmosphere.start()
@@ -192,22 +196,22 @@ function updateReactCodePreview() {
   if (p.bottomCollision) {
     props.push(`bottomCollision={true}`)
   }
-  if (p.transparency === 'glass') {
+  if (p.surfaceMode === 'glass') {
     props.push(`alpha={${p.alpha.toFixed(2)}}`)
   }
 
   const atmosFxPropsStr = props.join('\n' + indent)
 
-  const cardOpacityProp = p.transparency === 'opacity' ? ` opacity={${p.opacity.toFixed(2)}}` : ''
+  const cardOpacityProp = p.surfaceMode === 'opacity' ? ` opacity={${p.opacity.toFixed(2)}}` : ''
 
   const code = `<AtmosFx
   ${atmosFxPropsStr}
 >
-  <AtmosCard transMode="${p.transparency}"${cardOpacityProp}${p.preset === 'rain' ? ` liquidDripping={${p.liquidDripping}}` : ''}>
+  <AtmosCard transMode="${p.surfaceMode}"${cardOpacityProp}${p.preset === 'rain' ? ` liquidDripping={${p.liquidDripping}}` : ''}>
     <div>A high-performance DOM-aware WebGL atmosphere engine.</div>
   </AtmosCard>
 
-  <AtmosCard transMode="${p.transparency}"${cardOpacityProp}>
+  <AtmosCard transMode="${p.surfaceMode}"${cardOpacityProp}>
     <input type="text" placeholder="Type here..." />
   </AtmosCard>
 </AtmosFx>`
@@ -224,8 +228,8 @@ function applyPlayground() {
   ;(document.querySelector('#liquid-dripping-container') as HTMLElement).style.display = playgroundState.preset === 'rain' ? 'flex' : 'none'
 
   // Display transparency conditional options
-  ;(document.querySelector('#surface-opacity-control') as HTMLElement).style.display = playgroundState.transparency === 'glass' ? 'flex' : 'none'
-  ;(document.querySelector('#content-opacity-control') as HTMLElement).style.display = playgroundState.transparency === 'opacity' ? 'flex' : 'none'
+  ;(document.querySelector('#surface-opacity-control') as HTMLElement).style.display = playgroundState.surfaceMode === 'glass' ? 'flex' : 'none'
+  ;(document.querySelector('#content-opacity-control') as HTMLElement).style.display = playgroundState.surfaceMode === 'opacity' ? 'flex' : 'none'
 
   // Sync sliders
   syncSliderValue('density')
@@ -241,12 +245,6 @@ function applyPlayground() {
   // Apply card configs and layout attributes
   const infoCard = document.querySelector('#playground-info-card') as HTMLElement
   const inputCard = document.querySelector('#playground-input-card') as HTMLElement
-  const stage = document.querySelector('#playground-stage') as HTMLElement
-
-  if (stage) {
-    stage.setAttribute('data-atmos-transparency', playgroundState.transparency)
-  }
-
   [infoCard, inputCard].forEach(card => {
     if (!card) return
     card.removeAttribute('data-atmos-glass')
@@ -254,12 +252,12 @@ function applyPlayground() {
     card.removeAttribute('data-atmos-solid')
     card.style.removeProperty('--atmos-fx-opacity')
 
-    if (playgroundState.transparency === 'glass') {
+    if (playgroundState.surfaceMode === 'glass') {
       card.setAttribute('data-atmos-glass', '')
-    } else if (playgroundState.transparency === 'opacity') {
+    } else if (playgroundState.surfaceMode === 'opacity') {
       card.setAttribute('data-atmos-opacity', String(playgroundState.opacity))
       card.style.setProperty('--atmos-fx-opacity', String(playgroundState.opacity))
-    } else if (playgroundState.transparency === 'none') {
+    } else if (playgroundState.surfaceMode === 'none') {
       card.setAttribute('data-atmos-solid', '')
     }
 
@@ -278,7 +276,7 @@ function applyPlayground() {
 
   // Dropdown values
   ;(document.querySelector('#quality') as HTMLSelectElement).value = playgroundState.quality
-  ;(document.querySelector('#transparency') as HTMLSelectElement).value = playgroundState.transparency
+  ;(document.querySelector('#transparency') as HTMLSelectElement).value = playgroundState.surfaceMode
 
   // Sync code output block
   updateReactCodePreview()
@@ -286,12 +284,10 @@ function applyPlayground() {
   // Push updates to controller
   playgroundAtmosphere.update({
     preset: playgroundState.preset,
-    particle: playgroundState.preset,
     density: playgroundState.density,
     speed: playgroundState.speed,
     wind: playgroundState.wind,
     quality: playgroundState.quality,
-    transparency: playgroundState.transparency,
     alpha: playgroundState.alpha,
     opacity: playgroundState.opacity,
     bottomCollision: playgroundState.bottomCollision,
@@ -327,7 +323,7 @@ document.querySelector('#quality')?.addEventListener('change', (e) => {
 })
 
 document.querySelector('#transparency')?.addEventListener('change', (e) => {
-  playgroundState.transparency = (e.target as HTMLSelectElement).value
+  playgroundState.surfaceMode = (e.target as HTMLSelectElement).value
   applyPlayground()
 })
 
