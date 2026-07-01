@@ -106,7 +106,7 @@ describe('QualityMonitor auto-scaling', () => {
   })
 
   it('keeps manual quality fixed and only reduces DPR', () => {
-    const monitor = new QualityMonitor(true, false)
+    const monitor = new QualityMonitor(false)
     const onStateChange = vi.fn()
     warmUp(monitor, onStateChange)
 
@@ -121,7 +121,7 @@ describe('QualityMonitor auto-scaling', () => {
   })
 
   it('resets to the correct baseline when the quality mode changes', () => {
-    const monitor = new QualityMonitor(true, false)
+    const monitor = new QualityMonitor(false)
 
     monitor.setup(true)
     expect(monitor.getCurrentStep()).toBe(1)
@@ -130,20 +130,6 @@ describe('QualityMonitor auto-scaling', () => {
     monitor.setup(false)
     expect(monitor.getCurrentStep()).toBe(0)
     expect(monitor.getScalingState()).toEqual({ dprCap: 2 })
-  })
-
-  it('holds auto at medium when adaptive scaling is disabled', () => {
-    const monitor = new QualityMonitor(false, true)
-    const onStateChange = vi.fn()
-
-    warmUp(monitor, onStateChange)
-    feedFrames(monitor, 180, () => false, onStateChange)
-
-    expect(monitor.getScalingState()).toEqual({
-      dprCap: 2,
-      qualityTierOverride: 'medium',
-    })
-    expect(onStateChange).not.toHaveBeenCalled()
   })
 
   it('discards samples collected before a background pause', () => {

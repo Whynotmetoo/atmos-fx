@@ -141,9 +141,8 @@ describe('createAtmosphere', () => {
     expect(foregroundCanvas?.height).toBe(360)
     expect(root.dataset.atmosFx).toBe('running')
     expect(root.dataset.atmosFxPreset).toBe('rain')
-    expect(root.dataset.atmosParticle).toBe('rain')
+    expect(root.hasAttribute('data-atmos-particle')).toBe(false)
     expect(root.dataset.atmosRenderer).toBe('canvas2d')
-    expect(root.dataset.atmosTransparency).toBe('glass')
 
     controller.stop()
     expect(root.dataset.atmosFx).toBe('stopped')
@@ -153,39 +152,32 @@ describe('createAtmosphere', () => {
     expect(root.querySelector('[data-atmos-layer="weather-foreground"]')).toBeNull()
     expect(root.dataset.atmosFx).toBeUndefined()
     expect(root.dataset.atmosFxPreset).toBeUndefined()
-    expect(root.dataset.atmosParticle).toBeUndefined()
     expect(root.dataset.atmosRenderer).toBeUndefined()
-    expect(root.dataset.atmosTransparency).toBeUndefined()
   })
 
   it('syncs glass controls during lifecycle updates', () => {
     const root = createRoot()
     const solid = document.createElement('button')
     const translucent = document.createElement('div')
-    solid.className = 'solid'
+    solid.dataset.atmosSolid = ''
     translucent.dataset.atmosOpacity = '0.35'
     root.append(solid, translucent)
 
     const controller = createAtmosphere(root, {
-      solidSelector: '.solid',
       opacity: 0.55,
       alpha: 0.22,
     })
 
     controller.start()
 
-    expect(solid.dataset.atmosSolid).toBe('managed')
+    expect(solid.dataset.atmosSolid).toBe('')
     expect(translucent.style.getPropertyValue('--atmos-fx-opacity')).toBe('0.35')
     expect(root.style.getPropertyValue('--atmos-fx-opacity')).toBe('0.55')
     expect(root.style.getPropertyValue('--atmos-fx-alpha')).toBe('0.22')
 
-    controller.update({ transparency: 'opacity' })
-
-    expect(root.dataset.atmosTransparency).toBe('opacity')
-
     controller.destroy()
 
-    expect(solid.dataset.atmosSolid).toBeUndefined()
+    expect(solid.dataset.atmosSolid).toBe('')
     expect(translucent.style.getPropertyValue('--atmos-fx-opacity')).toBe('')
     expect(root.style.getPropertyValue('--atmos-fx-opacity')).toBe('')
     expect(root.style.getPropertyValue('--atmos-fx-alpha')).toBe('')
@@ -204,16 +196,16 @@ describe('createAtmosphere', () => {
     expect(liquidSvg).not.toBeNull()
     expect(liquidSvg?.style.display).toBe('block')
 
-    // Gate: disable when particle is snow
-    controller.update({ preset: 'rain', particle: 'snow' })
+    // Gate: disable when the preset is snow
+    controller.update({ preset: 'snow' })
     expect(liquidSvg?.style.display).toBe('none')
 
     // Gate: disable when liquidDripping is false
-    controller.update({ preset: 'rain', particle: 'rain', liquidDripping: false })
+    controller.update({ preset: 'rain', liquidDripping: false })
     expect(liquidSvg?.style.display).toBe('none')
 
     // Enable again
-    controller.update({ preset: 'rain', particle: 'rain', liquidDripping: true })
+    controller.update({ preset: 'rain', liquidDripping: true })
     expect(liquidSvg?.style.display).toBe('block')
 
     controller.destroy()
@@ -293,24 +285,21 @@ describe('createAtmosphere', () => {
     controller.start()
 
     expect(root.dataset.atmosFxPreset).toBe('snow')
-    expect(root.dataset.atmosParticle).toBe('snow')
 
     controller.update({ preset: 'rain' })
 
     expect(root.dataset.atmosFxPreset).toBe('rain')
-    expect(root.dataset.atmosParticle).toBe('rain')
 
     controller.destroy()
   })
 
-  it('starts with the hail preset and exposes hail dataset state', () => {
+  it('starts with the hail preset and exposes preset dataset state', () => {
     const root = createRoot()
     const controller = createAtmosphere(root, { preset: 'hail' })
 
     controller.start()
 
     expect(root.dataset.atmosFxPreset).toBe('hail')
-    expect(root.dataset.atmosParticle).toBe('hail')
 
     controller.destroy()
   })
@@ -325,7 +314,6 @@ describe('createAtmosphere', () => {
     controller.update({ density: 0.8 })
 
     expect(root.dataset.atmosFxPreset).toBe('snow')
-    expect(root.dataset.atmosParticle).toBe('snow')
 
     controller.destroy()
   })

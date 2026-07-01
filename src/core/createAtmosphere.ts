@@ -8,8 +8,8 @@ import { createAnimationScheduler } from './scheduler'
 import { QualityMonitor } from './qualityMonitor'
 import type {
   AtmosphereController,
-  AtmosphereParticle,
   AtmosphereOptions,
+  AtmospherePreset,
   NormalizedAtmosphereOptions,
 } from './types'
 import type { CanvasLayer } from '../dom/canvasLayer'
@@ -45,8 +45,8 @@ function addReducedMotionListener(
 const CSS_CONTENT = `
 @layer atmos-fx {
   [data-atmos-fx] {
-    --atmos-fx-opacity: 0.72;
-    --atmos-fx-alpha: 0.08;
+    --atmos-fx-opacity: 0.1;
+    --atmos-fx-alpha: 0.12;
     --atmos-fx-glass-background: rgba(255, 255, 255, var(--atmos-fx-alpha));
     --atmos-fx-glass-border-start: rgba(255, 255, 255, 0.45);
     --atmos-fx-glass-border-end: rgba(255, 255, 255, 0.18);
@@ -77,7 +77,7 @@ const CSS_CONTENT = `
     position: relative;
     z-index: 2;
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]):not([data-atmos-solid]) {
+  [data-atmos-fx] :where([data-atmos-glass]):not([data-atmos-solid]) {
     background: rgba(255, 255, 255, 0.08);
     background: var(--atmos-fx-glass-background);
     box-shadow: var(--atmos-fx-glass-shadow);
@@ -85,19 +85,19 @@ const CSS_CONTENT = `
     -webkit-backdrop-filter: blur(1px) saturate(130%);
     transition: background 0.15s;
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] input:where([data-atmos-glass]):not([data-atmos-solid]),
-  [data-atmos-fx][data-atmos-transparency='glass'] select:where([data-atmos-glass]):not([data-atmos-solid]),
-  [data-atmos-fx][data-atmos-transparency='glass'] textarea:where([data-atmos-glass]):not([data-atmos-solid]) {
+  [data-atmos-fx] input:where([data-atmos-glass]):not([data-atmos-solid]),
+  [data-atmos-fx] select:where([data-atmos-glass]):not([data-atmos-solid]),
+  [data-atmos-fx] textarea:where([data-atmos-glass]):not([data-atmos-solid]) {
     border: 1px solid rgba(255, 255, 255, 0.22);
     border: 1px solid var(--atmos-fx-glass-border-end);
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] input:where([data-atmos-glass]):not([data-atmos-solid])::before,
-  [data-atmos-fx][data-atmos-transparency='glass'] select:where([data-atmos-glass]):not([data-atmos-solid])::before,
-  [data-atmos-fx][data-atmos-transparency='glass'] textarea:where([data-atmos-glass]):not([data-atmos-solid])::before {
+  [data-atmos-fx] input:where([data-atmos-glass]):not([data-atmos-solid])::before,
+  [data-atmos-fx] select:where([data-atmos-glass]):not([data-atmos-solid])::before,
+  [data-atmos-fx] textarea:where([data-atmos-glass]):not([data-atmos-solid])::before {
     display: none !important;
     content: none !important;
   }
-  [data-atmos-fx][data-atmos-transparency='glass'] :where([data-atmos-glass]):not([data-atmos-solid])::before {
+  [data-atmos-fx] :where([data-atmos-glass]):not([data-atmos-solid])::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -169,7 +169,7 @@ export function createAtmosphere(
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
-  let rendererParticle: AtmosphereParticle | undefined
+  let rendererPreset: AtmospherePreset | undefined
   let visibilityPaused = false
   let reducedMotionPaused = false
   let intersectionPaused = false
@@ -177,10 +177,7 @@ export function createAtmosphere(
   let manuallyPaused = false
   let lastTime: number | undefined
 
-  const qualityMonitor = new QualityMonitor(
-    normalizedOptions.autoScaleQuality,
-    normalizedOptions.quality === 'auto',
-  )
+  const qualityMonitor = new QualityMonitor(normalizedOptions.quality === 'auto')
 
   const getEffectiveOptions = (): NormalizedAtmosphereOptions => {
     const scaling = qualityMonitor.getScalingState()
@@ -228,7 +225,6 @@ export function createAtmosphere(
 
   const collisionTargetManager = createCollisionTargetManager(
     element,
-    normalizedOptions,
     (targets) => {
       renderer?.setCollisionTargets(targets)
       const effectiveOptions = getEffectiveOptions()
@@ -244,7 +240,6 @@ export function createAtmosphere(
 
   const syncDataset = () => {
     element.dataset.atmosFxPreset = normalizedOptions.preset
-    element.dataset.atmosParticle = normalizedOptions.particle
 
     if (renderer) {
       element.dataset.atmosRenderer = renderer.backend
@@ -254,7 +249,7 @@ export function createAtmosphere(
   }
 
   const syncCollisionTargets = () => {
-    const targets = collisionTargetManager.updateOptions(normalizedOptions)
+    const targets = collisionTargetManager.refresh()
     renderer?.setCollisionTargets(targets)
     const effectiveOptions = getEffectiveOptions()
     liquidDripsController.sync(effectiveOptions, targets)
@@ -302,12 +297,12 @@ export function createAtmosphere(
 
     const shouldRecreateRenderer =
       renderer !== undefined &&
-      rendererParticle !== normalizedOptions.particle
+      rendererPreset !== normalizedOptions.preset
 
     if (shouldRecreateRenderer) {
       renderer?.destroy()
       renderer = undefined
-      rendererParticle = undefined
+      rendererPreset = undefined
 
       canvasLayer?.destroy()
       canvasLayer = undefined
@@ -330,7 +325,7 @@ export function createAtmosphere(
         activeCanvasLayer.getSize(),
         effectiveOptions,
       )
-      rendererParticle = normalizedOptions.particle
+      rendererPreset = normalizedOptions.preset
       element.dataset.atmosRenderer = renderer.backend
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
       return
@@ -530,7 +525,6 @@ export function createAtmosphere(
       if (normalizedOptions.injectStyles) {
         injectStyles(ownerDocument, normalizedOptions.styleNonce)
       }
-      qualityMonitor.setEnabled(normalizedOptions.autoScaleQuality)
       qualityMonitor.setup(normalizedOptions.quality === 'auto')
 
       syncDataset()
@@ -548,14 +542,13 @@ export function createAtmosphere(
       collisionTargetManager.destroy()
       renderer?.destroy()
       renderer = undefined
-      rendererParticle = undefined
+      rendererPreset = undefined
       liquidDripsController.destroy()
       glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined
       setState('destroyed')
       delete element.dataset.atmosFxPreset
-      delete element.dataset.atmosParticle
       delete element.dataset.atmosRenderer
     }
   }

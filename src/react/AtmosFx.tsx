@@ -3,14 +3,12 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, Children, cloneElement, isValidElement } from 'react'
 import type { ComponentPropsWithoutRef, ForwardedRef } from 'react'
 import { createAtmosphere } from '../core/createAtmosphere'
-import type { AtmosphereController, AtmosphereOptions, AtmospherePreset } from '../core/types'
+import type { AtmosphereController, AtmosphereOptions } from '../core/types'
 
 type AtmosphereElementProps = Omit<ComponentPropsWithoutRef<'div'>, keyof AtmosphereOptions>
 type RefCleanup = void | (() => void)
 
-export interface AtmosFxProps extends AtmosphereOptions, AtmosphereElementProps {
-  mode?: AtmospherePreset
-}
+export type AtmosFxProps = AtmosphereOptions & AtmosphereElementProps
 
 function assignRef<T>(ref: ForwardedRef<T>, value: T | null): RefCleanup {
   if (typeof ref === 'function') {
@@ -24,21 +22,15 @@ function assignRef<T>(ref: ForwardedRef<T>, value: T | null): RefCleanup {
 
 export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx(
   {
-    mode,
     preset,
-    particle,
     density,
     speed,
     wind,
     color,
     quality,
-    autoScaleQuality,
-    transparency,
     opacity,
     alpha,
     bottomCollision,
-    collisionSelector,
-    solidSelector,
     pauseWhenHidden,
     respectReducedMotion,
     liquidDripping,
@@ -55,13 +47,8 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
     () => {
       const nextOptions: AtmosphereOptions = {}
 
-      const resolvedPreset = mode !== undefined ? mode : preset
-      if (resolvedPreset !== undefined) {
-        nextOptions.preset = resolvedPreset
-      }
-
-      if (particle !== undefined) {
-        nextOptions.particle = particle
+      if (preset !== undefined) {
+        nextOptions.preset = preset
       }
 
       if (density !== undefined) {
@@ -84,14 +71,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.quality = quality
       }
 
-      if (autoScaleQuality !== undefined) {
-        nextOptions.autoScaleQuality = autoScaleQuality
-      }
-
-      if (transparency !== undefined) {
-        nextOptions.transparency = transparency
-      }
-
       if (opacity !== undefined) {
         nextOptions.opacity = opacity
       }
@@ -102,14 +81,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
 
       if (bottomCollision !== undefined) {
         nextOptions.bottomCollision = bottomCollision
-      }
-
-      if (collisionSelector !== undefined) {
-        nextOptions.collisionSelector = collisionSelector
-      }
-
-      if (solidSelector !== undefined) {
-        nextOptions.solidSelector = solidSelector
       }
 
       if (pauseWhenHidden !== undefined) {
@@ -137,21 +108,15 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
       return nextOptions
     },
     [
-      mode,
       preset,
-      particle,
       density,
       speed,
       wind,
       color,
       quality,
-      autoScaleQuality,
-      transparency,
       opacity,
       alpha,
       bottomCollision,
-      collisionSelector,
-      solidSelector,
       pauseWhenHidden,
       respectReducedMotion,
       liquidDripping,
@@ -304,7 +269,7 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
         'data-atmos-liquid-gathering-point': liquidGatheringPoint !== undefined ? String(liquidGatheringPoint) : undefined,
         'data-atmos-glass': transMode === 'glass' ? '' : undefined,
         'data-atmos-solid': transMode === 'solid' ? '' : undefined,
-        'data-atmos-opacity': transMode === 'opacity' ? String(opacity ?? 0.72) : undefined,
+        'data-atmos-opacity': transMode === 'opacity' ? String(opacity ?? 0.1) : undefined,
         'data-atmos-alpha': transMode === 'glass' && alpha !== undefined ? String(alpha) : undefined,
       })
     }
@@ -318,7 +283,7 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
       data-atmos-liquid-gathering-point={liquidGatheringPoint !== undefined ? String(liquidGatheringPoint) : undefined}
       data-atmos-glass={transMode === 'glass' ? '' : undefined}
       data-atmos-solid={transMode === 'solid' ? '' : undefined}
-      data-atmos-opacity={transMode === 'opacity' ? String(opacity ?? 0.72) : undefined}
+      data-atmos-opacity={transMode === 'opacity' ? String(opacity ?? 0.1) : undefined}
       data-atmos-alpha={transMode === 'glass' && alpha !== undefined ? String(alpha) : undefined}
       {...props}
     >

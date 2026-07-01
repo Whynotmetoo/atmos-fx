@@ -1,6 +1,4 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DEFAULT_OPTIONS } from '../src/core/presets'
-import type { NormalizedAtmosphereOptions } from '../src/core/types'
 import {
   collectCollisionTargetRects,
   createCollisionTargetManager,
@@ -20,15 +18,6 @@ function rect(left: number, top: number, width: number, height: number): DOMRect
   } as DOMRect
 }
 
-function createOptions(
-  options: Partial<NormalizedAtmosphereOptions> = {},
-): NormalizedAtmosphereOptions {
-  return {
-    ...DEFAULT_OPTIONS,
-    ...options,
-  }
-}
-
 describe('collision targets', () => {
   it('collects root-relative target rects', () => {
     const root = document.createElement('section')
@@ -43,7 +32,7 @@ describe('collision targets', () => {
     target.getBoundingClientRect = vi.fn(() => rect(136, 94, 120, 40))
     canvas.getBoundingClientRect = vi.fn(() => rect(100, 50, 320, 180))
 
-    expect(collectCollisionTargetRects(root, '[data-atmos-collision]')).toEqual([
+    expect(collectCollisionTargetRects(root)).toEqual([
       {
         element: target,
         x: 36,
@@ -66,7 +55,7 @@ describe('collision targets', () => {
     root.getBoundingClientRect = vi.fn(() => rect(0, 0, 320, 180))
     target.getBoundingClientRect = vi.fn(() => rect(40, 60, 140, 8))
 
-    expect(collectCollisionTargetRects(root, '[data-atmos-collision]')).toEqual([
+    expect(collectCollisionTargetRects(root)).toEqual([
       {
         element: target,
         x: 40,
@@ -80,81 +69,37 @@ describe('collision targets', () => {
     ])
   })
 
-  it('updates selectors and notifies with refreshed rects', () => {
+  it('refreshes fixed collision targets and notifies listeners', () => {
     const root = document.createElement('section')
-    const firstTarget = document.createElement('article')
-    const secondTarget = document.createElement('aside')
-    root.append(firstTarget, secondTarget)
-    firstTarget.dataset.atmosCollision = ''
-    secondTarget.className = 'surface'
+    const target = document.createElement('article')
+    const unmarked = document.createElement('aside')
+    unmarked.className = 'collision-target'
+    root.append(target, unmarked)
+    target.dataset.atmosCollision = ''
 
     root.getBoundingClientRect = vi.fn(() => rect(10, 20, 300, 200))
-    firstTarget.getBoundingClientRect = vi.fn(() => rect(20, 30, 80, 30))
-    secondTarget.getBoundingClientRect = vi.fn(() => rect(40, 90, 110, 24))
+    target.getBoundingClientRect = vi.fn(() => rect(20, 30, 80, 30))
+    unmarked.getBoundingClientRect = vi.fn(() => rect(40, 90, 110, 24))
 
     const onChange = vi.fn()
-    const manager = createCollisionTargetManager(root, createOptions(), onChange)
+    const manager = createCollisionTargetManager(root, onChange)
 
-    expect(manager.refresh()).toHaveLength(1)
-
-    const updated = manager.updateOptions(createOptions({ collisionSelector: '.surface' }))
-
-    expect(updated).toEqual([
+    expect(manager.refresh()).toEqual([
       {
-        element: secondTarget,
-        x: 30,
-        y: 70,
-        width: 110,
-        height: 24,
-        right: 140,
-        bottom: 94,
+        element: target,
+        x: 10,
+        y: 10,
+        width: 80,
+        height: 30,
+        right: 90,
+        bottom: 40,
       },
     ])
     expect(onChange).toHaveBeenCalled()
+    expect(unmarked.getBoundingClientRect).not.toHaveBeenCalled()
 
     manager.destroy()
     expect(manager.getTargets()).toEqual([])
-  })
-
-  it('manages data-atmos-collision="managed" attribute dynamically', () => {
-    const root = document.createElement('section')
-    const firstTarget = document.createElement('article')
-    const secondTarget = document.createElement('aside')
-    root.append(firstTarget, secondTarget)
-    firstTarget.dataset.atmosCollision = 'custom'
-    secondTarget.className = 'surface'
-
-    root.getBoundingClientRect = vi.fn(() => rect(10, 20, 300, 200))
-    firstTarget.getBoundingClientRect = vi.fn(() => rect(20, 30, 80, 30))
-    secondTarget.getBoundingClientRect = vi.fn(() => rect(40, 90, 110, 24))
-
-    const manager = createCollisionTargetManager(
-      root,
-      createOptions({ collisionSelector: '[data-atmos-collision], .surface' }),
-    )
-
-    // Initially refresh to trigger sync
-    manager.refresh()
-
-    // The element matching [data-atmos-collision] should keep its original attribute
-    expect(firstTarget.dataset.atmosCollision).toBe('custom')
-    // The element matching .surface should get "managed"
-    expect(secondTarget.dataset.atmosCollision).toBe('managed')
-
-    // Change options to only match the original selector
-    manager.updateOptions(createOptions({ collisionSelector: '[data-atmos-collision]' }))
-    // .surface element should lose the managed attribute
-    expect(secondTarget.dataset.atmosCollision).toBeUndefined()
-    expect(firstTarget.dataset.atmosCollision).toBe('custom')
-
-    // Add .surface back
-    manager.updateOptions(createOptions({ collisionSelector: '.surface' }))
-    expect(secondTarget.dataset.atmosCollision).toBe('managed')
-
-    // Destroy the manager
-    manager.destroy()
-    // It should clean up the managed attribute
-    expect(secondTarget.dataset.atmosCollision).toBeUndefined()
   })
 
   it('throttles scroll events and filters unrelated scroll targets', () => {
@@ -168,7 +113,7 @@ describe('collision targets', () => {
     firstTarget.getBoundingClientRect = vi.fn(() => rect(20, 30, 80, 30))
 
     const onChange = vi.fn()
-    const manager = createCollisionTargetManager(root, createOptions(), onChange)
+    const manager = createCollisionTargetManager(root, onChange)
 
     // Initial load
     manager.refresh()

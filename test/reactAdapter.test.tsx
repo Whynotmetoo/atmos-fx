@@ -104,37 +104,6 @@ describe('Atmosphere React adapter', () => {
     })
   })
 
-  it('plumbs autoScaleQuality to createAtmosphere instead of the root element', async () => {
-    const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
-
-    await act(async () => {
-      reactRoot.render(<AtmosFx quality="auto" autoScaleQuality={false} />)
-    })
-
-    expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
-      quality: 'auto',
-      autoScaleQuality: false,
-    }))
-    expect(host.firstElementChild?.hasAttribute('autoScaleQuality')).toBe(false)
-
-    await act(async () => {
-      reactRoot.unmount()
-    })
-  })
-
-  it('plumbs mode prop as preset to createAtmosphere', async () => {
-    const spy = vi.spyOn(createAtmosphereModule, 'createAtmosphere')
-    await act(async () => {
-      reactRoot.render(<AtmosFx mode="snow" />)
-    })
-    expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
-      preset: 'snow',
-    }))
-    await act(async () => {
-      reactRoot.unmount()
-    })
-  })
-
   it('renders AtmosCard with data attributes', async () => {
     await act(async () => {
       reactRoot.render(
@@ -155,6 +124,18 @@ describe('Atmosphere React adapter', () => {
     expect(cardEl?.getAttribute('data-atmos-liquid-gathering-point')).toBe('0.44')
     expect(cardEl?.getAttribute('data-atmos-glass')).toBe('')
     expect(cardEl?.querySelector('span')?.textContent).toBe('content')
+
+    await act(async () => {
+      reactRoot.unmount()
+    })
+  })
+
+  it('uses the default opacity for opacity cards', async () => {
+    await act(async () => {
+      reactRoot.render(<AtmosCard transMode="opacity">content</AtmosCard>)
+    })
+
+    expect(host.firstElementChild?.getAttribute('data-atmos-opacity')).toBe('0.1')
 
     await act(async () => {
       reactRoot.unmount()
@@ -220,6 +201,7 @@ describe('Atmosphere React adapter', () => {
     expect(styleEl?.getAttribute('nonce')).toBe('test-nonce')
     expect(styleEl?.textContent).toContain(':where([data-atmos-glass]):not([data-atmos-solid])')
     expect(styleEl?.textContent).toContain(':where([data-atmos-opacity]):not([data-atmos-solid])')
+    expect(styleEl?.textContent).not.toContain('data-atmos-transparency')
 
     await act(async () => {
       reactRoot.unmount()

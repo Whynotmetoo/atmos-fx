@@ -2,7 +2,6 @@ import type { NormalizedAtmosphereOptions } from '../core/types'
 
 const OPACITY_VARIABLE = '--atmos-fx-opacity'
 const ALPHA_VARIABLE = '--atmos-fx-alpha'
-const MANAGED_SOLID_VALUE = 'managed'
 
 function clampOpacity(value: string): string | undefined {
   const parsed = Number.parseFloat(value)
@@ -23,68 +22,12 @@ export function createGlassController(root: HTMLElement): GlassController {
   const ownerWindow = root.ownerDocument.defaultView
   const trackedOpacityElements = new Set<HTMLElement>()
   const trackedAlphaElements = new Set<HTMLElement>()
-  const managedSolidElements = new Set<HTMLElement>()
-  let options: NormalizedAtmosphereOptions | undefined
   let observing = false
 
   const observeOptions: MutationObserverInit = {
     attributes: true,
     childList: true,
     subtree: true,
-  }
-
-  const clearManagedSolidElements = (nextElements = new Set<HTMLElement>()) => {
-    for (const element of managedSolidElements) {
-      if (!nextElements.has(element) && element.dataset.atmosSolid === MANAGED_SOLID_VALUE) {
-        delete element.dataset.atmosSolid
-      }
-    }
-
-    if (nextElements.size === 0) {
-      managedSolidElements.clear()
-      return
-    }
-
-    for (const element of Array.from(managedSolidElements)) {
-      if (!nextElements.has(element)) {
-        managedSolidElements.delete(element)
-      }
-    }
-  }
-
-  const syncSolidSelector = () => {
-    if (!options?.solidSelector) {
-      clearManagedSolidElements()
-      return
-    }
-
-    for (const element of managedSolidElements) {
-      if (element.dataset.atmosSolid === MANAGED_SOLID_VALUE) {
-        delete element.dataset.atmosSolid
-      }
-    }
-
-    const nextElements = new Set<HTMLElement>()
-
-    for (const element of root.querySelectorAll(options.solidSelector)) {
-      if (!(element instanceof HTMLElement)) {
-        continue
-      }
-
-      managedSolidElements.add(element)
-
-      if (element.dataset.atmosSolid === undefined) {
-        if (element.dataset.atmosSolid !== MANAGED_SOLID_VALUE) {
-          element.dataset.atmosSolid = MANAGED_SOLID_VALUE
-        }
-      }
-
-      if (element.dataset.atmosSolid === MANAGED_SOLID_VALUE) {
-        nextElements.add(element)
-      }
-    }
-
-    clearManagedSolidElements(nextElements)
   }
 
   const syncOpacityElements = () => {
@@ -155,7 +98,6 @@ export function createGlassController(root: HTMLElement): GlassController {
 
   const syncDomState = () => {
     stopObserving()
-    syncSolidSelector()
     syncOpacityElements()
     syncAlphaElements()
     startObserving()
@@ -191,15 +133,12 @@ export function createGlassController(root: HTMLElement): GlassController {
 
   return {
     sync(nextOptions) {
-      options = nextOptions
-      root.dataset.atmosTransparency = nextOptions.transparency
       root.style.setProperty(OPACITY_VARIABLE, String(nextOptions.opacity))
       root.style.setProperty(ALPHA_VARIABLE, String(nextOptions.alpha))
       syncDomState()
     },
     destroy() {
       stopObserving()
-      clearManagedSolidElements()
 
       for (const element of trackedOpacityElements) {
         element.style.removeProperty(OPACITY_VARIABLE)
@@ -212,7 +151,6 @@ export function createGlassController(root: HTMLElement): GlassController {
       trackedAlphaElements.clear()
       root.style.removeProperty(OPACITY_VARIABLE)
       root.style.removeProperty(ALPHA_VARIABLE)
-      delete root.dataset.atmosTransparency
     },
   }
 }

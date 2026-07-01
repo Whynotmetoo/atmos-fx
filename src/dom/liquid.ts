@@ -559,7 +559,7 @@ export function createLiquidDripsController(
   return {
     sync(nextOptions, targets) {
       options = nextOptions
-      const isEnabled = options.particle === 'rain' && options.liquidDripping
+      const isEnabled = options.preset === 'rain' && options.liquidDripping
 
       if (!isEnabled) {
         svg.style.display = 'none'
@@ -685,7 +685,7 @@ export function createLiquidDripsController(
 
     update(deltaTimeSeconds) {
       if (!options) return
-      const isEnabled = options.particle === 'rain' && options.liquidDripping
+      const isEnabled = options.preset === 'rain' && options.liquidDripping
 
       if (!isEnabled || drips.length === 0) {
         return
