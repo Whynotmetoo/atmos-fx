@@ -15,11 +15,11 @@ export type AtmosphereOptions = {
   color?: string
   quality?: AtmosphereQuality
   transparency?: TransparencyMode
-  contentOpacity?: number
-  surfaceOpacity?: number
+  opacity?: number
+  alpha?: number
   bottomCollision?: boolean
   collisionSelector?: string
-  opaqueSelector?: string
+  solidSelector?: string
   pauseWhenHidden?: boolean
   respectReducedMotion?: boolean
   liquidDripping?: boolean

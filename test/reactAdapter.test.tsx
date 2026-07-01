@@ -177,7 +177,7 @@ describe('Atmosphere React adapter', () => {
     expect(buttonEl?.getAttribute('data-atmos-collision')).toBe('')
     expect(buttonEl?.getAttribute('data-atmos-liquid-dripping')).toBe('true')
     expect(buttonEl?.getAttribute('data-atmos-liquid-gathering-point')).toBe('0.6')
-    expect(buttonEl?.getAttribute('data-atmos-opaque')).toBe('')
+    expect(buttonEl?.getAttribute('data-atmos-solid')).toBe('')
     expect(buttonEl?.className).toBe('base-class extra-class')
     expect(buttonEl?.style.color).toBe('red')
     expect(buttonEl?.style.background).toBe('blue')

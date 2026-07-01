@@ -34,11 +34,11 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
     quality,
     autoScaleQuality,
     transparency,
-    contentOpacity,
-    surfaceOpacity,
+    opacity,
+    alpha,
     bottomCollision,
     collisionSelector,
-    opaqueSelector,
+    solidSelector,
     pauseWhenHidden,
     respectReducedMotion,
     liquidDripping,
@@ -92,12 +92,12 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.transparency = transparency
       }
 
-      if (contentOpacity !== undefined) {
-        nextOptions.contentOpacity = contentOpacity
+      if (opacity !== undefined) {
+        nextOptions.opacity = opacity
       }
 
-      if (surfaceOpacity !== undefined) {
-        nextOptions.surfaceOpacity = surfaceOpacity
+      if (alpha !== undefined) {
+        nextOptions.alpha = alpha
       }
 
       if (bottomCollision !== undefined) {
@@ -108,8 +108,8 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.collisionSelector = collisionSelector
       }
 
-      if (opaqueSelector !== undefined) {
-        nextOptions.opaqueSelector = opaqueSelector
+      if (solidSelector !== undefined) {
+        nextOptions.solidSelector = solidSelector
       }
 
       if (pauseWhenHidden !== undefined) {
@@ -147,11 +147,11 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
       quality,
       autoScaleQuality,
       transparency,
-      contentOpacity,
-      surfaceOpacity,
+      opacity,
+      alpha,
       bottomCollision,
       collisionSelector,
-      opaqueSelector,
+      solidSelector,
       pauseWhenHidden,
       respectReducedMotion,
       liquidDripping,
@@ -215,6 +215,7 @@ export interface AtmosCardProps extends React.HTMLAttributes<HTMLDivElement> {
   liquidGatheringPoint?: number
   transMode?: 'glass' | 'opacity' | 'solid'
   opacity?: number
+  alpha?: number
   asChild?: boolean
 }
 
@@ -224,6 +225,7 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
     liquidGatheringPoint,
     transMode = 'glass',
     opacity,
+    alpha,
     asChild,
     children,
     ...props
@@ -301,8 +303,9 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
         'data-atmos-liquid-dripping': liquidDripping !== undefined ? String(liquidDripping) : undefined,
         'data-atmos-liquid-gathering-point': liquidGatheringPoint !== undefined ? String(liquidGatheringPoint) : undefined,
         'data-atmos-glass': transMode === 'glass' ? '' : undefined,
-        'data-atmos-opaque': transMode === 'solid' ? '' : undefined,
+        'data-atmos-solid': transMode === 'solid' ? '' : undefined,
         'data-atmos-opacity': transMode === 'opacity' ? String(opacity ?? 0.72) : undefined,
+        'data-atmos-alpha': transMode === 'glass' && alpha !== undefined ? String(alpha) : undefined,
       })
     }
   }
@@ -314,8 +317,9 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
       data-atmos-liquid-dripping={liquidDripping !== undefined ? String(liquidDripping) : undefined}
       data-atmos-liquid-gathering-point={liquidGatheringPoint !== undefined ? String(liquidGatheringPoint) : undefined}
       data-atmos-glass={transMode === 'glass' ? '' : undefined}
-      data-atmos-opaque={transMode === 'solid' ? '' : undefined}
+      data-atmos-solid={transMode === 'solid' ? '' : undefined}
       data-atmos-opacity={transMode === 'opacity' ? String(opacity ?? 0.72) : undefined}
+      data-atmos-alpha={transMode === 'glass' && alpha !== undefined ? String(alpha) : undefined}
       {...props}
     >
       {children}
