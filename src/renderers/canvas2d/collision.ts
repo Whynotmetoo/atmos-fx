@@ -85,9 +85,11 @@ export function findTargetCollision(
   for (let i = 0; i < targets.length; i++) {
     const target = targets[i]!
 
-    // Bounding Box quick reject to avoid unnecessary algebra
+    if (target.y > maxY) {
+      break
+    }
+
     if (
-      target.y > maxY ||
       target.bottom < minY ||
       target.x > maxX ||
       target.right < minX

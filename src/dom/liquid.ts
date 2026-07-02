@@ -23,6 +23,9 @@ type LiquidDrip = {
   isIntersecting: boolean
   targetElement: HTMLElement | null
   
+  flatPathD?: string
+  lastPathD?: string
+
   // DOM Elements
   group: SVGGElement
   path: SVGPathElement
@@ -580,10 +583,12 @@ export function createLiquidDripsController(
         removeDrip(drips.length - 1)
       }
 
-      // Sync geometry and color
       for (let i = 0; i < targets.length; i++) {
-        const drip = drips[i]
-        const target = targets[i]
+        const drip = drips[i]!
+        const target = targets[i]!
+
+        drip.flatPathD = undefined
+        drip.lastPathD = undefined
 
         const element = target.element || null
         if (drip.targetElement !== element) {
@@ -954,68 +959,86 @@ export function createLiquidDripsController(
         const scaledAmp = baseAmp * scale
         const waveSpan = drip.waveRight - drip.waveLeft
 
-        const progressesCount = fillWaveSampleProgresses(
-          progressesBuffer,
-          elapsedMs,
-          drip.waveLeft,
-          drip.waveRight,
-          drip.dripX,
-          scale,
-          drip.gatheringDurationMs,
-        )
+        const dxVal = drip.dripX.toFixed(1)
+        let pathD = ''
 
-        for (let idx = 0; idx < progressesCount; idx++) {
-          const prog = progressesBuffer[idx]
-          const xVal = drip.waveLeft + prog * waveSpan
-          let yVal = drip.targetBottom - 1.0
+        if (scaledAmp === 0) {
+          if (drip.flatPathD) {
+            pathD = drip.flatPathD
+          } else {
+            const wl = drip.waveLeft.toFixed(1)
+            const wr = drip.waveRight.toFixed(1)
+            const ybTop = (drip.targetBottom - 20).toFixed(1)
+            const yValStr = (drip.targetBottom - 1.0).toFixed(1)
+            pathD = `M ${wl},${ybTop} L ${wl},${yValStr} L ${wr},${yValStr} L ${wr},${ybTop} Z`
+            drip.flatPathD = pathD
+          }
+        } else {
+          const progressesCount = fillWaveSampleProgresses(
+            progressesBuffer,
+            elapsedMs,
+            drip.waveLeft,
+            drip.waveRight,
+            drip.dripX,
+            scale,
+            drip.gatheringDurationMs,
+          )
 
-          if (scaledAmp !== 0 && idx > 0 && idx < progressesCount - 1) {
-            yVal += getWaveY(
-              xVal,
-              drip.dripX,
-              leftCenter,
-              rightCenter,
-              pulseWidth,
-              scaledAmp,
-              formation,
-              releaseFade,
+          for (let idx = 0; idx < progressesCount; idx++) {
+            const prog = progressesBuffer[idx]
+            const xVal = drip.waveLeft + prog * waveSpan
+            let yVal = drip.targetBottom - 1.0
+
+            if (idx > 0 && idx < progressesCount - 1) {
+              yVal += getWaveY(
+                xVal,
+                drip.dripX,
+                leftCenter,
+                rightCenter,
+                pulseWidth,
+                scaledAmp,
+                formation,
+                releaseFade,
+              )
+            }
+
+            const pt = pointsBuffer[idx]
+            pt.x = xVal
+            pt.y = yVal
+          }
+
+          const wl = drip.waveLeft.toFixed(1)
+          const wr = drip.waveRight.toFixed(1)
+          const ybTop = (drip.targetBottom - 20).toFixed(1)
+
+          pathSegments.length = 0
+          pathSegments.push('M ', wl, ',', ybTop, ' L ', pointsBuffer[0].x.toFixed(1), ',', pointsBuffer[0].y.toFixed(1), ' ')
+
+          for (let idx = 0; idx < progressesCount - 1; idx++) {
+            const p0 = pointsBuffer[Math.max(0, idx - 1)]
+            const p1 = pointsBuffer[idx]
+            const p2 = pointsBuffer[idx + 1]
+            const p3 = pointsBuffer[Math.min(progressesCount - 1, idx + 2)]
+            const cp1x = p1.x + (p2.x - p0.x) / 6
+            const cp1y = p1.y + (p2.y - p0.y) / 6
+            const cp2x = p2.x - (p3.x - p1.x) / 6
+            const cp2y = p2.y - (p3.y - p1.y) / 6
+
+            pathSegments.push(
+              'C ', cp1x.toFixed(1), ',', cp1y.toFixed(1), ' ',
+              cp2x.toFixed(1), ',', cp2y.toFixed(1), ' ',
+              p2.x.toFixed(1), ',', p2.y.toFixed(1), ' '
             )
           }
 
-          const pt = pointsBuffer[idx]
-          pt.x = xVal
-          pt.y = yVal
+          pathSegments.push('L ', wr, ',', ybTop, ' Z')
+          pathD = pathSegments.join('')
         }
 
-        const wl = drip.waveLeft.toFixed(1)
-        const wr = drip.waveRight.toFixed(1)
-        const ybTop = (drip.targetBottom - 20).toFixed(1)
-        const dxVal = drip.dripX.toFixed(1)
-
-        pathSegments.length = 0
-        pathSegments.push('M ', wl, ',', ybTop, ' L ', pointsBuffer[0].x.toFixed(1), ',', pointsBuffer[0].y.toFixed(1), ' ')
-
-        for (let idx = 0; idx < progressesCount - 1; idx++) {
-          const p0 = pointsBuffer[Math.max(0, idx - 1)]
-          const p1 = pointsBuffer[idx]
-          const p2 = pointsBuffer[idx + 1]
-          const p3 = pointsBuffer[Math.min(progressesCount - 1, idx + 2)]
-          const cp1x = p1.x + (p2.x - p0.x) / 6
-          const cp1y = p1.y + (p2.y - p0.y) / 6
-          const cp2x = p2.x - (p3.x - p1.x) / 6
-          const cp2y = p2.y - (p3.y - p1.y) / 6
-
-          pathSegments.push(
-            'C ', cp1x.toFixed(1), ',', cp1y.toFixed(1), ' ',
-            cp2x.toFixed(1), ',', cp2y.toFixed(1), ' ',
-            p2.x.toFixed(1), ',', p2.y.toFixed(1), ' '
-          )
+        if (drip.lastPathD !== pathD) {
+          drip.path.setAttribute('d', pathD)
+          drip.lastPathD = pathD
         }
-
-        pathSegments.push('L ', wr, ',', ybTop, ' Z')
-        const pathD = pathSegments.join('')
-
-        drip.path.setAttribute('d', pathD)
         drip.bulge.setAttribute('cy', bulgeCY.toFixed(1))
         drip.bulge.setAttribute('r', bulgeR.toFixed(1))
         drip.bulge.setAttribute('cx', dxVal)

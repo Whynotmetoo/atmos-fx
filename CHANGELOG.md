@@ -6,12 +6,12 @@ The project follows semantic versioning once published.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-02
+
 - **Breaking:** Simplified the public API by removing `particle`, the React `mode` alias, `transparency`, `autoScaleQuality`, `collisionSelector`, and `solidSelector`. Presets now determine the renderer, adaptive quality is always enabled, and DOM integration uses fixed data attributes.
 - **Defaults:** Changed opacity from `0.72` to `0.1` and glass alpha from `0.08` to `0.12`.
+- **Performance:** Optimized core renderers (rain, snow, hail) and physics update loops by breaking early during collision target lookups using sorted Y-coordinate boundaries.
 - **Documentation:** Reduced the API reference to common consumer options and clarified that `data-atmos-liquid-gathering-point="0.5"` is an optional override, not the default.
-
-## [0.3.0] - 2026-06-30
-
 - Bump version to 0.3.0.
 
 ## [0.2.0] - 2026-06-30
