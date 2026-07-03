@@ -536,10 +536,12 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
       if (!isBackground) {
         for (let i = 0; i < this.collisionTargets.length; i++) {
           const target = this.collisionTargets[i]!
+          if (target.y >= particle.y) {
+            break
+          }
           if (
             particle.x >= target.x &&
             particle.x <= target.right &&
-            particle.y > target.y &&
             particle.y < target.bottom
           ) {
             drawBehind = true

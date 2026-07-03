@@ -175,7 +175,10 @@ export class AccumulationPool {
           // Sync coordinate with target in case it moved/scrolled
           let currentTarget: CollisionTargetRect | undefined
           for (let k = 0; k < collisionTargets.length; k++) {
-            const t = collisionTargets[k]
+            const t = collisionTargets[k]!
+            if (t.y > p.target.y + 4) {
+              break
+            }
             if (
               Math.abs(t.x - p.target.x) < 4 &&
               Math.abs(t.y - p.target.y) < 4 &&
