@@ -108,6 +108,7 @@ const options: NormalizedAtmosphereOptions = {
   pauseWhenHidden: true,
   respectReducedMotion: true,
   liquidDripping: true,
+  surfaceDroplets: false,
   injectStyles: true,
   styleNonce: '',
 }

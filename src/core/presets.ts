@@ -16,10 +16,13 @@ export const DEFAULT_OPTIONS = {
   respectReducedMotion: true,
   liquidDripping: true,
   liquidGatheringPoint: undefined,
+  surfaceDroplets: false,
+  bgStart: undefined,
+  bgEnd: undefined,
   injectStyles: true,
   styleNonce: '',
-} satisfies Required<Omit<AtmosphereOptions, 'liquidGatheringPoint'>> &
-  Pick<AtmosphereOptions, 'liquidGatheringPoint'> & {
+} satisfies Required<Omit<AtmosphereOptions, 'liquidGatheringPoint' | 'bgStart' | 'bgEnd'>> &
+  Pick<AtmosphereOptions, 'liquidGatheringPoint' | 'bgStart' | 'bgEnd'> & {
     snowAccumulation: number
     hailBounce: number
   }
@@ -31,6 +34,7 @@ export const PRESET_OPTIONS = {
     wind: -0.12,
     color: 'rgba(220, 235, 255, 0.72)',
     liquidDripping: true,
+    surfaceDroplets: true,
   },
   snow: {
     density: 0.5,

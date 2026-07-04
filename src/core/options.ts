@@ -44,6 +44,9 @@ export function normalizeAtmosphereOptions(
     speed: Math.max(0, merged.speed ?? DEFAULT_OPTIONS.speed),
     liquidDripping: merged.liquidDripping ?? DEFAULT_OPTIONS.liquidDripping,
     liquidGatheringPoint: clampOptional(merged.liquidGatheringPoint, 0.33, 0.66),
+    surfaceDroplets: merged.surfaceDroplets ?? DEFAULT_OPTIONS.surfaceDroplets,
+    bgStart: merged.bgStart,
+    bgEnd: merged.bgEnd,
     injectStyles: merged.injectStyles ?? DEFAULT_OPTIONS.injectStyles,
     styleNonce: merged.styleNonce ?? DEFAULT_OPTIONS.styleNonce,
   }

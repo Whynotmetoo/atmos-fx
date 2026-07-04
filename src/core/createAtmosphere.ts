@@ -2,6 +2,7 @@ import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
 import { createLiquidDripsController } from '../dom/liquid'
+import { SurfaceDropletsController } from '../dom/surfaceDroplets'
 import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
@@ -161,6 +162,7 @@ export function createAtmosphere(
   const ownerWindow = ownerDocument.defaultView
   const reducedMotionQuery = getReducedMotionQuery()
   const glassController = createGlassController(element)
+  const surfaceDropletsController = new SurfaceDropletsController(element)
   const liquidDripsController = createLiquidDripsController(element, (x, y, vx, scale) => {
     if (renderer && typeof renderer.spawnSplash === 'function') {
       renderer.spawnSplash(x, y, vx, scale)
@@ -211,6 +213,10 @@ export function createAtmosphere(
     const frameStart = performance.now()
     renderer?.render(time)
     liquidDripsController.update(deltaSeconds)
+    
+    const effectiveOptions = getEffectiveOptions()
+    surfaceDropletsController.update(deltaSeconds, effectiveOptions)
+    
     const frameDuration = performance.now() - frameStart
 
     qualityMonitor.recordFrame(time, frameDuration, () => {
@@ -229,6 +235,7 @@ export function createAtmosphere(
       renderer?.setCollisionTargets(targets)
       const effectiveOptions = getEffectiveOptions()
       liquidDripsController.sync(effectiveOptions, targets)
+      surfaceDropletsController.sync(effectiveOptions, targets)
     },
   )
 
@@ -253,6 +260,7 @@ export function createAtmosphere(
     renderer?.setCollisionTargets(targets)
     const effectiveOptions = getEffectiveOptions()
     liquidDripsController.sync(effectiveOptions, targets)
+    surfaceDropletsController.sync(effectiveOptions, targets)
   }
 
   const setState = (nextState: ControllerState) => {
@@ -285,6 +293,7 @@ export function createAtmosphere(
       renderer?.resize(size)
       renderer?.setCollisionTargets(targets)
       liquidDripsController.sync(effectiveOptions, targets)
+      surfaceDropletsController.sync(effectiveOptions, targets)
     }
 
     return size
@@ -487,6 +496,7 @@ export function createAtmosphere(
       scheduler.stop()
       renderer?.clear()
       liquidDripsController.sync(normalizedOptions, [])
+      surfaceDropletsController.sync(normalizedOptions, [])
       lastTime = undefined
       qualityMonitor.reset()
       setState('stopped')
@@ -543,6 +553,7 @@ export function createAtmosphere(
       renderer?.destroy()
       renderer = undefined
       rendererPreset = undefined
+      surfaceDropletsController.destroy()
       liquidDripsController.destroy()
       glassController.destroy()
       canvasLayer?.destroy()

@@ -14,6 +14,9 @@ describe('normalizeAtmosphereOptions', () => {
       bottomCollision: true,
       liquidDripping: true,
       liquidGatheringPoint: undefined,
+      surfaceDroplets: true,
+      bgStart: undefined,
+      bgEnd: undefined,
     })
   })
 
@@ -27,6 +30,7 @@ describe('normalizeAtmosphereOptions', () => {
       preset: 'snow',
       density: 0.2,
       liquidDripping: false,
+      surfaceDroplets: false,
     })
   })
 
@@ -36,6 +40,7 @@ describe('normalizeAtmosphereOptions', () => {
       density: 0.46,
       hailBounce: 0.5,
       liquidDripping: false,
+      surfaceDroplets: false,
     })
   })
 

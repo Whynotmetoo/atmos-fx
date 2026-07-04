@@ -39,6 +39,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
+    "dev": "npx vite --config vite.config.docs.ts --host 127.0.0.1 --port 4173",
     "build": "npm run clean && npm run build:bundle && npm run build:types && npm run build:styles",
     "build:bundle": "vite build",
     "build:types": "tsc -p tsconfig.build.json",

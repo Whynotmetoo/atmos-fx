@@ -631,7 +631,7 @@
 
       .checkbox-grid-row {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 12px;
         border-bottom: 1px solid var(--line);
         padding-bottom: 8px;
@@ -1159,6 +1159,13 @@
                 <span class="slider"></span>
               </label>
             </div>
+            <div class="switch-container" id="surface-droplets-container">
+              <div class="switch-label" style="font-size: 0.82rem;" data-i18n-key="control-surface-droplets">Surface Droplets</div>
+              <label class="switch">
+                <input type="checkbox" id="surfaceDroplets" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
 
           <!-- Quality and Transparency selectors in a single row -->
@@ -1372,6 +1379,21 @@ onUnmounted(() => {
                 <td data-i18n-key="api-desc-globalLiquidDripping">Enables rainwater condensation, gathering, detachment, falling, and splash animation on collision targets. It only runs for rain and can be disabled per target with <code>data-atmos-liquid-dripping="false"</code>.</td>
               </tr>
               <tr>
+                <td><code>surfaceDroplets</code></td>
+                <td><code>boolean</code> <span class="api-badge">false</span></td>
+                <td data-i18n-key="api-desc-surfaceDroplets">Enables Apple Weather-style rain droplets on card surfaces. Requires rain preset and data-atmos-surface-droplets="true" on individual cards.</td>
+              </tr>
+              <tr>
+                <td><code>bgStart</code></td>
+                <td><code>string</code></td>
+                <td>Specifies the starting (bottom) color of the ambient gradient, e.g., <code>'#0f2036'</code> or <code>'rgb(15, 32, 54)'</code>. If omitted, it is automatically extracted from parent DOM styles.</td>
+              </tr>
+              <tr>
+                <td><code>bgEnd</code></td>
+                <td><code>string</code></td>
+                <td>Specifies the ending (top) color of the ambient gradient, e.g., <code>'#284b6e'</code>. If omitted, it is automatically extracted from parent DOM styles.</td>
+              </tr>
+              <tr>
                 <td><code>liquidGatheringPoint</code></td>
                 <td><code>number</code> (0.33 to 0.66)</td>
                 <td data-i18n-key="api-desc-globalLiquidGatheringPoint">Sets the horizontal liquid gathering position as a normalized value from 0.33 to 0.66. When omitted, each card receives a stable random point; a card prop or data attribute can override it.</td>
@@ -1440,6 +1462,10 @@ onUnmounted(() => {
                 <td><code>alpha</code></td>
                 <td><code>number</code> (0 to 1)</td>
                 <td data-i18n-key="api-desc-card-alpha">Sets this card's background opacity in glass mode and is expected from 0 to 1. When omitted, it uses the global default 0.12.</td>
+              <tr>
+                <td><code>surfaceDroplets</code></td>
+                <td><code>boolean</code> <span class="api-badge">true</span></td>
+                <td data-i18n-key="api-desc-liquidDripping">Enables or disables rain liquid animation for this card. The global <code>liquidDripping</code> option must also be enabled, and non-rain presets ignore it.</td>
               </tr>
             </tbody>
           </table>
@@ -1459,6 +1485,7 @@ onUnmounted(() => {
           <li><code>data-atmos-collision</code> <span data-i18n-key="api-data-collision">registers an element as a DOM collision target for foreground precipitation. Top and side boundaries use its root-relative bounding box and rounded-corner inset.</span></li>
           <li><code>data-atmos-liquid-dripping="true"</code> <span data-i18n-key="api-data-liquid-dripping">enables or disables condensation and dripping for one collision target. It only takes effect for rain when global <code>liquidDripping</code> is enabled.</span></li>
           <li><code>data-atmos-liquid-gathering-point="0.5"</code> <span data-i18n-key="api-data-liquid-gathering-point">is an optional override example. Omit it to keep the stable-random per-card default; when provided, values are clamped from 0.33 to 0.66.</span></li>
+          <li><code>data-atmos-surface-droplets="true"</code> <span data-i18n-key="api-data-surface-droplets">enables or disables card surface rain droplets. It only takes effect for rain when global <code>surfaceDroplets</code> is enabled.</span></li>
         </ul>
 
         <h3 class="section-subtitle" data-i18n-key="methods-title" style="margin-top: 24px;">Controller Methods</h3>

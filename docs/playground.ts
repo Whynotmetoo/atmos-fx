@@ -137,6 +137,7 @@ const playgroundState: PlaygroundState = {
   opacity: 0.1,
   bottomCollision: true,
   liquidDripping: true,
+  surfaceDroplets: true,
   color: 'rgba(220, 235, 255, 0.72)'
 }
 
@@ -150,6 +151,7 @@ const playgroundAtmosphere = createAtmosphere(playgroundRoot, {
   opacity: playgroundState.opacity,
   bottomCollision: playgroundState.bottomCollision,
   liquidDripping: playgroundState.liquidDripping,
+  surfaceDroplets: playgroundState.surfaceDroplets,
   color: playgroundState.color,
   pauseWhenHidden: true
 })
@@ -203,11 +205,13 @@ function updateReactCodePreview() {
   const atmosFxPropsStr = props.join('\n' + indent)
 
   const cardOpacityProp = p.surfaceMode === 'opacity' ? ` opacity={${p.opacity.toFixed(2)}}` : ''
+  const cardDrippingProp = p.preset === 'rain' ? ` liquidDripping={${p.liquidDripping}}` : ''
+  const cardDropletsProp = p.preset === 'rain' ? ` surfaceDroplets={${p.surfaceDroplets}}` : ''
 
   const code = `<AtmosFx
   ${atmosFxPropsStr}
 >
-  <AtmosCard transMode="${p.surfaceMode}"${cardOpacityProp}${p.preset === 'rain' ? ` liquidDripping={${p.liquidDripping}}` : ''}>
+  <AtmosCard transMode="${p.surfaceMode}"${cardOpacityProp}${cardDrippingProp}${cardDropletsProp}>
     <div>A high-performance DOM-aware WebGL atmosphere engine.</div>
   </AtmosCard>
 
@@ -241,6 +245,7 @@ function applyPlayground() {
   // Sync checkboxes
   ;(document.querySelector('#bottomCollision') as HTMLInputElement).checked = playgroundState.bottomCollision
   ;(document.querySelector('#liquidDripping') as HTMLInputElement).checked = playgroundState.liquidDripping
+  ;(document.querySelector('#surfaceDroplets') as HTMLInputElement).checked = playgroundState.surfaceDroplets
 
   // Apply card configs and layout attributes
   const infoCard = document.querySelector('#playground-info-card') as HTMLElement
@@ -263,8 +268,10 @@ function applyPlayground() {
 
     if (playgroundState.preset === 'rain') {
       card.dataset.atmosLiquidDripping = String(playgroundState.liquidDripping)
+      card.dataset.atmosSurfaceDroplets = String(playgroundState.surfaceDroplets)
     } else {
       delete card.dataset.atmosLiquidDripping
+      delete card.dataset.atmosSurfaceDroplets
     }
   })
 
@@ -292,6 +299,7 @@ function applyPlayground() {
     opacity: playgroundState.opacity,
     bottomCollision: playgroundState.bottomCollision,
     liquidDripping: playgroundState.liquidDripping,
+    surfaceDroplets: playgroundState.surfaceDroplets,
     color: playgroundState.color
   })
 }
@@ -313,6 +321,11 @@ document.querySelector('#bottomCollision')?.addEventListener('change', (e) => {
 
 document.querySelector('#liquidDripping')?.addEventListener('change', (e) => {
   playgroundState.liquidDripping = (e.target as HTMLInputElement).checked
+  applyPlayground()
+})
+
+document.querySelector('#surfaceDroplets')?.addEventListener('change', (e) => {
+  playgroundState.surfaceDroplets = (e.target as HTMLInputElement).checked
   applyPlayground()
 })
 

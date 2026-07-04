@@ -16,13 +16,16 @@ export type AtmosphereOptions = {
   respectReducedMotion?: boolean
   liquidDripping?: boolean
   liquidGatheringPoint?: number
+  surfaceDroplets?: boolean
+  bgStart?: string
+  bgEnd?: string
   injectStyles?: boolean
   styleNonce?: string
 }
 
 export type NormalizedAtmosphereOptions = Required<
-  Omit<AtmosphereOptions, 'liquidGatheringPoint'>
-> & Pick<AtmosphereOptions, 'liquidGatheringPoint'> & {
+  Omit<AtmosphereOptions, 'liquidGatheringPoint' | 'bgStart' | 'bgEnd'>
+> & Pick<AtmosphereOptions, 'liquidGatheringPoint' | 'bgStart' | 'bgEnd'> & {
   snowAccumulation: number
   hailBounce: number
 }
