@@ -181,6 +181,8 @@ export interface AtmosCardProps extends React.HTMLAttributes<HTMLDivElement> {
   transMode?: 'glass' | 'opacity' | 'solid'
   opacity?: number
   alpha?: number
+  /** Opt this card into the WebGL water-drop surface effect (rain preset only). */
+  surfaceDroplets?: boolean
   asChild?: boolean
 }
 
@@ -191,6 +193,7 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
     transMode = 'glass',
     opacity,
     alpha,
+    surfaceDroplets,
     asChild,
     children,
     ...props
@@ -267,6 +270,7 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
         'data-atmos-collision': '',
         'data-atmos-liquid-dripping': liquidDripping !== undefined ? String(liquidDripping) : undefined,
         'data-atmos-liquid-gathering-point': liquidGatheringPoint !== undefined ? String(liquidGatheringPoint) : undefined,
+        'data-atmos-surface-droplets': surfaceDroplets !== undefined ? String(surfaceDroplets) : undefined,
         'data-atmos-glass': transMode === 'glass' ? '' : undefined,
         'data-atmos-solid': transMode === 'solid' ? '' : undefined,
         'data-atmos-opacity': transMode === 'opacity' ? String(opacity ?? 0.1) : undefined,
@@ -281,6 +285,7 @@ export const AtmosCard = forwardRef<HTMLDivElement, AtmosCardProps>(function Atm
       data-atmos-collision=""
       data-atmos-liquid-dripping={liquidDripping !== undefined ? String(liquidDripping) : undefined}
       data-atmos-liquid-gathering-point={liquidGatheringPoint !== undefined ? String(liquidGatheringPoint) : undefined}
+      data-atmos-surface-droplets={surfaceDroplets !== undefined ? String(surfaceDroplets) : undefined}
       data-atmos-glass={transMode === 'glass' ? '' : undefined}
       data-atmos-solid={transMode === 'solid' ? '' : undefined}
       data-atmos-opacity={transMode === 'opacity' ? String(opacity ?? 0.1) : undefined}

@@ -2,6 +2,7 @@ import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
 import { createLiquidDripsController } from '../dom/liquid'
+import { createCardRainController } from '../dom/cardRainEffect'
 import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
@@ -166,6 +167,7 @@ export function createAtmosphere(
       renderer.spawnSplash(x, y, vx, scale)
     }
   })
+  const cardRainController = createCardRainController(element)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
@@ -253,6 +255,7 @@ export function createAtmosphere(
     renderer?.setCollisionTargets(targets)
     const effectiveOptions = getEffectiveOptions()
     liquidDripsController.sync(effectiveOptions, targets)
+    cardRainController.sync(effectiveOptions, targets)
   }
 
   const setState = (nextState: ControllerState) => {
@@ -498,6 +501,7 @@ export function createAtmosphere(
         visibilityPaused = false
         reducedMotionPaused = false
         scheduler.stop()
+        cardRainController.pause()
         setState('paused')
       }
     },
@@ -508,12 +512,14 @@ export function createAtmosphere(
         visibilityPaused = false
         reducedMotionPaused = false
         setState('running')
+        cardRainController.resume()
         startAnimationIfAllowed()
       }
     },
     resize() {
       assertActive()
       resizeLayerAndRenderer()
+      cardRainController.resize()
     },
     update(nextOptions) {
       assertActive()
@@ -544,6 +550,7 @@ export function createAtmosphere(
       renderer = undefined
       rendererPreset = undefined
       liquidDripsController.destroy()
+      cardRainController.destroy()
       glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined
