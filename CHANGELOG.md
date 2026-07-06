@@ -6,6 +6,10 @@ The project follows semantic versioning once published.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-06
+
+- Bump version to 0.4.0.
+
 ## [0.3.0] - 2026-07-02
 
 - **Breaking:** Simplified the public API by removing `particle`, the React `mode` alias, `transparency`, `autoScaleQuality`, `collisionSelector`, and `solidSelector`. Presets now determine the renderer, adaptive quality is always enabled, and DOM integration uses fixed data attributes.
