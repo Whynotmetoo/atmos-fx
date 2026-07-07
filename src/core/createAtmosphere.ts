@@ -126,7 +126,7 @@ const CSS_CONTENT = `
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  [data-atmos-fx] :where([data-atmos-surface-droplets]) {
+  [data-atmos-fx] :where([data-atmos-glass]) {
     overflow: hidden;
     isolation: isolate;
   }

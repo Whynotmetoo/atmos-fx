@@ -2,8 +2,6 @@ import { RainEffect } from './rain-card'
 import type { NormalizedAtmosphereOptions } from '../core/types'
 import type { CollisionTargetRect } from './collisionTargets'
 
-/** Attribute that opts a card into the backdrop water-drop effect. */
-const ATTR = 'data-atmos-surface-droplets'
 /** Layer attribute so we can skip our own canvases during collision detection. */
 const LAYER_ATTR = 'data-atmos-layer'
 const LAYER_VALUE = 'card-rain'
@@ -23,15 +21,24 @@ export type CardRainController = {
 }
 
 function isOptedIn(el: HTMLElement): boolean {
-  // Opt-in: attribute present and not explicitly "false"
-  return el.hasAttribute(ATTR) && el.getAttribute(ATTR) !== 'false'
+  return el.hasAttribute('data-atmos-glass') && !el.hasAttribute('data-atmos-solid')
+}
+
+function getPadding(el: HTMLElement) {
+  const style = el.ownerDocument.defaultView?.getComputedStyle(el)
+  return {
+    left:   parseFloat(style?.paddingLeft   || '0') || 0,
+    right:  parseFloat(style?.paddingRight  || '0') || 0,
+    top:    parseFloat(style?.paddingTop    || '0') || 0,
+    bottom: parseFloat(style?.paddingBottom || '0') || 0,
+  }
 }
 
 /**
  * Manages per-card WebGL water-drop canvases.
  *
  * Layer model:
- *   <card [data-atmos-surface-droplets]>
+ *   <card [data-atmos-glass]>
  *     <canvas data-atmos-layer="card-rain" />   ← z-index: -1, behind card content
  *     (card children)
  *   </card>
@@ -61,7 +68,8 @@ export function createCardRainController(_root: HTMLElement): CardRainController
       el.appendChild(canvas)
     }
 
-    const effect = new RainEffect(canvas, { autoStart: active && isRain })
+    const effect = new RainEffect(canvas, { autoStart: false })
+    effect.setPadding(getPadding(el))
 
     entries.set(el, { element: el, canvas, effect })
   }
@@ -74,12 +82,16 @@ export function createCardRainController(_root: HTMLElement): CardRainController
   return {
     sync(options, targets) {
       isRain = options.preset === 'rain'
+      const isLowQuality = options.quality === 'low'
+      const runEffect = isRain && !isLowQuality && active
 
       // Build set of opted-in elements from current collision targets
       const nextElements = new Set<HTMLElement>()
-      for (const t of targets) {
-        if (t.element && isOptedIn(t.element)) {
-          nextElements.add(t.element)
+      if (runEffect) {
+        for (const t of targets) {
+          if (t.element && isOptedIn(t.element)) {
+            nextElements.add(t.element)
+          }
         }
       }
 
@@ -98,8 +110,9 @@ export function createCardRainController(_root: HTMLElement): CardRainController
 
       // Start/stop based on preset
       for (const entry of entries.values()) {
+        entry.effect.setPadding(getPadding(entry.element))
         entry.effect.setDensity(options.density)
-        if (isRain && active) {
+        if (runEffect) {
           entry.effect.start()
         } else {
           entry.effect.stop()
@@ -120,7 +133,10 @@ export function createCardRainController(_root: HTMLElement): CardRainController
     },
 
     resize() {
-      for (const e of entries.values()) e.effect.resize()
+      for (const e of entries.values()) {
+        e.effect.setPadding(getPadding(e.element))
+        e.effect.resize()
+      }
     },
 
     destroy() {

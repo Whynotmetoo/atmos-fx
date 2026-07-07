@@ -151,6 +151,18 @@ export class RaindropSimulation {
     this.opts.maxDrops   = Math.round(this.baseOpts.maxDrops * d)
   }
 
+  private safeLeft = 0
+  private safeRight = 0
+  private safeTop = 0
+  private safeBottom = 0
+
+  setPadding(padding: { left: number; right: number; top: number; bottom: number }): void {
+    this.safeLeft   = Math.max(0, padding.left - 2)
+    this.safeRight  = Math.max(0, padding.right - 2)
+    this.safeTop    = Math.max(0, padding.top - 2)
+    this.safeBottom = Math.max(0, padding.bottom - 2)
+  }
+
   private get radiusDelta(): number { return this.opts.maxRadius - this.opts.minRadius }
 
   private get areaMultiplier(): number {
@@ -170,8 +182,11 @@ export class RaindropSimulation {
       count++
       const r = randomBetween(this.opts.minRadius, this.opts.maxRadius, v => v ** this.opts.radiusDistribution)
       const momentum = 1 + (r - this.opts.minRadius) * 0.1 + randomBetween(1, 2)
+      const cssW = this.width / this.pixelRatio
+      const minX = Math.min(cssW * 0.5, this.safeLeft + r)
+      const maxX = Math.max(cssW * 0.5, cssW - this.safeRight - r)
       spawned.push(createDrop({
-        x: randomBetween(0, this.width / this.pixelRatio),
+        x: randomBetween(minX, maxX),
         y: randomBetween(
           (this.height / this.pixelRatio) * this.opts.spawnArea[0],
           (this.height / this.pixelRatio) * this.opts.spawnArea[1],
@@ -187,6 +202,23 @@ export class RaindropSimulation {
 
   update(timestamp: number): void {
     this.ctx.clearRect(0, 0, this.width, this.height)
+
+    const pr = this.pixelRatio
+    const cssW = this.width / pr
+    const cssH = this.height / pr
+    const safeW = cssW - this.safeLeft - this.safeRight
+    const safeH = cssH - this.safeTop - this.safeBottom
+
+    this.ctx.save()
+    this.ctx.beginPath()
+    this.ctx.rect(
+      this.safeLeft * pr,
+      this.safeTop * pr,
+      Math.max(0, safeW) * pr,
+      Math.max(0, safeH) * pr
+    )
+    this.ctx.clip()
+
     if (this.lastTs === null) this.lastTs = timestamp
     const frameScale = clamp((timestamp - this.lastTs) / (1000 / 60), 0, 1.1)
     const ts = frameScale * this.opts.timeScale
@@ -215,6 +247,8 @@ export class RaindropSimulation {
       if (!d.killed) { next.push(d); this.drawDrop(d) }
     })
     this.drops = next
+
+    this.ctx.restore()
   }
 
   private motion(d: Drop, ts: number): void {
@@ -227,7 +261,8 @@ export class RaindropSimulation {
     if (d.momentum > 0) {
       d.y += d.momentum * this.opts.fallSpeed * ts
       d.x += d.momentumX * ts
-      if (d.y > this.height / this.pixelRatio + d.radius) d.killed = true
+      const cssH = this.height / this.pixelRatio
+      if (d.y > cssH - this.safeBottom + d.radius) d.killed = true
     }
   }
 

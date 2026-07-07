@@ -45,6 +45,11 @@
     filter: blur(1px);
   }
 
+  [data-atmos-fx] :where([data-atmos-glass]) {
+    overflow: hidden;
+    isolation: isolate;
+  }
+
   [data-atmos-fx] :where([data-atmos-glass], [data-atmos-solid], [data-atmos-opacity], [data-atmos-collision]) {
     position: relative;
     z-index: 2;
