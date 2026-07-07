@@ -36,6 +36,7 @@ const showcaseAtmosphere = createAtmosphere(showcaseRoot, {
   pauseWhenHidden: true
 })
 showcaseAtmosphere.start()
+;(window as any).showcaseAtmosphere = showcaseAtmosphere
 
 function applyShowcase() {
   const lang = currentLang

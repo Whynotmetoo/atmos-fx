@@ -2,6 +2,7 @@ import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
 import { createLiquidDripsController } from '../dom/liquid'
+import { createCardRainController } from '../dom/cardRainEffect'
 import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
 import { createAnimationScheduler } from './scheduler'
@@ -81,8 +82,8 @@ const CSS_CONTENT = `
     background: rgba(255, 255, 255, 0.08);
     background: var(--atmos-fx-glass-background);
     box-shadow: var(--atmos-fx-glass-shadow);
-    backdrop-filter: blur(1px) saturate(130%);
-    -webkit-backdrop-filter: blur(1px) saturate(130%);
+    backdrop-filter: blur(8px) saturate(130%);
+    -webkit-backdrop-filter: blur(8px) saturate(130%);
     transition: background 0.15s;
   }
   [data-atmos-fx] input:where([data-atmos-glass]):not([data-atmos-solid]),
@@ -125,6 +126,20 @@ const CSS_CONTENT = `
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+  [data-atmos-fx] :where([data-atmos-surface-droplets]) {
+    overflow: hidden;
+    isolation: isolate;
+  }
+  [data-atmos-layer='card-rain'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    border-radius: inherit;
+    filter: blur(1px);
+  }
 }
 `
 
@@ -166,6 +181,7 @@ export function createAtmosphere(
       renderer.spawnSplash(x, y, vx, scale)
     }
   })
+  const cardRainController = createCardRainController(element)
   let state: ControllerState = 'idle'
   let canvasLayer: CanvasLayer | undefined
   let renderer: Canvas2DRenderer | undefined
@@ -253,6 +269,7 @@ export function createAtmosphere(
     renderer?.setCollisionTargets(targets)
     const effectiveOptions = getEffectiveOptions()
     liquidDripsController.sync(effectiveOptions, targets)
+    cardRainController.sync(effectiveOptions, targets)
   }
 
   const setState = (nextState: ControllerState) => {
@@ -498,6 +515,7 @@ export function createAtmosphere(
         visibilityPaused = false
         reducedMotionPaused = false
         scheduler.stop()
+        cardRainController.pause()
         setState('paused')
       }
     },
@@ -508,12 +526,14 @@ export function createAtmosphere(
         visibilityPaused = false
         reducedMotionPaused = false
         setState('running')
+        cardRainController.resume()
         startAnimationIfAllowed()
       }
     },
     resize() {
       assertActive()
       resizeLayerAndRenderer()
+      cardRainController.resize()
     },
     update(nextOptions) {
       assertActive()
@@ -544,6 +564,7 @@ export function createAtmosphere(
       renderer = undefined
       rendererPreset = undefined
       liquidDripsController.destroy()
+      cardRainController.destroy()
       glassController.destroy()
       canvasLayer?.destroy()
       canvasLayer = undefined
