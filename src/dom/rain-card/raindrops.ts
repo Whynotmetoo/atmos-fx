@@ -225,7 +225,7 @@ export class RaindropSimulation {
   private motion(d: Drop, ts: number): void {
     const nr = (d.radius - this.opts.minRadius) / this.radiusDelta
     if (chance(nr * 0.1 * ts)) {
-      d.momentum += randomBetween(1, Math.max(1, (d.radius / this.opts.maxRadius) * 4))
+      d.momentum += randomBetween(1, Math.max(1, (d.radius / this.opts.maxRadius) * 4)) * 0.55
     }
     d.spreadX *= this.opts.spreadDecayX ** ts
     d.spreadY *= this.opts.spreadDecayY ** ts
