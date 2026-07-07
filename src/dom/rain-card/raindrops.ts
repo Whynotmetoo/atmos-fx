@@ -114,6 +114,7 @@ function measureVisibleMask(img: ImageLike, threshold: number): VisibleMask {
 
 export class RaindropSimulation {
   readonly opts: SimulationOptions
+  private readonly baseOpts: SimulationOptions
   width:      number
   height:     number
   pixelRatio: number
@@ -133,6 +134,7 @@ export class RaindropSimulation {
     opts: Partial<SimulationOptions> = {},
   ) {
     this.opts       = { ...DEFAULT_SIM_OPTIONS, ...opts }
+    this.baseOpts   = { ...this.opts }
     this.width      = width
     this.height     = height
     this.pixelRatio = pixelRatio
@@ -140,6 +142,13 @@ export class RaindropSimulation {
     this.textures   = createDropTextures(dropAlpha, dropColor)
     this.canvas     = createOffscreenCanvas(width, height)
     this.ctx        = this.canvas.getContext('2d')!
+  }
+
+  setDensity(density: number): void {
+    const d = Math.max(0, density)
+    this.opts.rainChance = this.baseOpts.rainChance * d
+    this.opts.rainLimit  = this.baseOpts.rainLimit  * d
+    this.opts.maxDrops   = Math.round(this.baseOpts.maxDrops * d)
   }
 
   private get radiusDelta(): number { return this.opts.maxRadius - this.opts.minRadius }

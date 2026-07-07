@@ -98,6 +98,7 @@ export function createCardRainController(_root: HTMLElement): CardRainController
 
       // Start/stop based on preset
       for (const entry of entries.values()) {
+        entry.effect.setDensity(options.density)
         if (isRain && active) {
           entry.effect.start()
         } else {

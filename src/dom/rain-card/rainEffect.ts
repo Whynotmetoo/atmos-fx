@@ -21,6 +21,7 @@ export class RainEffect {
   private destroyed     = false
   private initialized   = false
   private startPending: boolean
+  private currentDensity = 1
 
   readonly ready: Promise<void>
   private readonly opts: Required<RainEffectOptions>
@@ -57,6 +58,7 @@ export class RainEffect {
     this.canvas.height = h
 
     this.sim = new RaindropSimulation(w, h, dpr, alpha, color, this.opts.simulation)
+    this.sim.setDensity(this.currentDensity)
     this.renderer = new RainRenderer(
       this.canvas, this.sim.canvas,
       null,        // no shine texture for now
@@ -120,6 +122,14 @@ export class RainEffect {
     this.startPending = false
     this.running = false
     if (this.raf !== null) { cancelAnimationFrame(this.raf); this.raf = null }
+    return this
+  }
+
+  setDensity(density: number): this {
+    this.currentDensity = density
+    if (this.sim) {
+      this.sim.setDensity(density)
+    }
     return this
   }
 
