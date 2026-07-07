@@ -22,7 +22,6 @@ export class RainEffect {
   private initialized   = false
   private startPending: boolean
   private currentDensity = 1
-  private currentPadding = { left: 0, right: 0, top: 0, bottom: 0 }
 
   readonly ready: Promise<void>
   private readonly opts: Required<RainEffectOptions>
@@ -60,7 +59,6 @@ export class RainEffect {
 
     this.sim = new RaindropSimulation(w, h, dpr, alpha, color, this.opts.simulation)
     this.sim.setDensity(this.currentDensity)
-    this.sim.setPadding(this.currentPadding)
     this.renderer = new RainRenderer(
       this.canvas, this.sim.canvas,
       null,        // no shine texture for now
@@ -135,13 +133,6 @@ export class RainEffect {
     return this
   }
 
-  setPadding(padding: { left: number; right: number; top: number; bottom: number }): this {
-    this.currentPadding = padding
-    if (this.sim) {
-      this.sim.setPadding(padding)
-    }
-    return this
-  }
 
   private loop(ts: number): void {
     if (!this.running || this.destroyed || !this.sim || !this.renderer) return

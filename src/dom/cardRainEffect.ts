@@ -20,19 +20,17 @@ export type CardRainController = {
   destroy(): void
 }
 
-function isOptedIn(el: HTMLElement): boolean {
-  return el.hasAttribute('data-atmos-glass') && !el.hasAttribute('data-atmos-solid')
+function isOptedIn(el: HTMLElement, width: number, height: number): boolean {
+  const tag = el.tagName.toUpperCase()
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+    return false
+  }
+  return el.hasAttribute('data-atmos-glass') &&
+         !el.hasAttribute('data-atmos-solid') &&
+         width >= 100 &&
+         height >= 80
 }
 
-function getPadding(el: HTMLElement) {
-  const style = el.ownerDocument.defaultView?.getComputedStyle(el)
-  return {
-    left:   parseFloat(style?.paddingLeft   || '0') || 0,
-    right:  parseFloat(style?.paddingRight  || '0') || 0,
-    top:    parseFloat(style?.paddingTop    || '0') || 0,
-    bottom: parseFloat(style?.paddingBottom || '0') || 0,
-  }
-}
 
 /**
  * Manages per-card WebGL water-drop canvases.
@@ -69,7 +67,6 @@ export function createCardRainController(_root: HTMLElement): CardRainController
     }
 
     const effect = new RainEffect(canvas, { autoStart: false })
-    effect.setPadding(getPadding(el))
 
     entries.set(el, { element: el, canvas, effect })
   }
@@ -82,14 +79,14 @@ export function createCardRainController(_root: HTMLElement): CardRainController
   return {
     sync(options, targets) {
       isRain = options.preset === 'rain'
-      const isLowQuality = options.quality === 'low'
-      const runEffect = isRain && !isLowQuality && active
+      const isHighQuality = options.quality === 'high'
+      const runEffect = isRain && isHighQuality && active
 
       // Build set of opted-in elements from current collision targets
       const nextElements = new Set<HTMLElement>()
       if (runEffect) {
         for (const t of targets) {
-          if (t.element && isOptedIn(t.element)) {
+          if (t.element && isOptedIn(t.element, t.width, t.height)) {
             nextElements.add(t.element)
           }
         }
@@ -110,7 +107,6 @@ export function createCardRainController(_root: HTMLElement): CardRainController
 
       // Start/stop based on preset
       for (const entry of entries.values()) {
-        entry.effect.setPadding(getPadding(entry.element))
         entry.effect.setDensity(options.density)
         if (runEffect) {
           entry.effect.start()
@@ -134,7 +130,6 @@ export function createCardRainController(_root: HTMLElement): CardRainController
 
     resize() {
       for (const e of entries.values()) {
-        e.effect.setPadding(getPadding(e.element))
         e.effect.resize()
       }
     },
