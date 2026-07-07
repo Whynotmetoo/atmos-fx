@@ -32,9 +32,9 @@ export interface SimulationOptions {
 export const DEFAULT_SIM_OPTIONS: SimulationOptions = {
   minRadius:                10,
   maxRadius:                14,
-  maxDrops:                 720,
-  rainChance:               0.28,
-  rainLimit:                4.8,
+  maxDrops:                 648,
+  rainChance:               0.25,
+  rainLimit:                4.3,
   spawnArea:                [-0.1, 0.95],
   radiusDistribution:       3,
   initialSpread:            1,
