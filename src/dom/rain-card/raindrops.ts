@@ -30,8 +30,8 @@ export interface SimulationOptions {
 }
 
 export const DEFAULT_SIM_OPTIONS: SimulationOptions = {
-  minRadius:                15,
-  maxRadius:                20,
+  minRadius:                10,
+  maxRadius:                14,
   maxDrops:                 900,
   rainChance:               0.35,
   rainLimit:                6,
