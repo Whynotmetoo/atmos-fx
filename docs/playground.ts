@@ -54,25 +54,10 @@ function applyShowcase() {
 
   // Update stats deck
   const particleReadout = document.querySelector('#showcase-readout-particle') as HTMLElement
-  const actionReadout = document.querySelector('#showcase-readout-action') as HTMLElement
-  const driftReadout = document.querySelector('#showcase-readout-drift') as HTMLElement
 
   if (particleReadout) {
     const presetLabelKey = `control-preset-${showcaseState.preset}`
     particleReadout.textContent = TRANSLATIONS[lang][presetLabelKey]
-  }
-
-  if (actionReadout) {
-    const actionKey = `showcase-ticket-val-${showcaseState.preset}`
-    actionReadout.textContent = TRANSLATIONS[lang][actionKey]
-  }
-
-  if (driftReadout) {
-    if (showcaseState.wind > 0) {
-      driftReadout.textContent = TRANSLATIONS[lang]['showcase-tilt-east']
-    } else {
-      driftReadout.textContent = TRANSLATIONS[lang]['showcase-tilt-west']
-    }
   }
 
   // Sync sliders value

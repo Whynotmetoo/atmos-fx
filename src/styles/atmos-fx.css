@@ -45,6 +45,11 @@
     filter: blur(1px);
   }
 
+  [data-atmos-card-fx='paused'] [data-atmos-layer='card-rain'],
+  [data-atmos-card-fx='stopped'] [data-atmos-layer='card-rain'] {
+    display: none;
+  }
+
   [data-atmos-fx] :where([data-atmos-glass]) {
     overflow: hidden;
     isolation: isolate;

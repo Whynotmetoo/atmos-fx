@@ -1,7 +1,8 @@
 import { createCanvasLayer } from '../dom/canvasLayer'
 import { createCollisionTargetManager } from '../dom/collisionTargets'
+import type { CollisionTargetRect } from '../dom/collisionTargets'
 import { createGlassController } from '../dom/glass'
-import { createLiquidDripsController } from '../dom/liquid'
+import { createLiquidDripsController, LIQUID_VISIBILITY_TOP_MARGIN_PX } from '../dom/liquid'
 import { createCardRainController } from '../dom/cardRainEffect'
 import { createRenderer } from '../renderers/createRenderer'
 import { normalizeAtmosphereOptions } from './options'
@@ -194,6 +195,8 @@ export function createAtmosphere(
   let intersectionPaused = false
   let isIntersecting = true
   let manuallyPaused = false
+  let startupGraceTime = true
+  let startupTimerId: number | undefined
   let lastTime: number | undefined
 
   const qualityMonitor = new QualityMonitor(normalizedOptions.quality === 'auto')
@@ -239,15 +242,61 @@ export function createAtmosphere(
         renderer?.resize(size)
       }
       ensureRenderer()
+      syncCollisionTargets()
     })
   })
+
+  let observedCards = new Set<HTMLElement>()
+  const cardVisibilityMap = new WeakMap<HTMLElement, boolean>()
+  const dripVisibilityMap = new WeakMap<HTMLElement, boolean>()
+
+  const cardIntersectionObserver = ownerWindow?.IntersectionObserver
+    ? new ownerWindow.IntersectionObserver((entries) => {
+        let changed = false
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i]!
+          const el = entry.target as HTMLElement
+          const prev = cardVisibilityMap.get(el)
+          if (prev !== entry.isIntersecting) {
+            cardVisibilityMap.set(el, entry.isIntersecting)
+            changed = true
+          }
+        }
+        if (changed) {
+          syncTargets(collisionTargetManager.getTargets())
+        }
+      }, {
+        root: null,
+        threshold: 0.0,
+      })
+    : null
+
+  const dripIntersectionObserver = ownerWindow?.IntersectionObserver
+    ? new ownerWindow.IntersectionObserver((entries) => {
+        let changed = false
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i]!
+          const el = entry.target as HTMLElement
+          const prev = dripVisibilityMap.get(el)
+          if (prev !== entry.isIntersecting) {
+            dripVisibilityMap.set(el, entry.isIntersecting)
+            changed = true
+          }
+        }
+        if (changed) {
+          syncTargets(collisionTargetManager.getTargets())
+        }
+      }, {
+        root: null,
+        rootMargin: `${LIQUID_VISIBILITY_TOP_MARGIN_PX}px 0px 0px 0px`,
+        threshold: 0.0,
+      })
+    : null
 
   const collisionTargetManager = createCollisionTargetManager(
     element,
     (targets) => {
-      renderer?.setCollisionTargets(targets)
-      const effectiveOptions = getEffectiveOptions()
-      liquidDripsController.sync(effectiveOptions, targets)
+      syncTargets(targets)
     },
   )
 
@@ -267,12 +316,39 @@ export function createAtmosphere(
     glassController.sync(normalizedOptions)
   }
 
-  const syncCollisionTargets = () => {
-    const targets = collisionTargetManager.refresh()
+  const syncTargets = (targets: readonly CollisionTargetRect[]) => {
+    // Centralized visibility tracking
+    const nextObserved = new Set<HTMLElement>()
+    for (let i = 0; i < targets.length; i++) {
+      const t = targets[i]!
+      if (t.element) {
+        nextObserved.add(t.element)
+        if (!observedCards.has(t.element)) {
+          cardIntersectionObserver?.observe(t.element)
+          dripIntersectionObserver?.observe(t.element)
+        }
+        t.isIntersectingCard = startupGraceTime || cardVisibilityMap.get(t.element) !== false
+        t.isIntersectingDrips = startupGraceTime || dripVisibilityMap.get(t.element) !== false
+      }
+    }
+    for (const el of observedCards) {
+      if (!nextObserved.has(el)) {
+        cardIntersectionObserver?.unobserve(el)
+        dripIntersectionObserver?.unobserve(el)
+        cardVisibilityMap.delete(el)
+        dripVisibilityMap.delete(el)
+      }
+    }
+    observedCards = nextObserved
+
     renderer?.setCollisionTargets(targets)
     const effectiveOptions = getEffectiveOptions()
     liquidDripsController.sync(effectiveOptions, targets)
     cardRainController.sync(effectiveOptions, targets)
+  }
+
+  const syncCollisionTargets = () => {
+    collisionTargetManager.refresh()
   }
 
   const setState = (nextState: ControllerState) => {
@@ -300,11 +376,8 @@ export function createAtmosphere(
     const size = canvasLayer?.resize(scaling.dprCap)
 
     if (size) {
-      const effectiveOptions = getEffectiveOptions()
-      const targets = collisionTargetManager.refresh()
       renderer?.resize(size)
-      renderer?.setCollisionTargets(targets)
-      liquidDripsController.sync(effectiveOptions, targets)
+      syncCollisionTargets()
     }
 
     return size
@@ -360,10 +433,10 @@ export function createAtmosphere(
     normalizedOptions.respectReducedMotion && Boolean(reducedMotionQuery?.matches)
 
   const shouldPauseForHiddenDocument = () =>
-    normalizedOptions.pauseWhenHidden && ownerDocument.hidden
+    !startupGraceTime && normalizedOptions.pauseWhenHidden && ownerDocument.hidden
 
   const shouldPauseForOutOfViewport = () =>
-    normalizedOptions.pauseWhenHidden && !isIntersecting
+    !startupGraceTime && normalizedOptions.pauseWhenHidden && !isIntersecting
 
   const hasAutoPause = () => visibilityPaused || reducedMotionPaused || intersectionPaused
 
@@ -371,6 +444,21 @@ export function createAtmosphere(
     visibilityPaused = shouldPauseForHiddenDocument()
     reducedMotionPaused = shouldReduceMotion()
     intersectionPaused = shouldPauseForOutOfViewport()
+  }
+
+  const startStartupTimer = () => {
+    if (startupTimerId !== undefined) {
+      ownerWindow?.clearTimeout(startupTimerId)
+    }
+    startupGraceTime = true
+    startupTimerId = ownerWindow?.setTimeout(() => {
+      startupGraceTime = false
+      startupTimerId = undefined
+      if (state === 'running') {
+        syncCollisionTargets()
+        startAnimationIfAllowed()
+      }
+    }, 1000)
   }
 
   const startAnimationIfAllowed = () => {
@@ -497,6 +585,7 @@ export function createAtmosphere(
       renderer?.resize(size)
       manuallyPaused = false
       setState('running')
+      startStartupTimer()
       startAnimationIfAllowed()
     },
     stop() {
@@ -504,9 +593,15 @@ export function createAtmosphere(
       visibilityPaused = false
       reducedMotionPaused = false
       manuallyPaused = false
+      startupGraceTime = true
+      if (startupTimerId !== undefined) {
+        ownerWindow?.clearTimeout(startupTimerId)
+        startupTimerId = undefined
+      }
       scheduler.stop()
       renderer?.clear()
       liquidDripsController.sync(normalizedOptions, [])
+      cardRainController.sync(normalizedOptions, [])
       lastTime = undefined
       qualityMonitor.reset()
       setState('stopped')
@@ -560,6 +655,12 @@ export function createAtmosphere(
       ownerWindow?.removeEventListener('resize', handleContainerResize)
       resizeObserver?.disconnect()
       intersectionObserver?.disconnect()
+      cardIntersectionObserver?.disconnect()
+      dripIntersectionObserver?.disconnect()
+      if (startupTimerId !== undefined) {
+        ownerWindow?.clearTimeout(startupTimerId)
+        startupTimerId = undefined
+      }
       removeReducedMotionListener()
       scheduler.stop()
       collisionTargetManager.destroy()

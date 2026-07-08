@@ -297,11 +297,6 @@ function createShader(
   gl.shaderSource(shader, source)
   gl.compileShader(shader)
 
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    gl.deleteShader(shader)
-    return undefined
-  }
-
   return shader
 }
 
@@ -328,11 +323,6 @@ function createProgramFromSource(
   gl.linkProgram(program)
   gl.deleteShader(vertexShader)
   gl.deleteShader(fragmentShader)
-
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    gl.deleteProgram(program)
-    return undefined
-  }
 
   return program
 }
@@ -391,6 +381,9 @@ function cleanupLayerResources(layer: WebGLLayer | undefined) {
   }
 
   const { gl, program, buffer, quadBuffer } = layer
+  if (gl.isContextLost()) {
+    return
+  }
   gl.deleteProgram(program)
   gl.deleteBuffer(buffer)
   gl.deleteBuffer(quadBuffer)

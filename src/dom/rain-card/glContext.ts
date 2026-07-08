@@ -41,11 +41,6 @@ export class GlContext {
     const shader = gl.createShader(type)!
     gl.shaderSource(shader, src)
     gl.compileShader(shader)
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      const msg = gl.getShaderInfoLog(shader) ?? ''
-      gl.deleteShader(shader)
-      throw new Error(`Shader compile failed: ${msg}`)
-    }
     return shader
   }
 
@@ -55,11 +50,6 @@ export class GlContext {
     gl.attachShader(prog, vert)
     gl.attachShader(prog, frag)
     gl.linkProgram(prog)
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      const msg = gl.getProgramInfoLog(prog) ?? ''
-      gl.deleteProgram(prog)
-      throw new Error(`Program link failed: ${msg}`)
-    }
     gl.useProgram(prog)
     return prog
   }
@@ -126,6 +116,11 @@ export class GlContext {
 
   destroy(): void {
     const { gl } = this
+    if (gl.isContextLost()) {
+      this.textures.length = 0
+      this.uniforms.clear()
+      return
+    }
     this.textures.forEach(t => gl.deleteTexture(t))
     gl.deleteBuffer(this.posBuf)
     gl.deleteProgram(this.program)

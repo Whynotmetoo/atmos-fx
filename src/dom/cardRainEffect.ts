@@ -9,7 +9,9 @@ const LAYER_VALUE = 'card-rain'
 interface CardEntry {
   element: HTMLElement
   canvas:  HTMLCanvasElement
-  effect:  RainEffect
+  effect:  RainEffect | null
+  isIntersectingCard: boolean
+  isIntersectingDrips: boolean
 }
 
 export type CardRainController = {
@@ -51,6 +53,35 @@ export function createCardRainController(_root: HTMLElement): CardRainController
   }
   let active = true    // mirrors running state of parent scheduler
   let isRain = false   // only operate in rain preset
+  let runEffect = false
+  let initTimerId: number | null = null
+
+  function scheduleInitialization(): void {
+    if (initTimerId !== null) return
+
+    const tick = () => {
+      let nextEntry: CardEntry | null = null
+      for (const [_, entry] of entries) {
+        if (entry.effect === null) {
+          nextEntry = entry
+          break
+        }
+      }
+
+      if (nextEntry) {
+        nextEntry.effect = new RainEffect(nextEntry.canvas, { autoStart: false, maxPixelRatio: 1.0 })
+        const shouldRun = runEffect && nextEntry.isIntersectingCard
+        if (shouldRun) {
+          nextEntry.effect.start()
+        }
+        initTimerId = requestAnimationFrame(tick)
+      } else {
+        initTimerId = null
+      }
+    }
+
+    initTimerId = requestAnimationFrame(tick)
+  }
 
   function addCard(el: HTMLElement): void {
     if (entries.has(el)) return
@@ -66,13 +97,15 @@ export function createCardRainController(_root: HTMLElement): CardRainController
       el.appendChild(canvas)
     }
 
-    const effect = new RainEffect(canvas, { autoStart: false })
-
-    entries.set(el, { element: el, canvas, effect })
+    entries.set(el, { element: el, canvas, effect: null, isIntersectingCard: true, isIntersectingDrips: true })
+    scheduleInitialization()
   }
 
   function removeCard(entry: CardEntry): void {
-    entry.effect.destroy()
+    entry.element.removeAttribute('data-atmos-card-fx')
+    if (entry.effect) {
+      entry.effect.destroy()
+    }
     entry.canvas.parentNode?.removeChild(entry.canvas)
   }
 
@@ -80,7 +113,7 @@ export function createCardRainController(_root: HTMLElement): CardRainController
     sync(options, targets) {
       isRain = options.preset === 'rain'
       const isHighQuality = options.quality === 'high'
-      const runEffect = isRain && isHighQuality && active
+      runEffect = isRain && isHighQuality && active
 
       // Build set of opted-in elements from current collision targets
       const nextElements = new Set<HTMLElement>()
@@ -106,36 +139,78 @@ export function createCardRainController(_root: HTMLElement): CardRainController
       }
 
       // Start/stop based on preset
-      for (const entry of entries.values()) {
-        entry.effect.setDensity(options.density)
-        if (runEffect) {
-          entry.effect.start()
+      for (const [el, entry] of entries) {
+        if (entry.effect) {
+          entry.effect.setDensity(options.density)
+        }
+        const target = targets.find(t => t.element === el)
+        const isIntersectingCard = target ? target.isIntersectingCard !== false : true
+        const isIntersectingDrips = target ? target.isIntersectingDrips !== false : true
+
+        entry.isIntersectingCard = isIntersectingCard
+        entry.isIntersectingDrips = isIntersectingDrips
+
+        const shouldRun = runEffect && isIntersectingCard
+        if (entry.effect) {
+          if (shouldRun) {
+            entry.effect.start()
+          } else {
+            entry.effect.stop()
+          }
+        }
+
+        const isCardRainRunning = shouldRun
+        const isDripsRunning = options.preset === 'rain' && options.liquidDripping && isIntersectingDrips
+
+        if (active && (isCardRainRunning || isDripsRunning)) {
+          el.setAttribute('data-atmos-card-fx', 'running')
         } else {
-          entry.effect.stop()
+          el.setAttribute('data-atmos-card-fx', active ? 'paused' : 'stopped')
         }
       }
     },
 
     pause() {
       active = false
-      for (const e of entries.values()) e.effect.stop()
+      runEffect = false
+      for (const [el, e] of entries) {
+        e.effect?.stop()
+        el.setAttribute('data-atmos-card-fx', 'stopped')
+      }
     },
 
     resume() {
       active = true
+      runEffect = isRain
       if (isRain) {
-        for (const e of entries.values()) e.effect.start()
+        for (const [el, e] of entries) {
+          if (e.isIntersectingCard) {
+            e.effect?.start()
+          }
+          const isCardRainRunning = e.isIntersectingCard
+          const isDripsRunning = e.isIntersectingDrips
+          if (isCardRainRunning || isDripsRunning) {
+            el.setAttribute('data-atmos-card-fx', 'running')
+          } else {
+            el.setAttribute('data-atmos-card-fx', 'paused')
+          }
+        }
       }
     },
 
     resize() {
       for (const e of entries.values()) {
-        e.effect.resize()
+        e.effect?.resize()
       }
     },
 
     destroy() {
       active = false
+      runEffect = false
+      if (initTimerId !== null) {
+        cancelAnimationFrame(initTimerId)
+        initTimerId = null
+      }
       for (const e of entries.values()) removeCard(e)
       entries.clear()
     },

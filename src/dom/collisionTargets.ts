@@ -7,6 +7,8 @@ export type CollisionTargetRect = {
   right: number
   bottom: number
   borderRadius?: number
+  isIntersectingCard?: boolean
+  isIntersectingDrips?: boolean
 }
 
 export type CollisionTargetManager = {
@@ -169,6 +171,11 @@ export function createCollisionTargetManager(
       ? undefined
       : new MutationObserverCtor((mutations) => {
           const hasSignificantMutation = mutations.some((mutation) => {
+            if (mutation.type === 'attributes' &&
+                (mutation.attributeName === 'data-atmos-card-fx' ||
+                 mutation.attributeName === 'data-atmos-fx')) {
+              return false
+            }
             const target = mutation.target as HTMLElement
             if (target && typeof target.closest === 'function') {
               return !target.closest('[data-atmos-layer]')

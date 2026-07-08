@@ -200,11 +200,6 @@ function createShader(
   gl.shaderSource(shader, source)
   gl.compileShader(shader)
 
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    gl.deleteShader(shader)
-    return undefined
-  }
-
   return shader
 }
 
@@ -227,11 +222,6 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | undefined {
   gl.linkProgram(program)
   gl.deleteShader(vertexShader)
   gl.deleteShader(fragmentShader)
-
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    gl.deleteProgram(program)
-    return undefined
-  }
 
   return program
 }
@@ -507,6 +497,8 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     this.canvases.foreground.removeEventListener('webglcontextrestored', this.handleContextRestored)
     this.particles = []
     this.lastTime = undefined
+    this.cleanupLayerResources(this.backgroundLayer)
+    this.cleanupLayerResources(this.foregroundLayer)
     this.backgroundLayer = undefined
     this.foregroundLayer = undefined
   }
@@ -674,6 +666,24 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     layer.gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
     layer.gl.clearColor(0, 0, 0, 0)
     layer.gl.clear(layer.gl.COLOR_BUFFER_BIT)
+  }
+
+  private cleanupLayerResources(layer: WebGLLayer | undefined) {
+    if (!layer) {
+      return
+    }
+
+    const { gl, program, buffer } = layer
+    if (gl.isContextLost()) {
+      return
+    }
+    gl.deleteProgram(program)
+    gl.deleteBuffer(buffer)
+
+    const ext = gl.getExtension('WEBGL_lose_context')
+    if (ext) {
+      ext.loseContext()
+    }
   }
 }
 

@@ -21,7 +21,7 @@ type LiquidDrip = {
   collisionY: number
   hasSplashed: boolean
   isIntersecting: boolean
-  targetElement: HTMLElement | null
+
   
   flatPathD?: string
   lastPathD?: string
@@ -430,23 +430,7 @@ export function createLiquidDripsController(
 
   const drips: LiquidDrip[] = []
   const randomGatheringPoints = new WeakMap<HTMLElement, number>()
-  const dripMap = new WeakMap<HTMLElement, LiquidDrip>()
 
-  const observer = typeof IntersectionObserver !== 'undefined'
-    ? new IntersectionObserver((entries) => {
-        for (let i = 0; i < entries.length; i++) {
-          const entry = entries[i]
-          const drip = dripMap.get(entry.target as HTMLElement)
-          if (drip) {
-            drip.isIntersecting = entry.isIntersecting
-          }
-        }
-      }, {
-        root: null,
-        rootMargin: `${LIQUID_VISIBILITY_TOP_MARGIN_PX}px 0px 0px 0px`,
-        threshold: 0.0,
-      })
-    : null
 
   let options: NormalizedAtmosphereOptions | undefined
 
@@ -524,7 +508,6 @@ export function createLiquidDripsController(
       collisionY: 10000,
       hasSplashed: false,
       isIntersecting: true,
-      targetElement: null,
       group: cardGroup,
       path,
       bulge,
@@ -539,12 +522,6 @@ export function createLiquidDripsController(
   const removeDrip = (index: number) => {
     const drip = drips[index]
     if (drip) {
-      if (drip.targetElement) {
-        if (observer) {
-          observer.unobserve(drip.targetElement)
-        }
-        dripMap.delete(drip.targetElement)
-      }
       drip.droplet.remove()
       drip.group.remove()
       drip.clipPath.remove()
@@ -590,22 +567,7 @@ export function createLiquidDripsController(
         drip.flatPathD = undefined
         drip.lastPathD = undefined
 
-        const element = target.element || null
-        if (drip.targetElement !== element) {
-          if (drip.targetElement) {
-            if (observer) {
-              observer.unobserve(drip.targetElement)
-            }
-            dripMap.delete(drip.targetElement)
-          }
-          drip.targetElement = element
-          if (element) {
-            dripMap.set(element, drip)
-            if (observer) {
-              observer.observe(element)
-            }
-          }
-        }
+        drip.isIntersecting = target.isIntersectingDrips !== false
 
         const indent = Math.min(20, target.width * 0.15)
 
@@ -1102,9 +1064,7 @@ export function createLiquidDripsController(
 
     destroy() {
       clearDrips()
-      if (observer) {
-        observer.disconnect()
-      }
+
       svg.remove()
     },
   }

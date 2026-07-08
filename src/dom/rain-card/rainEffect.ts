@@ -10,6 +10,19 @@ export interface RainEffectOptions {
   renderer?:     Partial<RendererOptions>
 }
 
+let cachedTextures: Promise<[HTMLImageElement, HTMLImageElement, HTMLImageElement]> | null = null
+
+function loadCachedTextures(): Promise<[HTMLImageElement, HTMLImageElement, HTMLImageElement]> {
+  if (!cachedTextures) {
+    cachedTextures = Promise.all([
+      loadImage(ALPHA_TEX),
+      loadImage(COLOR_TEX),
+      loadImage(REFRACTION_TEX),
+    ])
+  }
+  return cachedTextures
+}
+
 /** WebGL water-drop effect for a single canvas element.
  *  Ported from docs_local/rain-effect-simplified. */
 export class RainEffect {
@@ -45,11 +58,7 @@ export class RainEffect {
   }
 
   private async init(): Promise<void> {
-    const [alpha, color, refraction] = await Promise.all([
-      loadImage(ALPHA_TEX),
-      loadImage(COLOR_TEX),
-      loadImage(REFRACTION_TEX),
-    ])
+    const [alpha, color, refraction] = await loadCachedTextures()
     if (this.destroyed) return
 
     this.lockCssSize()
