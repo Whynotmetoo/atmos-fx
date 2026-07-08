@@ -181,6 +181,27 @@
       .showcase-nav-actions:not([data-atmos-glass]) {
         border: 1px solid rgba(255, 255, 255, 0.08);
       }
+      .showcase-nav-actions[data-atmos-glass] {
+        overflow: visible;
+      }
+      .lang-dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 100;
+        display: none;
+        min-width: 168px;
+        margin-top: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 10px;
+        background: var(--bg-panel);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.16),
+          0 16px 36px rgba(0, 0, 0, 0.34);
+        animation: none;
+        transition: none;
+      }
 
       /* Showcase Intro Typography Card */
       .showcase-intro {
@@ -350,56 +371,14 @@
         line-height: 1.4;
       }
 
-      .floating-ticket {
-        position: absolute;
-        left: 35vw;
-        bottom: 300px;
-        width: 180px;
-        padding: 16px;
-      }
-      .floating-ticket:not([data-atmos-glass]) {
-        background: rgba(13, 19, 18, 0.6);
-      }
-      .floating-ticket span {
-        display: block;
-        margin-bottom: 12px;
-        color: var(--muted);
-        font-size: 0.75rem;
-        text-transform: uppercase;
-      }
-      .floating-ticket strong {
-        font-size: 1.2rem;
-      }
-
-      .tilt-card {
-        position: absolute;
-        right: 440px;
-        top: 420px;
-        width: 220px;
-        padding: 16px;
-      }
-      .tilt-card:not([data-atmos-glass]) {
-        background: rgba(63, 31, 22, 0.42);
-      }
-      .tilt-card p {
-        margin-bottom: 12px;
-        color: var(--muted);
-        font-size: 0.75rem;
-        text-transform: uppercase;
-      }
-      .tilt-card strong {
-        font-size: 1.2rem;
-      }
-
       .micro-stack {
         position: absolute;
         left: 40px;
         right: 40px;
         bottom: 100px;
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 3rem;
-        width: calc(100% - 80px);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3rem 6rem;
       }
       .micro-card {
         min-height: 110px;
@@ -432,30 +411,6 @@
       .micro-2:not([data-atmos-glass]) p, .micro-2:not([data-atmos-glass]) > span {
         color: rgba(23, 33, 30, 0.65);
       }
-      .micro-3:not([data-atmos-glass]) {
-        background: rgba(112, 217, 255, 0.12);
-      }
-
-      .collision-rail {
-        position: absolute;
-        height: 8px;
-        border-radius: 99px;
-      }
-      .collision-rail:not([data-atmos-glass]) {
-        background: rgb(244, 240, 230);
-        box-shadow: 0 0 20px rgba(112, 217, 255, 0.15);
-      }
-      .rail-top {
-        right: 30vw;
-        top: 120px;
-        width: 140px;
-      }
-      .rail-bottom {
-        right: 460px;
-        bottom: 420px;
-        width: 180px;
-      }
-
       /* Playground Layout */
       .playground-title-wrapper {
         margin-bottom: 24px;
@@ -847,7 +802,7 @@
       .showcase-input {
         position: absolute;
         left: 40vw;
-        top: 350px;
+        top: 400px;
         width: 260px;
         padding: 14px 20px;
         border-radius: 12px;
@@ -892,7 +847,7 @@
           right: 24px;
           top: 24px;
         }
-        .showcase-backdrop, .orbit, .collision-rail {
+        .showcase-backdrop, .orbit {
           display: none;
         }
         .showcase-intro {
@@ -908,7 +863,7 @@
         .showcase-desc {
           font-size: 1.15rem;
         }
-        .control-deck, .forecast-card, .floating-ticket, .tilt-card, .micro-stack, .showcase-input {
+        .control-deck, .forecast-card, .micro-stack, .showcase-input {
           position: relative;
           inset: auto;
           width: 100%;
@@ -964,7 +919,7 @@
             <span id="current-lang-label">EN</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px; opacity: 0.6;"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
-          <div id="lang-dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 6px; background: var(--bg-panel-solid); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 100; min-width: 168px; overflow: hidden; backdrop-filter: blur(12px);">
+          <div id="lang-dropdown-menu" class="lang-dropdown-menu">
             <button class="lang-dropdown-item" data-lang="en" style="width: 100%; text-align: left; background: transparent; border: none; color: var(--ink); padding: 8px 12px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
               English <span class="active-check" style="opacity: 0; font-size: 0.8rem; color: var(--accent);">✓</span>
             </button>
@@ -1049,19 +1004,7 @@
           <p data-i18n-key="showcase-forecast-desc">Uses a translucent treatment so precipitation remains visible across content-heavy UI.</p>
         </div>
 
-        <!-- 4. Floating Ticket -->
-        <div class="showcase-card floating-ticket" data-atmos-collision data-atmos-glass>
-          <span data-i18n-key="showcase-ticket-title">Impact shelf</span>
-          <strong id="showcase-readout-action" data-i18n-key="showcase-ticket-val-rain">Splashing</strong>
-        </div>
-
-        <!-- 5. Angled Card -->
-        <div class="showcase-card tilt-card" data-atmos-collision data-atmos-glass>
-          <p data-i18n-key="showcase-tilt-title">Angled collision plane</p>
-          <strong id="showcase-readout-drift" data-i18n-key="showcase-tilt-west">west drift</strong>
-        </div>
-
-        <!-- 6. Micro Cards Stack -->
+        <!-- 4. Micro Cards Stack -->
         <div class="micro-stack">
           <div class="showcase-card micro-card micro-1" data-atmos-collision data-atmos-glass>
             <span>01</span>
@@ -1073,21 +1016,8 @@
             <strong data-i18n-key="showcase-micro-2-title">solid control</strong>
             <p data-i18n-key="showcase-micro-2-desc">opaque island in the same storm</p>
           </div>
-          <div class="showcase-card micro-card micro-3" data-atmos-collision data-atmos-glass>
-            <span>03</span>
-            <strong data-i18n-key="showcase-micro-3-title">opacity card</strong>
-            <p data-i18n-key="showcase-micro-3-desc">text fades into particles</p>
-          </div>
-          <div class="showcase-card micro-card micro-4" data-atmos-collision data-atmos-glass>
-            <span>04</span>
-            <strong data-i18n-key="showcase-micro-4-title">thin rail</strong>
-            <p data-i18n-key="showcase-micro-4-desc">snow and hail landing ledge</p>
-          </div>
         </div>
 
-        <!-- 7. Rails -->
-        <div class="collision-rail rail-top" data-atmos-collision data-atmos-glass></div>
-        <div class="collision-rail rail-bottom" data-atmos-collision data-atmos-glass></div>
       </div>
     </section>
 
@@ -1103,9 +1033,10 @@
         <!-- Preview Visual Canvas -->
         <div class="preview-column">
           <div id="playground-stage" data-playground-preset="rain">
-            <!-- 1. Text Container (Card A) -->
-            <div id="playground-info-card" data-atmos-collision data-atmos-glass data-i18n-key="playground-info-desc">
-              Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.
+            <div id="playground-info-card" data-atmos-collision data-atmos-glass>
+              <span data-i18n-key="playground-info-desc">
+                Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.
+              </span>
             </div>
 
             <!-- 2. Simple Input (Card B) -->

@@ -7,6 +7,8 @@ export type CollisionTargetRect = {
   right: number
   bottom: number
   borderRadius?: number
+  isIntersectingCard?: boolean
+  isIntersectingDrips?: boolean
 }
 
 export type CollisionTargetManager = {
@@ -17,6 +19,18 @@ export type CollisionTargetManager = {
 
 const SCHEDULE_FALLBACK_DELAY = 50
 const COLLISION_SELECTOR = '[data-atmos-collision]'
+const OBSERVED_ATTRIBUTES = [
+  'id',
+  'class',
+  'style',
+  'hidden',
+  'open',
+  'data-atmos-collision',
+  'data-atmos-glass',
+  'data-atmos-solid',
+  'data-atmos-liquid-dripping',
+  'data-atmos-liquid-gathering-point',
+]
 
 function toRootRelativeRect(
   element: HTMLElement,
@@ -218,6 +232,7 @@ export function createCollisionTargetManager(
   resizeObserver?.observe(root)
   mutationObserver?.observe(root, {
     attributes: true,
+    attributeFilter: OBSERVED_ATTRIBUTES,
     childList: true,
     subtree: true,
   })

@@ -51,6 +51,7 @@ function createWebGLContext() {
     bindBuffer: vi.fn(),
     bufferData: vi.fn(),
     enableVertexAttribArray: vi.fn(),
+    disableVertexAttribArray: vi.fn(),
     vertexAttribPointer: vi.fn(),
     uniform1f: vi.fn(),
     uniform2f: vi.fn(),
@@ -133,6 +134,18 @@ describe('WebGL renderer foundation', () => {
     expect(context.deleteProgram).toHaveBeenCalled()
     expect(context.deleteBuffer).toHaveBeenCalled()
   })
+
+  it.each(['rain', 'snow', 'hail'] as const)(
+    'falls back when a %s WebGL program fails to link',
+    (preset) => {
+      const context = createWebGLContext()
+      vi.mocked(context.getProgramParameter).mockReturnValue(false)
+
+      const renderer = createRenderer(createCanvases(context), size, { ...options, preset })
+
+      expect(renderer.backend).toBe('canvas2d')
+    },
+  )
 
   it('pauses drawing while the WebGL context is lost and resumes after restore', () => {
     const context = createWebGLContext()

@@ -200,11 +200,6 @@ function createShader(
   gl.shaderSource(shader, source)
   gl.compileShader(shader)
 
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    gl.deleteShader(shader)
-    return undefined
-  }
-
   return shader
 }
 
@@ -225,10 +220,11 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | undefined {
   gl.attachShader(program, vertexShader)
   gl.attachShader(program, fragmentShader)
   gl.linkProgram(program)
+  const linked = gl.getProgramParameter(program, gl.LINK_STATUS)
   gl.deleteShader(vertexShader)
   gl.deleteShader(fragmentShader)
 
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  if (!linked) {
     gl.deleteProgram(program)
     return undefined
   }
@@ -247,6 +243,8 @@ function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | 
   const buffer = gl.createBuffer()
 
   if (!program || !buffer) {
+    if (program) gl.deleteProgram(program)
+    if (buffer) gl.deleteBuffer(buffer)
     return undefined
   }
 
@@ -507,6 +505,8 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     this.canvases.foreground.removeEventListener('webglcontextrestored', this.handleContextRestored)
     this.particles = []
     this.lastTime = undefined
+    this.cleanupLayerResources(this.backgroundLayer)
+    this.cleanupLayerResources(this.foregroundLayer)
     this.backgroundLayer = undefined
     this.foregroundLayer = undefined
   }
@@ -674,6 +674,24 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
     layer.gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
     layer.gl.clearColor(0, 0, 0, 0)
     layer.gl.clear(layer.gl.COLOR_BUFFER_BIT)
+  }
+
+  private cleanupLayerResources(layer: WebGLLayer | undefined) {
+    if (!layer) {
+      return
+    }
+
+    const { gl, program, buffer, positionLocation, alphaLocation, radiusLocation } = layer
+    if (typeof gl.isContextLost === 'function' && gl.isContextLost()) {
+      return
+    }
+
+    for (const location of [positionLocation, alphaLocation, radiusLocation]) {
+      if (location >= 0) gl.disableVertexAttribArray(location)
+    }
+
+    gl.deleteProgram(program)
+    gl.deleteBuffer(buffer)
   }
 }
 

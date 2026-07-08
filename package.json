@@ -41,6 +41,7 @@
     "clean": "rm -rf dist",
     "build": "npm run clean && npm run build:bundle && npm run build:types && npm run build:styles",
     "build:bundle": "vite build",
+    "dev":"npx vite --config vite.config.docs.ts --host 127.0.0.1 --port 4173",
     "build:types": "tsc -p tsconfig.build.json",
     "build:styles": "mkdir -p dist/styles && cp src/styles/atmos-fx.css dist/atmos-fx.css && cp src/styles/atmos-fx.css dist/styles/atmos-fx.css",
     "build:docs": "vite build --config vite.config.docs.ts",

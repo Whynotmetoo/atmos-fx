@@ -249,11 +249,6 @@ function createShader(
   gl.shaderSource(shader, source)
   gl.compileShader(shader)
 
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    gl.deleteShader(shader)
-    return undefined
-  }
-
   return shader
 }
 
@@ -278,10 +273,11 @@ function createProgram(
   gl.attachShader(program, vertexShader)
   gl.attachShader(program, fragmentShader)
   gl.linkProgram(program)
+  const linked = gl.getProgramParameter(program, gl.LINK_STATUS)
   gl.deleteShader(vertexShader)
   gl.deleteShader(fragmentShader)
 
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  if (!linked) {
     gl.deleteProgram(program)
     return undefined
   }
@@ -301,6 +297,9 @@ function createHailLayer(canvas: HTMLCanvasElement, capacity: number): WebGLHail
   const buffer = gl.createBuffer()
 
   if (!hailProgram || !solidProgram || !buffer) {
+    if (hailProgram) gl.deleteProgram(hailProgram)
+    if (solidProgram) gl.deleteProgram(solidProgram)
+    if (buffer) gl.deleteBuffer(buffer)
     return undefined
   }
 
@@ -653,6 +652,8 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
     this.canvases.foreground.removeEventListener('webglcontextrestored', this.handleContextRestored)
     this.particles = []
     this.lastTime = undefined
+    this.cleanupLayerResources(this.backgroundLayer)
+    this.cleanupLayerResources(this.foregroundLayer)
     this.backgroundLayer = undefined
     this.foregroundLayer = undefined
   }
@@ -813,6 +814,43 @@ export class WebGLHailRenderer implements Canvas2DRenderer {
     layer.gl.viewport(0, 0, this.size.canvasWidth, this.size.canvasHeight)
     layer.gl.clearColor(0, 0, 0, 0)
     layer.gl.clear(layer.gl.COLOR_BUFFER_BIT)
+  }
+
+  private cleanupLayerResources(layer: WebGLHailLayer | undefined) {
+    if (!layer) {
+      return
+    }
+
+    const {
+      gl,
+      hailProgram,
+      solidProgram,
+      buffer,
+      hailPositionLocation,
+      hailAlphaLocation,
+      hailRadiusLocation,
+      solidPositionLocation,
+      solidAlphaLocation,
+      solidRadiusLocation,
+    } = layer
+    if (typeof gl.isContextLost === 'function' && gl.isContextLost()) {
+      return
+    }
+
+    for (const location of [
+      hailPositionLocation,
+      hailAlphaLocation,
+      hailRadiusLocation,
+      solidPositionLocation,
+      solidAlphaLocation,
+      solidRadiusLocation,
+    ]) {
+      if (location >= 0) gl.disableVertexAttribArray(location)
+    }
+
+    gl.deleteProgram(hailProgram)
+    gl.deleteProgram(solidProgram)
+    gl.deleteBuffer(buffer)
   }
 }
 
