@@ -46,12 +46,11 @@ function imgH(src: ImageLike): number {
 
 export class RainRenderer {
   private readonly gl: GlContext
-  private readonly waterTex: WebGLTexture | null
+  private readonly waterTex: WebGLTexture
   readonly opts: RendererOptions
 
   constructor(
     readonly canvas: HTMLCanvasElement,
-    readonly waterMap: HTMLCanvasElement,
     shine:      ImageLike | null,
     refraction: ImageLike | null,
     opts: Partial<RendererOptions> = {},
@@ -60,7 +59,7 @@ export class RainRenderer {
     const glCtx = new GlContext(canvas)
     this.gl = glCtx
 
-    this.waterTex  = glCtx.createTex(waterMap, 0)
+    this.waterTex  = glCtx.createEmptyTex(0)
     glCtx.createTex(shine,       1)
     glCtx.createTex(refraction,  2)
 
@@ -94,9 +93,14 @@ export class RainRenderer {
     gl.set3f('lightDirection',       ...opts.lightDirection)
   }
 
-  draw(): void {
-    if (this.waterTex) this.gl.bindTex(this.waterTex, 0)
-    this.gl.uploadTex(this.waterMap)
+  draw(waterMap: HTMLCanvasElement, width: number, height: number): void {
+    const originY = this.canvas.height - height
+    this.gl.setViewport(0, originY, width, height)
+    this.gl.clearViewport(0, originY, width, height)
+    this.gl.set2f('resolution', width, height)
+    this.gl.set2f('origin', 0, originY)
+    this.gl.bindTex(this.waterTex, 0)
+    this.gl.uploadTex(waterMap)
     this.gl.draw()
   }
 
@@ -104,10 +108,9 @@ export class RainRenderer {
     this.canvas.width  = w
     this.canvas.height = h
     this.gl.resize(w, h)
-    this.gl.set2f('resolution', w, h)
   }
 
   destroy(): void {
-    this.gl.destroy()
+    this.gl.destroy(true)
   }
 }

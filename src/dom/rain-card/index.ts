@@ -1,2 +1,3 @@
-export { RainEffect } from './rainEffect'
-export type { RainEffectOptions } from './rainEffect'
+export { loadSharedRainAssets, RainEffect } from './rainEffect'
+export type { RainEffectOptions, SharedRainAssets } from './rainEffect'
+export { RainRenderer } from './rainRenderer'

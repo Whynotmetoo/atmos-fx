@@ -143,6 +143,9 @@ describe('createAtmosphere', () => {
     expect(root.dataset.atmosFxPreset).toBe('rain')
     expect(root.hasAttribute('data-atmos-particle')).toBe(false)
     expect(root.dataset.atmosRenderer).toBe('canvas2d')
+    expect(document.querySelector('#atmos-fx-styles')?.textContent).toContain(
+      "[data-atmos-card-fx='paused'] [data-atmos-layer='card-rain']",
+    )
 
     controller.stop()
     expect(root.dataset.atmosFx).toBe('stopped')
@@ -289,6 +292,39 @@ describe('createAtmosphere', () => {
     controller.update({ preset: 'rain' })
 
     expect(root.dataset.atmosFxPreset).toBe('rain')
+
+    controller.destroy()
+  })
+
+  it('reuses weather canvases and renders immediately when switching presets', () => {
+    const makeRenderer = (): Canvas2DRenderer => ({
+      backend: 'webgl',
+      resize: vi.fn(),
+      updateOptions: vi.fn(),
+      setCollisionTargets: vi.fn(),
+      render: vi.fn(),
+      clear: vi.fn(),
+      destroy: vi.fn(),
+      getStats: vi.fn(() => ({ backend: 'webgl' as const, particleCount: 0 })),
+    })
+    const rainRenderer = makeRenderer()
+    const snowRenderer = makeRenderer()
+    vi.spyOn(rendererFactory, 'createRenderer')
+      .mockReturnValueOnce(rainRenderer)
+      .mockReturnValueOnce(snowRenderer)
+
+    const root = createRoot()
+    const controller = createAtmosphere(root, { preset: 'rain' })
+    controller.start()
+    const background = root.querySelector('[data-atmos-layer="weather-background"]')
+    const foreground = root.querySelector('[data-atmos-layer="weather-foreground"]')
+
+    controller.update({ preset: 'snow' })
+
+    expect(root.querySelector('[data-atmos-layer="weather-background"]')).toBe(background)
+    expect(root.querySelector('[data-atmos-layer="weather-foreground"]')).toBe(foreground)
+    expect(rainRenderer.destroy).toHaveBeenCalledTimes(1)
+    expect(snowRenderer.render).toHaveBeenCalledTimes(1)
 
     controller.destroy()
   })

@@ -17,7 +17,7 @@ export class QualityMonitor {
 
   constructor(isAuto = true) {
     this.isAuto = isAuto
-    this.currentStep = 0
+    this.currentStep = isAuto ? 1 : 0
   }
 
   setup(isAuto: boolean) {
@@ -30,7 +30,7 @@ export class QualityMonitor {
   }
 
   reset() {
-    this.currentStep = 0
+    this.currentStep = this.isAuto ? 1 : 0
     this.frameTimes = []
     this.frameDurations = []
     this.lastFrameTime = undefined

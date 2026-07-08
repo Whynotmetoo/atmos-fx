@@ -1,4 +1,4 @@
-import { RainEffect } from './rain-card'
+import { loadSharedRainAssets, RainEffect, RainRenderer } from './rain-card'
 import type { NormalizedAtmosphereOptions } from '../core/types'
 import type { CollisionTargetRect } from './collisionTargets'
 
@@ -8,8 +8,8 @@ const LAYER_VALUE = 'card-rain'
 
 interface CardEntry {
   element: HTMLElement
-  canvas:  HTMLCanvasElement
-  effect:  RainEffect | null
+  canvas: HTMLCanvasElement
+  effect: RainEffect
   isIntersectingCard: boolean
   isIntersectingDrips: boolean
 }
@@ -33,186 +33,204 @@ function isOptedIn(el: HTMLElement, width: number, height: number): boolean {
          height >= 80
 }
 
-
 /**
- * Manages per-card WebGL water-drop canvases.
- *
- * Layer model:
- *   <card [data-atmos-glass]>
- *     <canvas data-atmos-layer="card-rain" />   ← z-index: -1, behind card content
- *     (card children)
- *   </card>
+ * Manages independent per-card simulations through one shared WebGL renderer
+ * and one requestAnimationFrame loop for this AtmosFx root.
  */
-export function createCardRainController(_root: HTMLElement): CardRainController {
+export function createCardRainController(root: HTMLElement): CardRainController {
+  const ownerWindow = root.ownerDocument.defaultView
   const entries = new Map<HTMLElement, CardEntry>()
-  if (typeof window !== 'undefined') {
-    if (!(window as any).__cardRainControllers) {
-      ;(window as any).__cardRainControllers = []
-    }
-    ;(window as any).__cardRainControllers.push(entries)
-  }
-  let active = true    // mirrors running state of parent scheduler
-  let isRain = false   // only operate in rain preset
+  const sharedCanvas = root.ownerDocument.createElement('canvas')
+  let sharedRenderer: RainRenderer | null = null
+  let rendererPromise: Promise<void> | null = null
+  let frameId: number | null = null
+  let active = true
+  let isRain = false
+  let isHighQuality = false
+  let liquidDripping = false
   let runEffect = false
-  let initTimerId: number | null = null
+  let destroyed = false
 
-  function scheduleInitialization(): void {
-    if (initTimerId !== null) return
-
-    const tick = () => {
-      let nextEntry: CardEntry | null = null
-      for (const [_, entry] of entries) {
-        if (entry.effect === null) {
-          nextEntry = entry
-          break
-        }
-      }
-
-      if (nextEntry) {
-        nextEntry.effect = new RainEffect(nextEntry.canvas, { autoStart: false, maxPixelRatio: 1.0 })
-        const shouldRun = runEffect && nextEntry.isIntersectingCard
-        if (shouldRun) {
-          nextEntry.effect.start()
-        }
-        initTimerId = requestAnimationFrame(tick)
-      } else {
-        initTimerId = null
-      }
-    }
-
-    initTimerId = requestAnimationFrame(tick)
+  function cancelFrame(): void {
+    if (frameId === null) return
+    ownerWindow?.cancelAnimationFrame(frameId)
+    frameId = null
   }
 
-  function addCard(el: HTMLElement): void {
+  function requestFrame(): void {
+    const hasRenderableCard = [...entries.values()].some(entry =>
+      entry.isIntersectingCard && entry.effect.isReady(),
+    )
+    if (
+      destroyed ||
+      !runEffect ||
+      !sharedRenderer ||
+      !hasRenderableCard ||
+      frameId !== null ||
+      !ownerWindow
+    ) return
+    frameId = ownerWindow.requestAnimationFrame(renderFrame)
+  }
+
+  function ensureSharedRenderer(): void {
+    if (sharedRenderer || rendererPromise || destroyed) return
+
+    rendererPromise = loadSharedRainAssets()
+      .then(({ refraction }) => {
+        if (destroyed) return
+        sharedRenderer = new RainRenderer(sharedCanvas, null, refraction)
+        requestFrame()
+      })
+      .catch((error: unknown) => {
+        console.error('AtmosFx: failed to initialize card rain renderer', error)
+      })
+      .finally(() => {
+        rendererPromise = null
+      })
+  }
+
+  function renderFrame(time: number): void {
+    frameId = null
+    if (destroyed || !runEffect || !sharedRenderer) return
+
+    const runnable = [...entries.values()].filter(entry =>
+      entry.isIntersectingCard && entry.effect.isReady(),
+    )
+
+    let maxWidth = 1
+    let maxHeight = 1
+    for (const entry of runnable) {
+      const { width, height } = entry.effect.getSize()
+      maxWidth = Math.max(maxWidth, width)
+      maxHeight = Math.max(maxHeight, height)
+    }
+
+    if (sharedCanvas.width !== maxWidth || sharedCanvas.height !== maxHeight) {
+      sharedRenderer.resize(maxWidth, maxHeight)
+    }
+
+    for (const entry of runnable) {
+      entry.effect.render(time, sharedRenderer)
+    }
+
+    requestFrame()
+  }
+
+  function addCard(el: HTMLElement, density: number): void {
     if (entries.has(el)) return
 
     const canvas = el.ownerDocument.createElement('canvas')
     canvas.setAttribute(LAYER_ATTR, LAYER_VALUE)
     canvas.setAttribute('aria-hidden', 'true')
 
-    // Prepend canvas so it sits behind card content
     if (el.firstChild) {
       el.insertBefore(canvas, el.firstChild)
     } else {
       el.appendChild(canvas)
     }
 
-    entries.set(el, { element: el, canvas, effect: null, isIntersectingCard: true, isIntersectingDrips: true })
-    scheduleInitialization()
+    const effect = new RainEffect(canvas, { maxPixelRatio: 1 })
+    effect.setDensity(density).start()
+    effect.ready.then(requestFrame)
+    entries.set(el, {
+      element: el,
+      canvas,
+      effect,
+      isIntersectingCard: true,
+      isIntersectingDrips: true,
+    })
+    ensureSharedRenderer()
   }
 
   function removeCard(entry: CardEntry): void {
     entry.element.removeAttribute('data-atmos-card-fx')
-    if (entry.effect) {
-      entry.effect.destroy()
-    }
+    entry.effect.destroy()
     entry.canvas.parentNode?.removeChild(entry.canvas)
+  }
+
+  function updateEntryState(entry: CardEntry): void {
+    const shouldRun = runEffect && entry.isIntersectingCard
+    if (shouldRun) {
+      entry.effect.start()
+    } else {
+      entry.effect.stop()
+      entry.effect.clear()
+    }
+
+    const isDripsRunning = active && isRain && liquidDripping && entry.isIntersectingDrips
+    if (shouldRun || isDripsRunning) {
+      entry.element.setAttribute('data-atmos-card-fx', 'running')
+    } else {
+      entry.element.setAttribute('data-atmos-card-fx', active ? 'paused' : 'stopped')
+    }
   }
 
   return {
     sync(options, targets) {
       isRain = options.preset === 'rain'
-      const isHighQuality = options.quality === 'high'
-      runEffect = isRain && isHighQuality && active
+      isHighQuality = options.quality === 'high'
+      liquidDripping = options.liquidDripping
+      runEffect = active && isRain && isHighQuality
 
-      // Build set of opted-in elements from current collision targets
-      const nextElements = new Set<HTMLElement>()
-      if (runEffect) {
-        for (const t of targets) {
-          if (t.element && isOptedIn(t.element, t.width, t.height)) {
-            nextElements.add(t.element)
-          }
+      const targetByElement = new Map<HTMLElement, CollisionTargetRect>()
+      for (const target of targets) {
+        if (target.element && isOptedIn(target.element, target.width, target.height)) {
+          targetByElement.set(target.element, target)
+          if (runEffect) addCard(target.element, options.density)
         }
       }
 
-      // Add new cards
-      for (const el of nextElements) {
-        addCard(el)
-      }
-
-      // Remove stale cards
       for (const [el, entry] of entries) {
-        if (!nextElements.has(el)) {
+        const target = targetByElement.get(el)
+        if (!target) {
           removeCard(entry)
           entries.delete(el)
+          continue
         }
+
+        entry.isIntersectingCard = target.isIntersectingCard !== false
+        entry.isIntersectingDrips = target.isIntersectingDrips !== false
+        entry.effect.setDensity(options.density)
+        updateEntryState(entry)
       }
 
-      // Start/stop based on preset
-      for (const [el, entry] of entries) {
-        if (entry.effect) {
-          entry.effect.setDensity(options.density)
-        }
-        const target = targets.find(t => t.element === el)
-        const isIntersectingCard = target ? target.isIntersectingCard !== false : true
-        const isIntersectingDrips = target ? target.isIntersectingDrips !== false : true
-
-        entry.isIntersectingCard = isIntersectingCard
-        entry.isIntersectingDrips = isIntersectingDrips
-
-        const shouldRun = runEffect && isIntersectingCard
-        if (entry.effect) {
-          if (shouldRun) {
-            entry.effect.start()
-          } else {
-            entry.effect.stop()
-          }
-        }
-
-        const isCardRainRunning = shouldRun
-        const isDripsRunning = options.preset === 'rain' && options.liquidDripping && isIntersectingDrips
-
-        if (active && (isCardRainRunning || isDripsRunning)) {
-          el.setAttribute('data-atmos-card-fx', 'running')
-        } else {
-          el.setAttribute('data-atmos-card-fx', active ? 'paused' : 'stopped')
-        }
+      if (runEffect) {
+        ensureSharedRenderer()
+        requestFrame()
+      } else {
+        cancelFrame()
       }
     },
 
     pause() {
       active = false
       runEffect = false
-      for (const [el, e] of entries) {
-        e.effect?.stop()
-        el.setAttribute('data-atmos-card-fx', 'stopped')
-      }
+      cancelFrame()
+      for (const entry of entries.values()) updateEntryState(entry)
     },
 
     resume() {
       active = true
-      runEffect = isRain
-      if (isRain) {
-        for (const [el, e] of entries) {
-          if (e.isIntersectingCard) {
-            e.effect?.start()
-          }
-          const isCardRainRunning = e.isIntersectingCard
-          const isDripsRunning = e.isIntersectingDrips
-          if (isCardRainRunning || isDripsRunning) {
-            el.setAttribute('data-atmos-card-fx', 'running')
-          } else {
-            el.setAttribute('data-atmos-card-fx', 'paused')
-          }
-        }
-      }
+      runEffect = isRain && isHighQuality
+      for (const entry of entries.values()) updateEntryState(entry)
+      if (runEffect) requestFrame()
     },
 
     resize() {
-      for (const e of entries.values()) {
-        e.effect?.resize()
-      }
+      for (const entry of entries.values()) entry.effect.resize()
+      requestFrame()
     },
 
     destroy() {
+      if (destroyed) return
+      destroyed = true
       active = false
       runEffect = false
-      if (initTimerId !== null) {
-        cancelAnimationFrame(initTimerId)
-        initTimerId = null
-      }
-      for (const e of entries.values()) removeCard(e)
+      cancelFrame()
+      for (const entry of entries.values()) removeCard(entry)
       entries.clear()
+      sharedRenderer?.destroy()
+      sharedRenderer = null
     },
   }
 }

@@ -1,44 +1,61 @@
 import { clamp, loadImage } from './utils'
-import { RaindropSimulation, type SimulationOptions } from './raindrops'
-import { RainRenderer, type RendererOptions } from './rainRenderer'
+import {
+  createDropSimulationResources,
+  DEFAULT_SIM_OPTIONS,
+  RaindropSimulation,
+  type DropSimulationResources,
+  type SimulationOptions,
+} from './raindrops'
+import { RainRenderer } from './rainRenderer'
 import { ALPHA_TEX, COLOR_TEX, REFRACTION_TEX } from './textures'
 
 export interface RainEffectOptions {
-  autoStart?:    boolean
   maxPixelRatio?: number
-  simulation?:   Partial<SimulationOptions>
-  renderer?:     Partial<RendererOptions>
+  simulation?: Partial<SimulationOptions>
 }
 
-let cachedTextures: Promise<[HTMLImageElement, HTMLImageElement, HTMLImageElement]> | null = null
+export interface SharedRainAssets {
+  alpha: HTMLImageElement
+  color: HTMLImageElement
+  refraction: HTMLImageElement
+  resources: DropSimulationResources
+}
 
-function loadCachedTextures(): Promise<[HTMLImageElement, HTMLImageElement, HTMLImageElement]> {
-  if (!cachedTextures) {
-    cachedTextures = Promise.all([
+let cachedAssets: Promise<SharedRainAssets> | null = null
+
+export function loadSharedRainAssets(): Promise<SharedRainAssets> {
+  if (!cachedAssets) {
+    cachedAssets = Promise.all([
       loadImage(ALPHA_TEX),
       loadImage(COLOR_TEX),
       loadImage(REFRACTION_TEX),
-    ])
+    ]).then(([alpha, color, refraction]) => ({
+      alpha,
+      color,
+      refraction,
+      resources: createDropSimulationResources(
+        alpha,
+        color,
+        DEFAULT_SIM_OPTIONS.visibleAlphaThreshold,
+      ),
+    }))
   }
-  return cachedTextures
+  return cachedAssets
 }
 
-/** WebGL water-drop effect for a single canvas element.
- *  Ported from docs_local/rain-effect-simplified. */
+/** Per-card water-drop simulation and 2D compositor.
+ * WebGL rendering and requestAnimationFrame scheduling are shared by the root controller. */
 export class RainEffect {
-  private sim:          RaindropSimulation | null = null
-  private renderer:     RainRenderer       | null = null
-  private resizeObs:    ResizeObserver     | null = null
-  private raf:          number             | null = null
-  private running       = false
-  private destroyed     = false
-  private initialized   = false
-  private startPending: boolean
+  private sim: RaindropSimulation | null = null
+  private compositor: CanvasRenderingContext2D | null = null
+  private resizeObs: ResizeObserver | null = null
+  private running = false
+  private destroyed = false
+  private initialized = false
   private currentDensity = 1
 
   readonly ready: Promise<void>
   private readonly opts: Required<RainEffectOptions>
-  private readonly onLoop: (ts: number) => void
   private readonly onResize: () => void
 
   constructor(
@@ -46,56 +63,55 @@ export class RainEffect {
     opts: RainEffectOptions = {},
   ) {
     this.opts = {
-      autoStart:    opts.autoStart    ?? true,
       maxPixelRatio: opts.maxPixelRatio ?? 2,
-      simulation:   opts.simulation   ?? {},
-      renderer:     opts.renderer     ?? {},
+      simulation: opts.simulation ?? {},
     }
-    this.startPending = this.opts.autoStart
-    this.onLoop   = (ts) => this.loop(ts)
-    this.onResize = ()  => this.resize()
-    this.ready    = this.init()
+    this.onResize = () => this.resize()
+    this.ready = this.init()
   }
 
   private async init(): Promise<void> {
-    const [alpha, color, refraction] = await loadCachedTextures()
+    const assets = await loadSharedRainAssets()
     if (this.destroyed) return
 
     this.lockCssSize()
     const { w, h, dpr } = this.measure()
-    this.canvas.width  = w
+    this.canvas.width = w
     this.canvas.height = h
-
-    this.sim = new RaindropSimulation(w, h, dpr, alpha, color, this.opts.simulation)
-    this.sim.setDensity(this.currentDensity)
-    this.renderer = new RainRenderer(
-      this.canvas, this.sim.canvas,
-      null,        // no shine texture for now
-      refraction,
-      this.opts.renderer,
+    this.compositor = this.canvas.getContext('2d')
+    this.sim = new RaindropSimulation(
+      w,
+      h,
+      dpr,
+      assets.alpha,
+      assets.color,
+      this.opts.simulation,
+      assets.resources,
     )
+    this.sim.setDensity(this.currentDensity)
     this.initialized = true
     this.watchSize()
-    if (this.startPending) this.start()
   }
 
   private lockCssSize(): void {
-    const r = this.canvas.getBoundingClientRect()
-    if (!this.canvas.style.width  && Math.abs(r.width  - this.canvas.width)  < 0.5)
-      this.canvas.style.width  = `${r.width}px`
-    if (!this.canvas.style.height && Math.abs(r.height - this.canvas.height) < 0.5)
-      this.canvas.style.height = `${r.height}px`
+    const rect = this.canvas.getBoundingClientRect()
+    if (!this.canvas.style.width && rect.width > 0 && Math.abs(rect.width - this.canvas.width) < 0.5) {
+      this.canvas.style.width = `${rect.width}px`
+    }
+    if (!this.canvas.style.height && rect.height > 0 && Math.abs(rect.height - this.canvas.height) < 0.5) {
+      this.canvas.style.height = `${rect.height}px`
+    }
   }
 
   private measure(): { w: number; h: number; dpr: number } {
-    const r   = this.canvas.getBoundingClientRect()
-    const pr  = this.canvas.parentElement?.getBoundingClientRect()
-    const cw  = r.width  || pr?.width  || window.innerWidth
-    const ch  = r.height || pr?.height || window.innerHeight
+    const rect = this.canvas.getBoundingClientRect()
+    const parentRect = this.canvas.parentElement?.getBoundingClientRect()
+    const cssWidth = rect.width || parentRect?.width || window.innerWidth
+    const cssHeight = rect.height || parentRect?.height || window.innerHeight
     const dpr = clamp(window.devicePixelRatio || 1, 1, this.opts.maxPixelRatio)
     return {
-      w:   Math.max(1, Math.round(cw * dpr)),
-      h:   Math.max(1, Math.round(ch * dpr)),
+      w: Math.max(1, Math.round(cssWidth * dpr)),
+      h: Math.max(1, Math.round(cssHeight * dpr)),
       dpr,
     }
   }
@@ -110,44 +126,66 @@ export class RainEffect {
   }
 
   resize(): void {
-    if (!this.initialized || this.destroyed || !this.sim || !this.renderer) return
+    if (!this.initialized || this.destroyed || !this.sim) return
     const { w, h, dpr } = this.measure()
     if (w === this.canvas.width && h === this.canvas.height && dpr === this.sim.pixelRatio) return
+    this.canvas.width = w
+    this.canvas.height = h
+    this.compositor = this.canvas.getContext('2d')
     this.sim.resize(w, h, dpr)
-    this.renderer.resize(w, h)
   }
 
   start(): this {
     if (this.destroyed) throw new Error('RainEffect: already destroyed')
-    if (!this.initialized) { this.startPending = true; return this }
-    if (this.running) return this
-    this.running = true
-    this.sim!.resetClock()
-    this.raf = requestAnimationFrame(this.onLoop)
+    if (!this.running) {
+      this.running = true
+      this.sim?.resetClock()
+    }
     return this
   }
 
   stop(): this {
-    this.startPending = false
     this.running = false
-    if (this.raf !== null) { cancelAnimationFrame(this.raf); this.raf = null }
     return this
   }
 
   setDensity(density: number): this {
     this.currentDensity = density
-    if (this.sim) {
-      this.sim.setDensity(density)
-    }
+    this.sim?.setDensity(density)
     return this
   }
 
+  isReady(): boolean {
+    return this.initialized && !this.destroyed && this.sim !== null && this.compositor !== null
+  }
 
-  private loop(ts: number): void {
-    if (!this.running || this.destroyed || !this.sim || !this.renderer) return
-    this.sim.update(ts)
-    this.renderer.draw()
-    this.raf = requestAnimationFrame(this.onLoop)
+  getSize(): { width: number; height: number } {
+    return {
+      width: this.canvas.width,
+      height: this.canvas.height,
+    }
+  }
+
+  render(time: number, renderer: RainRenderer): void {
+    if (!this.running || !this.isReady() || !this.sim || !this.compositor) return
+    this.sim.update(time)
+    renderer.draw(this.sim.canvas, this.canvas.width, this.canvas.height)
+    this.compositor.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.compositor.drawImage(
+      renderer.canvas,
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height,
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height,
+    )
+  }
+
+  clear(): void {
+    this.compositor?.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }
 
   destroy(): void {
@@ -155,9 +193,9 @@ export class RainEffect {
     this.stop()
     this.resizeObs?.disconnect()
     if (!this.resizeObs) window.removeEventListener('resize', this.onResize)
-    this.renderer?.destroy()
+    this.clear()
     this.sim = null
-    this.renderer = null
+    this.compositor = null
     this.destroyed = true
   }
 }

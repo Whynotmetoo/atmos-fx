@@ -81,7 +81,7 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2
 }
 
-interface VisibleMask {
+export interface VisibleMask {
   width: number; height: number; offsetX: number; offsetY: number
 }
 
@@ -112,6 +112,22 @@ function measureVisibleMask(img: ImageLike, threshold: number): VisibleMask {
   }
 }
 
+export interface DropSimulationResources {
+  mask: VisibleMask
+  textures: readonly HTMLCanvasElement[]
+}
+
+export function createDropSimulationResources(
+  dropAlpha: ImageLike,
+  dropColor: ImageLike,
+  visibleAlphaThreshold: number,
+): DropSimulationResources {
+  return {
+    mask: measureVisibleMask(dropAlpha, visibleAlphaThreshold),
+    textures: createDropTextures(dropAlpha, dropColor),
+  }
+}
+
 export class RaindropSimulation {
   readonly opts: SimulationOptions
   private readonly baseOpts: SimulationOptions
@@ -122,8 +138,8 @@ export class RaindropSimulation {
   private ctx: CanvasRenderingContext2D
   private drops:       Drop[] = []
   private lastTs:      number | null = null
-  private mask:        VisibleMask
-  private textures:    HTMLCanvasElement[]
+  private readonly mask: VisibleMask
+  private readonly textures: readonly HTMLCanvasElement[]
 
   constructor(
     width: number,
@@ -132,14 +148,20 @@ export class RaindropSimulation {
     dropAlpha: ImageLike,
     dropColor: ImageLike,
     opts: Partial<SimulationOptions> = {},
+    resources?: DropSimulationResources,
   ) {
     this.opts       = { ...DEFAULT_SIM_OPTIONS, ...opts }
     this.baseOpts   = { ...this.opts }
     this.width      = width
     this.height     = height
     this.pixelRatio = pixelRatio
-    this.mask       = measureVisibleMask(dropAlpha, this.opts.visibleAlphaThreshold)
-    this.textures   = createDropTextures(dropAlpha, dropColor)
+    const renderResources = resources ?? createDropSimulationResources(
+      dropAlpha,
+      dropColor,
+      this.opts.visibleAlphaThreshold,
+    )
+    this.mask       = renderResources.mask
+    this.textures   = renderResources.textures
     this.canvas     = createOffscreenCanvas(width, height)
     this.ctx        = this.canvas.getContext('2d')!
   }

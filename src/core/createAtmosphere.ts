@@ -81,7 +81,7 @@ const CSS_CONTENT = `
   }
   [data-atmos-fx] :where([data-atmos-glass]):not([data-atmos-solid]) {
     background: rgba(255, 255, 255, 0.08);
-    background: 
+    background:
       linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 100%),
       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.045'/%3E%3C/svg%3E"),
       var(--atmos-fx-glass-background);
@@ -144,6 +144,10 @@ const CSS_CONTENT = `
     border-radius: inherit;
     filter: blur(1px);
   }
+  [data-atmos-card-fx='paused'] [data-atmos-layer='card-rain'],
+  [data-atmos-card-fx='stopped'] [data-atmos-layer='card-rain'] {
+    display: none;
+  }
 }
 `
 
@@ -195,8 +199,6 @@ export function createAtmosphere(
   let intersectionPaused = false
   let isIntersecting = true
   let manuallyPaused = false
-  let startupGraceTime = true
-  let startupTimerId: number | undefined
   let lastTime: number | undefined
 
   const qualityMonitor = new QualityMonitor(normalizedOptions.quality === 'auto')
@@ -327,8 +329,8 @@ export function createAtmosphere(
           cardIntersectionObserver?.observe(t.element)
           dripIntersectionObserver?.observe(t.element)
         }
-        t.isIntersectingCard = startupGraceTime || cardVisibilityMap.get(t.element) !== false
-        t.isIntersectingDrips = startupGraceTime || dripVisibilityMap.get(t.element) !== false
+        t.isIntersectingCard = cardVisibilityMap.get(t.element) !== false
+        t.isIntersectingDrips = dripVisibilityMap.get(t.element) !== false
       }
     }
     for (const el of observedCards) {
@@ -396,10 +398,6 @@ export function createAtmosphere(
       renderer?.destroy()
       renderer = undefined
       rendererPreset = undefined
-
-      canvasLayer?.destroy()
-      canvasLayer = undefined
-      ensureCanvasLayer()
     }
 
     const activeCanvasLayer = canvasLayer
@@ -421,6 +419,7 @@ export function createAtmosphere(
       rendererPreset = normalizedOptions.preset
       element.dataset.atmosRenderer = renderer.backend
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
+      renderer.render(ownerWindow?.performance.now() ?? 0)
       return
     }
 
@@ -433,10 +432,10 @@ export function createAtmosphere(
     normalizedOptions.respectReducedMotion && Boolean(reducedMotionQuery?.matches)
 
   const shouldPauseForHiddenDocument = () =>
-    !startupGraceTime && normalizedOptions.pauseWhenHidden && ownerDocument.hidden
+    normalizedOptions.pauseWhenHidden && ownerDocument.hidden
 
   const shouldPauseForOutOfViewport = () =>
-    !startupGraceTime && normalizedOptions.pauseWhenHidden && !isIntersecting
+    normalizedOptions.pauseWhenHidden && !isIntersecting
 
   const hasAutoPause = () => visibilityPaused || reducedMotionPaused || intersectionPaused
 
@@ -444,21 +443,6 @@ export function createAtmosphere(
     visibilityPaused = shouldPauseForHiddenDocument()
     reducedMotionPaused = shouldReduceMotion()
     intersectionPaused = shouldPauseForOutOfViewport()
-  }
-
-  const startStartupTimer = () => {
-    if (startupTimerId !== undefined) {
-      ownerWindow?.clearTimeout(startupTimerId)
-    }
-    startupGraceTime = true
-    startupTimerId = ownerWindow?.setTimeout(() => {
-      startupGraceTime = false
-      startupTimerId = undefined
-      if (state === 'running') {
-        syncCollisionTargets()
-        startAnimationIfAllowed()
-      }
-    }, 1000)
   }
 
   const startAnimationIfAllowed = () => {
@@ -585,7 +569,6 @@ export function createAtmosphere(
       renderer?.resize(size)
       manuallyPaused = false
       setState('running')
-      startStartupTimer()
       startAnimationIfAllowed()
     },
     stop() {
@@ -593,11 +576,6 @@ export function createAtmosphere(
       visibilityPaused = false
       reducedMotionPaused = false
       manuallyPaused = false
-      startupGraceTime = true
-      if (startupTimerId !== undefined) {
-        ownerWindow?.clearTimeout(startupTimerId)
-        startupTimerId = undefined
-      }
       scheduler.stop()
       renderer?.clear()
       liquidDripsController.sync(normalizedOptions, [])
@@ -657,10 +635,6 @@ export function createAtmosphere(
       intersectionObserver?.disconnect()
       cardIntersectionObserver?.disconnect()
       dripIntersectionObserver?.disconnect()
-      if (startupTimerId !== undefined) {
-        ownerWindow?.clearTimeout(startupTimerId)
-        startupTimerId = undefined
-      }
       removeReducedMotionListener()
       scheduler.stop()
       collisionTargetManager.destroy()

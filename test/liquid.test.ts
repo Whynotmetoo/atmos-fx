@@ -5,7 +5,6 @@ import {
   getLiquidGatheringDuration,
   getLiquidWaveCenter,
   getWaveSampleProgresses,
-  LIQUID_VISIBILITY_TOP_MARGIN_PX,
 } from '../src/dom/liquid'
 
 describe('liquid gathering', () => {
@@ -178,28 +177,6 @@ describe('liquid gathering', () => {
   })
 
   it('skips dripping updates for off-screen cards', () => {
-    let intersectionCallback: IntersectionObserverCallback | undefined
-    let intersectionOptions: IntersectionObserverInit | undefined
-    const observeSpy = vi.fn()
-    const unobserveSpy = vi.fn()
-    const disconnectSpy = vi.fn()
-
-    class MockIntersectionObserver {
-      observe = observeSpy
-      unobserve = unobserveSpy
-      disconnect = disconnectSpy
-
-      constructor(
-        callback: IntersectionObserverCallback,
-        options?: IntersectionObserverInit,
-      ) {
-        intersectionCallback = callback
-        intersectionOptions = options
-      }
-    }
-
-    vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
-
     const root = document.createElement('div')
     const card = document.createElement('div')
     root.append(card)
@@ -214,17 +191,10 @@ describe('liquid gathering', () => {
       height: 80,
       right: 310,
       bottom: 90,
+      isIntersectingDrips: true,
     }
 
     liquid.sync(normalizeAtmosphereOptions({ preset: 'rain', liquidDripping: true }), [target])
-
-    // Verify it is observed
-    expect(observeSpy).toHaveBeenCalledWith(card)
-    expect(intersectionOptions).toEqual({
-      root: null,
-      rootMargin: `${LIQUID_VISIBILITY_TOP_MARGIN_PX}px 0px 0px 0px`,
-      threshold: 0,
-    })
 
     // Under gathering phase at t=0.0
     liquid.update(0)
@@ -233,32 +203,16 @@ describe('liquid gathering', () => {
     const initialCy = getDropletCy(root.querySelector('.atmos-liquid-droplet'))
     expect(initialCy).not.toBeNull()
 
-    // Simulate offscreen (isIntersecting = false)
-    intersectionCallback?.(
-      [
-        {
-          isIntersecting: false,
-          target: card,
-        } as unknown as IntersectionObserverEntry,
-      ],
-      {} as IntersectionObserver,
-    )
+    target.isIntersectingDrips = false
+    liquid.sync(normalizeAtmosphereOptions({ preset: 'rain', liquidDripping: true }), [target])
 
     // Call update, check if the cy remains unchanged (skipped)
     liquid.update(1.0)
     const afterOffscreenCy = getDropletCy(root.querySelector('.atmos-liquid-droplet'))
     expect(afterOffscreenCy).toBe(initialCy)
 
-    // Simulate onscreen (isIntersecting = true)
-    intersectionCallback?.(
-      [
-        {
-          isIntersecting: true,
-          target: card,
-        } as unknown as IntersectionObserverEntry,
-      ],
-      {} as IntersectionObserver,
-    )
+    target.isIntersectingDrips = true
+    liquid.sync(normalizeAtmosphereOptions({ preset: 'rain', liquidDripping: true }), [target])
 
     // Now update should run again and change the cy value
     liquid.update(1.5)
@@ -267,6 +221,5 @@ describe('liquid gathering', () => {
 
     liquid.destroy()
     root.remove()
-    vi.unstubAllGlobals()
   })
 })

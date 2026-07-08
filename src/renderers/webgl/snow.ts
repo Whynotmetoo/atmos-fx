@@ -220,8 +220,14 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | undefined {
   gl.attachShader(program, vertexShader)
   gl.attachShader(program, fragmentShader)
   gl.linkProgram(program)
+  const linked = gl.getProgramParameter(program, gl.LINK_STATUS)
   gl.deleteShader(vertexShader)
   gl.deleteShader(fragmentShader)
+
+  if (!linked) {
+    gl.deleteProgram(program)
+    return undefined
+  }
 
   return program
 }
@@ -237,6 +243,8 @@ function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | 
   const buffer = gl.createBuffer()
 
   if (!program || !buffer) {
+    if (program) gl.deleteProgram(program)
+    if (buffer) gl.deleteBuffer(buffer)
     return undefined
   }
 
@@ -673,17 +681,17 @@ export class WebGLSnowRenderer implements Canvas2DRenderer {
       return
     }
 
-    const { gl, program, buffer } = layer
-    if (gl.isContextLost()) {
+    const { gl, program, buffer, positionLocation, alphaLocation, radiusLocation } = layer
+    if (typeof gl.isContextLost === 'function' && gl.isContextLost()) {
       return
     }
+
+    for (const location of [positionLocation, alphaLocation, radiusLocation]) {
+      if (location >= 0) gl.disableVertexAttribArray(location)
+    }
+
     gl.deleteProgram(program)
     gl.deleteBuffer(buffer)
-
-    const ext = gl.getExtension('WEBGL_lose_context')
-    if (ext) {
-      ext.loseContext()
-    }
   }
 }
 

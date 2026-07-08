@@ -118,6 +118,17 @@ export function createCanvasLayer(root: HTMLElement): CanvasLayer {
     },
     resize,
     destroy() {
+      const bgGl = (
+        backgroundCanvas.getContext('webgl') ||
+        backgroundCanvas.getContext('experimental-webgl')
+      ) as WebGLRenderingContext | null
+      bgGl?.getExtension('WEBGL_lose_context')?.loseContext()
+
+      const fgGl = (
+        foregroundCanvas.getContext('webgl') ||
+        foregroundCanvas.getContext('experimental-webgl')
+      ) as WebGLRenderingContext | null
+      fgGl?.getExtension('WEBGL_lose_context')?.loseContext()
       backgroundCanvas.remove()
       foregroundCanvas.remove()
       root.style.position = previousPosition

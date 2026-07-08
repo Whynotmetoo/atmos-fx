@@ -321,8 +321,14 @@ function createProgramFromSource(
   gl.attachShader(program, vertexShader)
   gl.attachShader(program, fragmentShader)
   gl.linkProgram(program)
+  const linked = gl.getProgramParameter(program, gl.LINK_STATUS)
   gl.deleteShader(vertexShader)
   gl.deleteShader(fragmentShader)
+
+  if (!linked) {
+    gl.deleteProgram(program)
+    return undefined
+  }
 
   return program
 }
@@ -348,6 +354,9 @@ function createLayer(canvas: HTMLCanvasElement, capacity: number): WebGLLayer | 
   const quadBuffer = gl.createBuffer()
 
   if (!program || !buffer || !quadBuffer) {
+    if (program) gl.deleteProgram(program)
+    if (buffer) gl.deleteBuffer(buffer)
+    if (quadBuffer) gl.deleteBuffer(quadBuffer)
     return undefined
   }
 
@@ -380,10 +389,33 @@ function cleanupLayerResources(layer: WebGLLayer | undefined) {
     return
   }
 
-  const { gl, program, buffer, quadBuffer } = layer
-  if (gl.isContextLost()) {
+  const {
+    gl,
+    program,
+    buffer,
+    quadBuffer,
+    quadPosLocation,
+    positionLocation,
+    dirLocation,
+    lenLocation,
+    alphaLocation,
+    radiiLocation,
+  } = layer
+  if (typeof gl.isContextLost === 'function' && gl.isContextLost()) {
     return
   }
+
+  for (const location of [
+    quadPosLocation,
+    positionLocation,
+    dirLocation,
+    lenLocation,
+    alphaLocation,
+    radiiLocation,
+  ]) {
+    if (location >= 0) gl.disableVertexAttribArray(location)
+  }
+
   gl.deleteProgram(program)
   gl.deleteBuffer(buffer)
   gl.deleteBuffer(quadBuffer)
@@ -683,6 +715,16 @@ export class WebGLRainRenderer implements Canvas2DRenderer {
   private cleanupSplashResources() {
     if (this.foregroundLayer) {
       const { gl } = this.foregroundLayer
+      for (const location of [
+        this.splashQuadPosLoc,
+        this.splashPositionLoc,
+        this.splashDirLoc,
+        this.splashLenLoc,
+        this.splashAlphaLoc,
+        this.splashRadiiLoc,
+      ]) {
+        if (location >= 0) gl.disableVertexAttribArray(location)
+      }
       if (this.splashProgram) {
         gl.deleteProgram(this.splashProgram)
       }

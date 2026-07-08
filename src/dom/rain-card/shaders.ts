@@ -16,6 +16,7 @@ uniform sampler2D u_shineTexture;
 uniform sampler2D u_refractionTexture;
 
 uniform vec2  u_resolution;
+uniform vec2  u_origin;
 uniform bool  u_renderShine;
 uniform bool  u_renderShadow;
 uniform float u_minRefraction;
@@ -44,7 +45,10 @@ vec4 blend(vec4 bg, vec4 fg) {
 }
 
 vec2 pixelSize()  { return vec2(1.0) / u_resolution; }
-vec2 canvasUv()   { return vec2(gl_FragCoord.x, u_resolution.y - gl_FragCoord.y) / u_resolution; }
+vec2 canvasUv() {
+  vec2 local = gl_FragCoord.xy - u_origin;
+  return vec2(local.x, u_resolution.y - local.y) / u_resolution;
+}
 
 vec2 coverUv(vec2 uv) {
   float cr = u_resolution.x / u_resolution.y;
