@@ -21,6 +21,8 @@ export interface SharedRainAssets {
   resources: DropSimulationResources
 }
 
+// Intentionally shared across atmosphere roots: deriving the 255 drop texture
+// canvases is the expensive part of card-rain startup.
 let cachedAssets: Promise<SharedRainAssets> | null = null
 
 export function loadSharedRainAssets(): Promise<SharedRainAssets> {

@@ -72,4 +72,23 @@ describe('createGlassController', () => {
     expect(child.style.getPropertyValue('--atmos-fx-alpha')).toBe('')
   })
 
+  it('reacts to tracked data attributes without observing generated styles', async () => {
+    const root = document.createElement('section')
+    const child = document.createElement('div')
+    root.append(child)
+
+    const controller = createGlassController(root)
+    controller.sync(createOptions())
+
+    child.dataset.atmosOpacity = '0.35'
+    await Promise.resolve()
+    expect(child.style.getPropertyValue('--atmos-fx-opacity')).toBe('0.35')
+
+    delete child.dataset.atmosOpacity
+    await Promise.resolve()
+    expect(child.style.getPropertyValue('--atmos-fx-opacity')).toBe('')
+
+    controller.destroy()
+  })
+
 })

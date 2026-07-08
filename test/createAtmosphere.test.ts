@@ -329,6 +329,35 @@ describe('createAtmosphere', () => {
     controller.destroy()
   })
 
+  it('does not render a new preset while stopped', () => {
+    const makeRenderer = (): Canvas2DRenderer => ({
+      backend: 'webgl',
+      resize: vi.fn(),
+      updateOptions: vi.fn(),
+      setCollisionTargets: vi.fn(),
+      render: vi.fn(),
+      clear: vi.fn(),
+      destroy: vi.fn(),
+      getStats: vi.fn(() => ({ backend: 'webgl' as const, particleCount: 0 })),
+    })
+    const rainRenderer = makeRenderer()
+    const snowRenderer = makeRenderer()
+    vi.spyOn(rendererFactory, 'createRenderer')
+      .mockReturnValueOnce(rainRenderer)
+      .mockReturnValueOnce(snowRenderer)
+
+    const root = createRoot()
+    const controller = createAtmosphere(root, { preset: 'rain' })
+    controller.start()
+    controller.stop()
+    controller.update({ preset: 'snow' })
+
+    expect(root.dataset.atmosFx).toBe('stopped')
+    expect(snowRenderer.render).not.toHaveBeenCalled()
+
+    controller.destroy()
+  })
+
   it('starts with the hail preset and exposes preset dataset state', () => {
     const root = createRoot()
     const controller = createAtmosphere(root, { preset: 'hail' })
@@ -418,6 +447,47 @@ describe('createAtmosphere', () => {
     controller.start()
 
     expect(root.dataset.atmosFx).toBe('paused')
+  })
+
+  it('keeps card rain inactive during automatic pause and stop', () => {
+    setReducedMotion(true)
+
+    const root = createRoot()
+    const card = document.createElement('article')
+    card.setAttribute('data-atmos-collision', '')
+    card.setAttribute('data-atmos-glass', '')
+    card.getBoundingClientRect = vi.fn(() => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 200,
+      bottom: 100,
+      width: 200,
+      height: 100,
+      toJSON: () => ({}),
+    }))
+    root.append(card)
+
+    const controller = createAtmosphere(root, { preset: 'rain', quality: 'medium' })
+    controller.start()
+    expect(root.dataset.atmosFx).toBe('paused')
+    expect(card.querySelector('[data-atmos-layer="card-rain"]')).toBeNull()
+
+    controller.update({ respectReducedMotion: false })
+    expect(root.dataset.atmosFx).toBe('running')
+    expect(card.querySelectorAll('[data-atmos-layer="card-rain"]')).toHaveLength(1)
+
+    controller.stop()
+    controller.resize()
+    controller.update({ density: 0.5 })
+    expect(root.dataset.atmosFx).toBe('stopped')
+    expect(card.querySelector('[data-atmos-layer="card-rain"]')).toBeNull()
+
+    controller.start()
+    expect(card.querySelectorAll('[data-atmos-layer="card-rain"]')).toHaveLength(1)
+
+    controller.destroy()
   })
 
   it('resumes when reduced-motion auto-pause is disabled by update', () => {

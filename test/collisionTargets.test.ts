@@ -150,4 +150,27 @@ describe('collision targets', () => {
     manager.destroy()
     vi.useRealTimers()
   })
+
+  it('filters high-frequency internal animation attributes before observation', () => {
+    let observeOptions: MutationObserverInit | undefined
+
+    class MockMutationObserver {
+      observe(_target: Node, options?: MutationObserverInit) {
+        observeOptions = options
+      }
+      disconnect() {}
+    }
+
+    vi.stubGlobal('MutationObserver', MockMutationObserver)
+    const root = document.createElement('section')
+    const manager = createCollisionTargetManager(root)
+
+    expect(observeOptions?.attributeFilter).toContain('data-atmos-collision')
+    expect(observeOptions?.attributeFilter).toContain('class')
+    expect(observeOptions?.attributeFilter).not.toContain('data-atmos-card-fx')
+    expect(observeOptions?.attributeFilter).not.toContain('d')
+
+    manager.destroy()
+    vi.unstubAllGlobals()
+  })
 })

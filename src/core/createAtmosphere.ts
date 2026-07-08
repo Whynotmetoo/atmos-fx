@@ -419,7 +419,15 @@ export function createAtmosphere(
       rendererPreset = normalizedOptions.preset
       element.dataset.atmosRenderer = renderer.backend
       renderer.setCollisionTargets(collisionTargetManager.getTargets())
-      renderer.render(ownerWindow?.performance.now() ?? 0)
+      const canRenderImmediately =
+        state === 'running' &&
+        !manuallyPaused &&
+        !shouldPauseForHiddenDocument() &&
+        !shouldReduceMotion() &&
+        !shouldPauseForOutOfViewport()
+      if (canRenderImmediately) {
+        renderer.render(ownerWindow?.performance.now() ?? 0)
+      }
       return
     }
 
@@ -448,6 +456,7 @@ export function createAtmosphere(
   const startAnimationIfAllowed = () => {
     if (state === 'destroyed' || state === 'stopped' || manuallyPaused) {
       scheduler.stop()
+      cardRainController.pause()
       return
     }
 
@@ -455,11 +464,13 @@ export function createAtmosphere(
 
     if (hasAutoPause()) {
       scheduler.stop()
+      cardRainController.pause()
       setState('paused')
       return
     }
 
     setState('running')
+    cardRainController.resume()
     scheduler.start()
   }
 
@@ -471,6 +482,7 @@ export function createAtmosphere(
     if (ownerDocument.hidden && state === 'running') {
       visibilityPaused = true
       scheduler.stop()
+      cardRainController.pause()
       setState('paused')
       return
     }
@@ -492,6 +504,7 @@ export function createAtmosphere(
     if (shouldReduceMotion() && state === 'running') {
       reducedMotionPaused = true
       scheduler.stop()
+      cardRainController.pause()
       setState('paused')
       return
     }
@@ -524,6 +537,7 @@ export function createAtmosphere(
       intersectionPaused = true
       if (state === 'running') {
         scheduler.stop()
+        cardRainController.pause()
         setState('paused')
       }
       return
@@ -578,6 +592,7 @@ export function createAtmosphere(
       manuallyPaused = false
       scheduler.stop()
       renderer?.clear()
+      cardRainController.pause()
       liquidDripsController.sync(normalizedOptions, [])
       cardRainController.sync(normalizedOptions, [])
       lastTime = undefined
@@ -602,7 +617,6 @@ export function createAtmosphere(
         visibilityPaused = false
         reducedMotionPaused = false
         setState('running')
-        cardRainController.resume()
         startAnimationIfAllowed()
       }
     },

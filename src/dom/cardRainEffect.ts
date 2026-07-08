@@ -44,12 +44,14 @@ export function createCardRainController(root: HTMLElement): CardRainController 
   let sharedRenderer: RainRenderer | null = null
   let rendererPromise: Promise<void> | null = null
   let frameId: number | null = null
-  let active = true
+  let active = false
   let isRain = false
-  let isHighQuality = false
+  let qualityAllowsCardRain = false
   let liquidDripping = false
   let runEffect = false
   let destroyed = false
+  let latestOptions: NormalizedAtmosphereOptions | null = null
+  let latestTargets: readonly CollisionTargetRect[] = []
 
   function cancelFrame(): void {
     if (frameId === null) return
@@ -165,41 +167,50 @@ export function createCardRainController(root: HTMLElement): CardRainController 
     }
   }
 
+  function reconcile(
+    options: NormalizedAtmosphereOptions,
+    targets: readonly CollisionTargetRect[],
+  ): void {
+    isRain = options.preset === 'rain'
+    qualityAllowsCardRain = options.quality !== 'low'
+    liquidDripping = options.liquidDripping
+    runEffect = active && isRain && qualityAllowsCardRain
+
+    const targetByElement = new Map<HTMLElement, CollisionTargetRect>()
+    for (const target of targets) {
+      if (target.element && isOptedIn(target.element, target.width, target.height)) {
+        targetByElement.set(target.element, target)
+        if (runEffect) addCard(target.element, options.density)
+      }
+    }
+
+    for (const [el, entry] of entries) {
+      const target = targetByElement.get(el)
+      if (!target) {
+        removeCard(entry)
+        entries.delete(el)
+        continue
+      }
+
+      entry.isIntersectingCard = target.isIntersectingCard !== false
+      entry.isIntersectingDrips = target.isIntersectingDrips !== false
+      entry.effect.setDensity(options.density)
+      updateEntryState(entry)
+    }
+
+    if (runEffect) {
+      ensureSharedRenderer()
+      requestFrame()
+    } else {
+      cancelFrame()
+    }
+  }
+
   return {
     sync(options, targets) {
-      isRain = options.preset === 'rain'
-      isHighQuality = options.quality === 'high'
-      liquidDripping = options.liquidDripping
-      runEffect = active && isRain && isHighQuality
-
-      const targetByElement = new Map<HTMLElement, CollisionTargetRect>()
-      for (const target of targets) {
-        if (target.element && isOptedIn(target.element, target.width, target.height)) {
-          targetByElement.set(target.element, target)
-          if (runEffect) addCard(target.element, options.density)
-        }
-      }
-
-      for (const [el, entry] of entries) {
-        const target = targetByElement.get(el)
-        if (!target) {
-          removeCard(entry)
-          entries.delete(el)
-          continue
-        }
-
-        entry.isIntersectingCard = target.isIntersectingCard !== false
-        entry.isIntersectingDrips = target.isIntersectingDrips !== false
-        entry.effect.setDensity(options.density)
-        updateEntryState(entry)
-      }
-
-      if (runEffect) {
-        ensureSharedRenderer()
-        requestFrame()
-      } else {
-        cancelFrame()
-      }
+      latestOptions = options
+      latestTargets = targets
+      reconcile(options, targets)
     },
 
     pause() {
@@ -211,9 +222,7 @@ export function createCardRainController(root: HTMLElement): CardRainController 
 
     resume() {
       active = true
-      runEffect = isRain && isHighQuality
-      for (const entry of entries.values()) updateEntryState(entry)
-      if (runEffect) requestFrame()
+      if (latestOptions) reconcile(latestOptions, latestTargets)
     },
 
     resize() {

@@ -2,6 +2,7 @@ import type { NormalizedAtmosphereOptions } from '../core/types'
 
 const OPACITY_VARIABLE = '--atmos-fx-opacity'
 const ALPHA_VARIABLE = '--atmos-fx-alpha'
+const OBSERVED_ATTRIBUTES = ['data-atmos-opacity', 'data-atmos-alpha']
 
 function clampOpacity(value: string): string | undefined {
   const parsed = Number.parseFloat(value)
@@ -22,10 +23,10 @@ export function createGlassController(root: HTMLElement): GlassController {
   const ownerWindow = root.ownerDocument.defaultView
   const trackedOpacityElements = new Set<HTMLElement>()
   const trackedAlphaElements = new Set<HTMLElement>()
-  let observing = false
 
   const observeOptions: MutationObserverInit = {
     attributes: true,
+    attributeFilter: OBSERVED_ATTRIBUTES,
     childList: true,
     subtree: true,
   }
@@ -97,10 +98,8 @@ export function createGlassController(root: HTMLElement): GlassController {
   }
 
   const syncDomState = () => {
-    stopObserving()
     syncOpacityElements()
     syncAlphaElements()
-    startObserving()
   }
 
   const MutationObserverCtor = ownerWindow?.MutationObserver
@@ -111,25 +110,7 @@ export function createGlassController(root: HTMLElement): GlassController {
           syncDomState()
         })
 
-  const startObserving = () => {
-    if (!mutationObserver || observing) {
-      return
-    }
-
-    mutationObserver.observe(root, observeOptions)
-    observing = true
-  }
-
-  const stopObserving = () => {
-    if (!mutationObserver || !observing) {
-      return
-    }
-
-    mutationObserver.disconnect()
-    observing = false
-  }
-
-  startObserving()
+  mutationObserver?.observe(root, observeOptions)
 
   return {
     sync(nextOptions) {
@@ -138,7 +119,7 @@ export function createGlassController(root: HTMLElement): GlassController {
       syncDomState()
     },
     destroy() {
-      stopObserving()
+      mutationObserver?.disconnect()
 
       for (const element of trackedOpacityElements) {
         element.style.removeProperty(OPACITY_VARIABLE)

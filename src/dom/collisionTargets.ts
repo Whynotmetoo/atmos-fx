@@ -19,6 +19,18 @@ export type CollisionTargetManager = {
 
 const SCHEDULE_FALLBACK_DELAY = 50
 const COLLISION_SELECTOR = '[data-atmos-collision]'
+const OBSERVED_ATTRIBUTES = [
+  'id',
+  'class',
+  'style',
+  'hidden',
+  'open',
+  'data-atmos-collision',
+  'data-atmos-glass',
+  'data-atmos-solid',
+  'data-atmos-liquid-dripping',
+  'data-atmos-liquid-gathering-point',
+]
 
 function toRootRelativeRect(
   element: HTMLElement,
@@ -171,11 +183,6 @@ export function createCollisionTargetManager(
       ? undefined
       : new MutationObserverCtor((mutations) => {
           const hasSignificantMutation = mutations.some((mutation) => {
-            if (mutation.type === 'attributes' &&
-                (mutation.attributeName === 'data-atmos-card-fx' ||
-                 mutation.attributeName === 'data-atmos-fx')) {
-              return false
-            }
             const target = mutation.target as HTMLElement
             if (target && typeof target.closest === 'function') {
               return !target.closest('[data-atmos-layer]')
@@ -225,6 +232,7 @@ export function createCollisionTargetManager(
   resizeObserver?.observe(root)
   mutationObserver?.observe(root, {
     attributes: true,
+    attributeFilter: OBSERVED_ATTRIBUTES,
     childList: true,
     subtree: true,
   })
