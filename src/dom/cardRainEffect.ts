@@ -5,6 +5,7 @@ import type { CollisionTargetRect } from './collisionTargets'
 /** Layer attribute so we can skip our own canvases during collision detection. */
 const LAYER_ATTR = 'data-atmos-layer'
 const LAYER_VALUE = 'card-rain'
+const CARD_RAIN_DENSITY_SCALE = 0.9
 
 interface CardEntry {
   element: HTMLElement
@@ -31,6 +32,10 @@ function isOptedIn(el: HTMLElement, width: number, height: number): boolean {
          !el.hasAttribute('data-atmos-solid') &&
          width >= 100 &&
          height >= 80
+}
+
+function resolveCardRainDensity(density: number): number {
+  return density * CARD_RAIN_DENSITY_SCALE
 }
 
 /**
@@ -132,7 +137,7 @@ export function createCardRainController(root: HTMLElement): CardRainController 
     }
 
     const effect = new RainEffect(canvas, { maxPixelRatio: 1 })
-    effect.setDensity(density).start()
+    effect.setDensity(resolveCardRainDensity(density)).start()
     effect.ready.then(requestFrame)
     entries.set(el, {
       element: el,
@@ -194,7 +199,7 @@ export function createCardRainController(root: HTMLElement): CardRainController 
 
       entry.isIntersectingCard = target.isIntersectingCard !== false
       entry.isIntersectingDrips = target.isIntersectingDrips !== false
-      entry.effect.setDensity(options.density)
+      entry.effect.setDensity(resolveCardRainDensity(options.density))
       updateEntryState(entry)
     }
 
