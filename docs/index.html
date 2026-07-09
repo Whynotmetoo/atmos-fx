@@ -18,7 +18,7 @@
         --bg-panel-solid: #0f171e;
         --line: rgba(255, 255, 255, 0.08);
         --line-active: rgba(255, 255, 255, 0.16);
-        --ink: #f8fafc;
+        --ink: #ffffff;
         --muted: #94a3b8;
         --accent: #d7ff54;
         --accent-glow: rgba(215, 255, 84, 0.12);
@@ -114,15 +114,41 @@
         position: relative;
         width: 100%;
         height: 100vh;
+        min-height: 760px;
         border-bottom: 1px solid var(--line);
-        background: #0d1613;
+        background: #081015;
         margin-bottom: 34px;
         overflow: hidden;
         isolation: isolate;
+      }
+
+      .showcase-media {
+        position: absolute;
+        inset: 0;
+        z-index: -3;
+        overflow: hidden;
+        pointer-events: none;
         background:
-          radial-gradient(circle at 13% 18%, rgba(112, 217, 255, 0.20), transparent 32rem),
-          radial-gradient(circle at 88% 76%, rgba(255, 107, 74, 0.16), transparent 34rem),
-          linear-gradient(135deg, #0c1815 0%, #1a2320 52%, #241c18 100%);
+          radial-gradient(circle at 18% 12%, rgba(148, 202, 255, 0.18), transparent 34rem),
+          linear-gradient(135deg, #070b0e 0%, #142129 100%);
+      }
+
+      .showcase-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.08), transparent 28rem),
+          linear-gradient(180deg, rgba(5, 9, 13, 0.34) 0%, rgba(5, 9, 13, 0.18) 36%, rgba(5, 9, 13, 0.58) 100%),
+          linear-gradient(90deg, rgba(5, 9, 13, 0.44) 0%, rgba(5, 9, 13, 0.08) 42%, rgba(5, 9, 13, 0.36) 100%);
+      }
+
+      .showcase-video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        filter: saturate(1.04) contrast(1.06) brightness(0.72);
       }
 
       .showcase-inner {
@@ -233,6 +259,8 @@
 
       .showcase-card {
         border-radius: 12px;
+        max-width: calc(100vw - 48px);
+        min-width: 0;
       }
       .showcase-card:not([data-atmos-glass]) {
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1048,7 +1076,7 @@
         }
         .showcase-inner {
           height: auto;
-          padding: 0;
+          padding: 72px 0 0;
         }
         .showcase-nav-actions {
           right: 24px;
@@ -1061,6 +1089,7 @@
           position: relative;
           left: auto;
           top: auto;
+          width: 100%;
           max-width: 100%;
           margin-bottom: 60px;
         }
@@ -1074,6 +1103,7 @@
           position: relative;
           inset: auto;
           width: 100%;
+          max-width: 100%;
           transform: none;
           margin-bottom: 60px;
         }
@@ -1092,6 +1122,27 @@
         }
       }
       @media (max-width: 620px) {
+        .showcase-container {
+          padding: 24px;
+        }
+        .showcase-intro,
+        .control-deck,
+        .forecast-card,
+        .showcase-input,
+        .micro-stack {
+          width: calc(100vw - 48px);
+          max-width: calc(100vw - 48px);
+        }
+        .control-deck {
+          padding: 24px;
+        }
+        .deck-grid {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .deck-grid strong {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
         .micro-stack {
           grid-template-columns: 1fr;
         }
@@ -1116,6 +1167,11 @@
   <body>
     <!-- Showcase Stage Section -->
     <section id="showcase-stage" class="showcase-container">
+      <div class="showcase-media" aria-hidden="true">
+        <video class="showcase-video" autoplay muted loop playsinline preload="metadata">
+          <source src="./cloudy-sky.webm" type="video/webm" />
+        </video>
+      </div>
 
       <!-- Top Right Navigation Actions -->
       <div class="showcase-nav-actions" data-atmos-collision data-atmos-glass data-atmos-liquid-dripping="true">

@@ -9,6 +9,7 @@ import {
 const showcaseRoot = document.querySelector('#showcase-stage') as HTMLElement
 const playgroundRoot = document.querySelector('#playground-stage') as HTMLElement
 const PLAYGROUND_INFO_COPY_KEY = 'playground-info-copy'
+const SHOWCASE_VIDEO_PLAYBACK_RATE = 0.8
 
 // ----------------------------------------------------
 // 1. Showcase Stage State & Setup
@@ -38,6 +39,14 @@ const showcaseAtmosphere = createAtmosphere(showcaseRoot, {
 })
 showcaseAtmosphere.start()
 ;(window as any).showcaseAtmosphere = showcaseAtmosphere
+
+const showcaseVideo = document.querySelector('.showcase-video') as HTMLVideoElement | null
+if (showcaseVideo) {
+  showcaseVideo.playbackRate = SHOWCASE_VIDEO_PLAYBACK_RATE
+  showcaseVideo.addEventListener('loadedmetadata', () => {
+    showcaseVideo.playbackRate = SHOWCASE_VIDEO_PLAYBACK_RATE
+  })
+}
 
 function applyShowcase() {
   const lang = currentLang
