@@ -32,6 +32,11 @@
     z-index: 3;
   }
 
+  [data-atmos-fx][data-atmos-quality='low'] > [data-atmos-layer='weather-background'],
+  [data-atmos-fx][data-atmos-quality='low'] > [data-atmos-layer='weather-foreground'] {
+    filter: none;
+  }
+
   [data-atmos-layer='liquid'] {
     z-index: 4;
   }

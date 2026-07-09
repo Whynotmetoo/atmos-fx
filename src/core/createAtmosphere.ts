@@ -74,6 +74,10 @@ const CSS_CONTENT = `
     filter: blur(0.7px);
     z-index: 3;
   }
+  [data-atmos-fx][data-atmos-quality='low'] > [data-atmos-layer='weather-background'],
+  [data-atmos-fx][data-atmos-quality='low'] > [data-atmos-layer='weather-foreground'] {
+    filter: none;
+  }
   [data-atmos-layer='liquid'] {
     z-index: 4;
   }
@@ -241,6 +245,7 @@ export function createAtmosphere(
 
     qualityMonitor.recordFrame(time, frameDuration, () => {
       const scaling = qualityMonitor.getScalingState()
+      syncDataset()
       const size = canvasLayer?.resize(scaling.dprCap)
       if (size) {
         renderer?.resize(size)
@@ -312,6 +317,7 @@ export function createAtmosphere(
 
   const syncDataset = () => {
     element.dataset.atmosFxPreset = normalizedOptions.preset
+    element.dataset.atmosQuality = getEffectiveOptions().quality
 
     if (renderer) {
       element.dataset.atmosRenderer = renderer.backend
@@ -664,6 +670,7 @@ export function createAtmosphere(
       canvasLayer = undefined
       setState('destroyed')
       delete element.dataset.atmosFxPreset
+      delete element.dataset.atmosQuality
       delete element.dataset.atmosRenderer
     }
   }

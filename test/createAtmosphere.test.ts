@@ -141,10 +141,14 @@ describe('createAtmosphere', () => {
     expect(foregroundCanvas?.height).toBe(360)
     expect(root.dataset.atmosFx).toBe('running')
     expect(root.dataset.atmosFxPreset).toBe('rain')
+    expect(root.dataset.atmosQuality).toBe('medium')
     expect(root.hasAttribute('data-atmos-particle')).toBe(false)
     expect(root.dataset.atmosRenderer).toBe('canvas2d')
     expect(document.querySelector('#atmos-fx-styles')?.textContent).toContain(
       "[data-atmos-card-fx='paused'] [data-atmos-layer='card-rain']",
+    )
+    expect(document.querySelector('#atmos-fx-styles')?.textContent).toContain(
+      "[data-atmos-fx][data-atmos-quality='low'] > [data-atmos-layer='weather-background']",
     )
 
     controller.stop()
@@ -155,7 +159,21 @@ describe('createAtmosphere', () => {
     expect(root.querySelector('[data-atmos-layer="weather-foreground"]')).toBeNull()
     expect(root.dataset.atmosFx).toBeUndefined()
     expect(root.dataset.atmosFxPreset).toBeUndefined()
+    expect(root.dataset.atmosQuality).toBeUndefined()
     expect(root.dataset.atmosRenderer).toBeUndefined()
+  })
+
+  it('marks low quality roots so weather layer blur can be disabled', () => {
+    const root = createRoot()
+    const controller = createAtmosphere(root, { quality: 'low' })
+
+    controller.start()
+
+    expect(root.dataset.atmosQuality).toBe('low')
+
+    controller.update({ quality: 'high' })
+
+    expect(root.dataset.atmosQuality).toBe('high')
   })
 
   it('syncs glass controls during lifecycle updates', () => {
