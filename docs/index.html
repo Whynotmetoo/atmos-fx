@@ -126,7 +126,7 @@
       .showcase-media {
         position: absolute;
         inset: 0;
-        z-index: -3;
+        z-index: 0;
         overflow: hidden;
         pointer-events: none;
         background:
@@ -150,6 +150,10 @@
         display: block;
         object-fit: cover;
         filter: saturate(1.04) contrast(1.06) brightness(0.72);
+      }
+
+      #showcase-stage > [data-atmos-layer='weather-background'] {
+        z-index: 1;
       }
 
       .showcase-inner {
