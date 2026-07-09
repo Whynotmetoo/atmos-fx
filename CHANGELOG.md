@@ -6,9 +6,20 @@ The project follows semantic versioning once published.
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-07-06
+## [0.4.0] - 2026-07-09
 
-- Bump version to 0.4.0.
+- **Feature (Card Rain):** Implemented a high-fidelity WebGL-based card surface water droplets effect (Apple Weather style). Renders shader-lit droplets with normal-vector reflections, shadows, and trailing physics. Droplets slide down, merge on contact, and trail dynamically.
+- **Performance & Pooling:**
+  - Implemented a single shared WebGL renderer across all glass cards to drastically cut GPU overhead and context switching.
+  - Automatically pauses off-screen card surface droplet rendering using visibility tracking.
+  - Integrated with the quality scaling system: disabled card droplets entirely under `low` quality tier to guarantee performance on mobile.
+- **Refactor:** Removed the global `liquidGatheringPoint` option from `AtmosFx` options validation, presets, and React component props, while keeping the card-level `liquidGatheringPoint` override attribute (`data-atmos-liquid-gathering-point`) and React prop.
+- **Visuals & UX:**
+  - Redesigned showcase cards with polished monochrome active/hover states.
+  - Refined card water droplet density and scale for a cleaner aesthetic.
+- **Accessibility:** Added an atmospheric background video (`cloudy-sky.webm`) to the showcase stage that dynamically respects the user's `prefers-reduced-motion` OS preferences, pausing playback automatically when reduced motion is requested.
+- **Performance:** Added support for `data-atmos-quality` attributes on target cards, automatically disabling CPU-heavy full-screen backdrop-filter blur styles when the renderer drops to `low` quality.
+- **Migration Note:** For users upgrading from versions prior to `0.3.0`, note that the public API has been simplified by removing deprecated options (`particle`, `transparency`, `contentOpacity`, `surfaceOpacity`, `collisionSelector`, `opaqueSelector`, `autoScaleQuality`, and the React `mode` alias).
 
 ## [0.3.0] - 2026-07-02
 
