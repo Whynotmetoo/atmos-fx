@@ -94,8 +94,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.liquidDripping = liquidDripping
       }
 
-
-
       if (injectStyles !== undefined) {
         nextOptions.injectStyles = injectStyles
       }

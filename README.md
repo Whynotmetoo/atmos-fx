@@ -149,7 +149,6 @@ onUnmounted(() => {
 | `opacity` | `number` | `0.1` | Fallback background opacity for elements marked with `data-atmos-opacity`, clamped from `0` to `1`. |
 | `bottomCollision` | `boolean` | `true` | Determines whether particles collide with the bottom edge of the container. |
 | `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
-
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden or the root element is out of the viewport. |
 | `respectReducedMotion`| `boolean` | `true` | Honors OS `prefers-reduced-motion` settings. |
 | `injectStyles` | `boolean` | `true` | Injects the default rules; disable it when loading `atmos-fx/styles.css` yourself. |
