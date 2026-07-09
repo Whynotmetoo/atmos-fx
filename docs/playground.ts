@@ -115,7 +115,7 @@ interface PlaygroundState {
 
 const playgroundState: PlaygroundState = {
   preset: 'rain',
-  density: 0.65,
+  density: 0.585,
   speed: 1.00,
   wind: -0.12,
   quality: 'auto',
@@ -147,7 +147,7 @@ playgroundAtmosphere.start()
 function syncSliderValue(id: string) {
   const valueElement = document.querySelector(`#${id}-val`)
   if (valueElement) {
-    valueElement.textContent = Number(playgroundState[id]).toFixed(2)
+    valueElement.textContent = Number(playgroundState[id]).toFixed(id === 'density' ? 3 : 2)
   }
   const slider = document.querySelector(`#${id}`) as HTMLInputElement
   if (slider) {
@@ -171,7 +171,7 @@ function updateReactCodePreview() {
 
   const props: string[] = []
   props.push(`preset="${p.preset}"`)
-  props.push(`density={${p.density.toFixed(2)}}`)
+  props.push(`density={${p.density.toFixed(3)}}`)
   props.push(`speed={${p.speed.toFixed(2)}}`)
   props.push(`wind={${p.wind.toFixed(2)}}`)
   if (p.color !== 'rgba(220, 235, 255, 0.72)') {

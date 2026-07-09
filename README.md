@@ -140,7 +140,7 @@ onUnmounted(() => {
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Applies preset default physical and visual values. |
-| `density` | `number` | `0.65` | Controls particles per unit area (0 disables particles; 1 uses the full quality-tier rate). |
+| `density` | `number` | `0.585` | Controls particles per unit area (0 disables particles; 1 uses the full quality-tier rate). |
 | `speed` | `number` | `1.0` | Scalar multiplier for gravity and vertical fall speed. |
 | `wind` | `number` | `-0.12` | Affects horizontal sway and particle drift. |
 | `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | Browser-supported CSS color for precipitation and rain liquid; its alpha channel is preserved. |

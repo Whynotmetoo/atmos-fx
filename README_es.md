@@ -141,7 +141,7 @@ onUnmounted(() => {
 | Prop | Tipo | Valor inicial | Descripción |
 | --- | --- | --- | --- |
 | `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | Elige un conjunto completo de valores físicos y visuales. |
-| `density` | `number` | `0.65` | Controla las partículas por unidad de área. 0 las desactiva y 1 usa la tasa completa del quality activo. |
+| `density` | `number` | `0.585` | Controla las partículas por unidad de área. 0 las desactiva y 1 usa la tasa completa del quality activo. |
 | `speed` | `number` | `1.0` | Multiplica la velocidad del movimiento y del ciclo de agua. Los valores negativos se convierten en 0. |
 | `wind` | `number` | `-0.12` | Aplica movimiento horizontal: negativo hacia la izquierda y positivo hacia la derecha. |
 | `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | Acepta un color CSS válido para la precipitación y el agua. También respeta su canal alpha. |

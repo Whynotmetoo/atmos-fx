@@ -71,7 +71,7 @@ const CSS_CONTENT = `
     z-index: 0;
   }
   [data-atmos-layer='weather-foreground'] {
-    filter: blur(0.7px);
+    filter: blur(0.6px);
     z-index: 3;
   }
   [data-atmos-fx][data-atmos-quality='low'] > [data-atmos-layer='weather-background'],
@@ -148,7 +148,7 @@ const CSS_CONTENT = `
     pointer-events: none;
     z-index: -1;
     border-radius: inherit;
-    filter: blur(1px);
+    filter: blur(0.6px);
   }
   [data-atmos-card-fx='paused'] [data-atmos-layer='card-rain'],
   [data-atmos-card-fx='stopped'] [data-atmos-layer='card-rain'] {
