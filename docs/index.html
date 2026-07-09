@@ -264,7 +264,7 @@
         display: flex;
         gap: 6px;
         padding: 4px;
-        border-radius: 6px;
+        border-radius: 12px;
       }
       .control-deck:not([data-atmos-glass]) .showcase-preset-row {
         background: rgba(21, 32, 29, 0.08);
@@ -277,7 +277,7 @@
         background: transparent;
         border: none;
         padding: 6px 0;
-        border-radius: 4px;
+        border-radius: 12px;
         font-size: 0.8rem;
         font-weight: 600;
         cursor: pointer;
@@ -353,8 +353,8 @@
 
       .forecast-card {
         position: absolute;
-        left: 40px;
-        top: 480px;
+        left: 36vw;
+        top: 425px;
         width: 280px;
         padding: 20px;
       }
@@ -370,6 +370,34 @@
         color: var(--muted);
         line-height: 1.4;
       }
+      .forecast-readout {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: end;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .forecast-temp {
+        font-size: 1.8rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .forecast-readout small {
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .forecast-chip {
+        align-self: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
 
       .micro-stack {
         position: absolute;
@@ -377,39 +405,214 @@
         right: 40px;
         bottom: 100px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 3rem 6rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 120px;
       }
       .micro-card {
-        min-height: 110px;
-        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 146px;
+        padding: 20px 22px;
+        border-radius: 24px !important;
       }
       .micro-card:not([data-atmos-glass]) {
         background: rgba(14, 21, 19, 0.56);
       }
-      .micro-card > span {
+      .status-rings,
+      .slider-stack,
+      .button-grid {
+        width: 100%;
+      }
+      .status-rings {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+      }
+      .status-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .status-ring-container {
+        position: relative;
+        width: 62px;
+        height: 62px;
+      }
+      .status-ring-svg {
+        transform: rotate(-90deg);
         display: block;
-        margin-bottom: 14px;
-        color: var(--accent);
-        font-weight: 800;
-        font-size: 0.8rem;
+        width: 100%;
+        height: 100%;
       }
-      .micro-card strong {
+      .status-ring-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.12);
+        stroke-width: 6px;
+      }
+      .status-ring-progress {
+        fill: none;
+        stroke: #ffffff;
+        stroke-width: 6px;
+        stroke-linecap: round;
+      }
+      .status-ring-icon {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .status-ring-icon svg {
+        width: 100%;
+        height: 100%;
         display: block;
-        margin-bottom: 4px;
-        font-size: 0.85rem;
       }
-      .micro-card p {
-        color: var(--muted);
-        font-size: 0.7rem;
-        line-height: 1.3;
+      .status-percent {
+        margin-top: 12px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
       }
-      .micro-2:not([data-atmos-glass]) {
-        background: #f3e8d0;
-        color: #17211e;
+
+      /* Slider controls redesign */
+      .slider-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
       }
-      .micro-2:not([data-atmos-glass]) p, .micro-2:not([data-atmos-glass]) > span {
-        color: rgba(23, 33, 30, 0.65);
+      .slider-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+      }
+      .slider-icon {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.7);
+        flex-shrink: 0;
+      }
+      .slider-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
+        min-width: 36px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .micro-range {
+        appearance: none;
+        -webkit-appearance: none;
+        background: transparent;
+        width: 100%;
+        accent-color: rgba(255, 255, 255, 0.92);
+        cursor: pointer;
+      }
+      .micro-range::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .micro-range::-webkit-slider-thumb {
+        width: 16px;
+        height: 16px;
+        margin-top: -5px;
+        border-radius: 50%;
+        border: 0;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.36);
+        cursor: grab;
+        -webkit-appearance: none;
+        transition: transform 0.1s;
+      }
+      .micro-range::-webkit-slider-thumb:hover {
+        background: #ffffff !important;
+        transform: scale(1.15);
+      }
+      .micro-range:active::-webkit-slider-thumb {
+        cursor: grabbing;
+        transform: scale(0.94) !important;
+        background: #ffffff !important;
+      }
+      .micro-range::-moz-range-track {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .micro-range::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 0;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.36);
+        cursor: grab;
+        transition: transform 0.1s;
+      }
+      .micro-range::-moz-range-thumb:hover {
+        background: #ffffff !important;
+        transform: scale(1.15);
+      }
+      .micro-range:active::-moz-range-thumb {
+        cursor: grabbing;
+        transform: scale(0.94) !important;
+        background: #ffffff !important;
+      }
+
+      /* Button controls redesign - grid of toggles */
+      .button-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        justify-items: center;
+        align-items: center;
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
+      }
+      .grid-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.95);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .grid-btn:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
+      .grid-btn.active {
+        background: #ffffff;
+        border-color: transparent;
+        color: #080d10;
+        box-shadow:
+          0 4px 12px rgba(255, 255, 255, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+      .grid-btn svg {
+        width: 20px;
+        height: 20px;
+        display: block;
       }
       /* Playground Layout */
       .playground-title-wrapper {
@@ -468,10 +671,14 @@
       #playground-info-card,
       #playground-input-card {
         width: 340px;
-        padding: 20px;
+        padding: 20px 20px;
         border-radius: 16px;
         transition: all 0.3s ease;
         font-size: 0.9rem;
+      }
+
+      #playground-info-card{
+        padding: 30px 20px;
       }
       
       #playground-input-card {
@@ -801,8 +1008,8 @@
 
       .showcase-input {
         position: absolute;
-        left: 40vw;
-        top: 400px;
+        left: 40px;
+        top: 500px;
         width: 260px;
         padding: 14px 20px;
         border-radius: 12px;
@@ -871,11 +1078,12 @@
           margin-bottom: 60px;
         }
         .micro-stack {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: 1fr;
           width: 100%;
           left: auto;
           right: auto;
           bottom: auto;
+          gap: 16px;
         }
       }
       @media (max-width: 968px) {
@@ -999,22 +1207,138 @@
 
         <!-- 3. Forecast Card -->
         <div class="showcase-card forecast-card" data-atmos-collision data-atmos-glass>
-          <span class="card-index" style="display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: #ff6b4a; color: #190c08; font-weight: 900; margin-bottom: 12px; font-size: 0.78rem;">A</span>
-          <h3 data-i18n-key="showcase-forecast-title">Readable opacity surface</h3>
-          <p data-i18n-key="showcase-forecast-desc">Uses a translucent treatment so precipitation remains visible across content-heavy UI.</p>
+          <h3 data-i18n-key="showcase-forecast-title">Forecast Readout</h3>
+          <p data-i18n-key="showcase-forecast-desc">A compact weather tile keeps live numbers legible while rain moves behind the glass.</p>
+          <div class="forecast-readout" aria-hidden="true">
+            <div>
+              <div class="forecast-temp">18°</div>
+              <small data-i18n-key="showcase-forecast-feels">Feels 15°</small>
+            </div>
+            <span class="forecast-chip" data-i18n-key="showcase-forecast-chip">Rain 74%</span>
+          </div>
         </div>
 
         <!-- 4. Micro Cards Stack -->
         <div class="micro-stack">
-          <div class="showcase-card micro-card micro-1" data-atmos-collision data-atmos-glass>
-            <span>01</span>
-            <strong data-i18n-key="showcase-micro-1-title">glass panel</strong>
-            <p data-i18n-key="showcase-micro-1-desc">blur + top-edge collision</p>
+          <!-- Card 1: Status Rings (Now 3 rings with different devices and states) -->
+          <div class="showcase-card micro-card" data-atmos-collision data-atmos-glass aria-label="Status rings">
+            <div class="status-rings" aria-hidden="true">
+              <!-- Item 1: Active 80% ring with Laptop Icon (White) -->
+              <div class="status-item">
+                <div class="status-ring-container">
+                  <svg class="status-ring-svg" viewBox="0 0 60 60">
+                    <circle class="status-ring-track" cx="30" cy="30" r="27" />
+                    <circle class="status-ring-progress" cx="30" cy="30" r="27" stroke-dasharray="169.65" stroke-dashoffset="33.93" />
+                  </svg>
+                  <div class="status-ring-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="4" y="5" width="16" height="11" rx="1.5" />
+                      <path d="M2 18h20" />
+                      <path d="M10 18a2 2 0 0 0 4 0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="status-percent">80%</div>
+              </div>
+
+              <!-- Item 2: Active 60% ring with Phone Icon (White) -->
+              <div class="status-item">
+                <div class="status-ring-container">
+                  <svg class="status-ring-svg" viewBox="0 0 60 60">
+                    <circle class="status-ring-track" cx="30" cy="30" r="27" />
+                    <circle class="status-ring-progress" cx="30" cy="30" r="27" stroke-dasharray="169.65" stroke-dashoffset="67.86" />
+                  </svg>
+                  <div class="status-ring-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="6" y="2" width="12" height="20" rx="2" />
+                      <path d="M12 18h.01" stroke-width="2" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="status-percent">60%</div>
+              </div>
+
+              <!-- Item 3: Active 35% ring with Headphones Icon (White) -->
+              <div class="status-item">
+                <div class="status-ring-container">
+                  <svg class="status-ring-svg" viewBox="0 0 60 60">
+                    <circle class="status-ring-track" cx="30" cy="30" r="27" />
+                    <circle class="status-ring-progress" cx="30" cy="30" r="27" stroke-dasharray="169.65" stroke-dashoffset="110.27" />
+                  </svg>
+                  <div class="status-ring-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="status-percent">35%</div>
+              </div>
+            </div>
           </div>
-          <div class="showcase-card micro-card micro-2" data-atmos-collision data-atmos-glass>
-            <span>02</span>
-            <strong data-i18n-key="showcase-micro-2-title">solid control</strong>
-            <p data-i18n-key="showcase-micro-2-desc">opaque island in the same storm</p>
+
+          <!-- Card 2: Slider Controls (Redesigned) -->
+          <div class="showcase-card micro-card" data-atmos-collision data-atmos-glass aria-label="Slider controls">
+            <div class="slider-stack">
+              <!-- Slider 1: Brightness -->
+              <div class="slider-row">
+                <svg class="slider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+                <input class="micro-range" type="range" min="0" max="100" value="72" id="micro-range-brightness" aria-label="Brightness" />
+                <span class="slider-value" id="micro-val-brightness">72%</span>
+              </div>
+              <!-- Slider 2: Volume -->
+              <div class="slider-row">
+                <svg class="slider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+                </svg>
+                <input class="micro-range" type="range" min="0" max="100" value="42" id="micro-range-volume" aria-label="Volume" />
+                <span class="slider-value" id="micro-val-volume">42%</span>
+              </div>
+              <!-- Slider 3: Focus/Haptic -->
+              <div class="slider-row">
+                <svg class="slider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                  <path d="M12 6v12M6 12h12" />
+                </svg>
+                <input class="micro-range" type="range" min="0" max="100" value="88" id="micro-range-haptic" aria-label="Haptic" />
+                <span class="slider-value" id="micro-val-haptic">88%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Button Controls (Redesigned Toggles) -->
+          <div class="showcase-card micro-card" data-atmos-collision data-atmos-glass aria-label="Button controls">
+            <div class="button-grid">
+              <!-- Button 1: Wi-Fi -->
+              <button class="grid-btn active" type="button" aria-label="Wi-Fi" id="btn-wifi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+                </svg>
+              </button>
+              <!-- Button 2: Bluetooth -->
+              <button class="grid-btn active" type="button" aria-label="Bluetooth" id="btn-bluetooth">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m7 7 10 10-5 5V2l5 5L7 17" />
+                </svg>
+              </button>
+              <!-- Button 3: AirDrop -->
+              <button class="grid-btn active" type="button" aria-label="AirDrop" id="btn-airdrop">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                  <path d="M12 6v12M8 10l4-4 4 4" />
+                </svg>
+              </button>
+              <!-- Button 4: Focus Mode -->
+              <button class="grid-btn" type="button" aria-label="Do Not Disturb" id="btn-dnd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1034,9 +1358,7 @@
         <div class="preview-column">
           <div id="playground-stage" data-playground-preset="rain">
             <div id="playground-info-card" data-atmos-collision data-atmos-glass>
-              <span data-i18n-key="playground-info-desc">
-                Displays live meteorological status readings and configuration logs. Fully reactive to transparency and collision options.
-              </span>
+              <span id="playground-info-copy" data-i18n-key="playground-info-copy">A high-performance DOM-aware WebGL atmosphere engine.</span>
             </div>
 
             <!-- 2. Simple Input (Card B) -->
@@ -1463,6 +1785,7 @@ controller.destroy()</code></pre>
           <p data-i18n-key="bp-intro" style="margin-bottom: 16px;">To ensure visually realistic atmosphere effects, keep the following guidelines in mind when designing with <code>AtmosCard</code>:</p>
           <ul style="list-style: disc; padding-left: 20px; color: var(--muted); font-size: 0.92rem; display: flex; flex-direction: column; gap: 12px;">
             <li data-i18n-key="bp-dripping"><strong>Particle Layering & Dripping:</strong> Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable <code>AtmosCard</code> elements. If <code>liquidDripping</code> is enabled, accumulated rainwater will drip down and correctly collide with any collidable cards positioned below it.</li>
+            <li data-i18n-key="bp-container">For the best glass mode results, use container-level glass. Put it on block-level HTML containers such as div, section, article, or form. Wrap inputs, images, SVGs, and inline text instead of marking them directly.</li>
             <li data-i18n-key="bp-blocking"><strong>Avoid Wide Blocking Cards:</strong> A very wide collidable <code>AtmosCard</code> will act like an umbrella, blocking most foreground rain. This prevents rain from reaching elements below, significantly reducing their splash animations. Unless this is intended, avoid overly wide collision surfaces.</li>
             <li data-i18n-key="bp-nesting"><strong>Avoid Nesting Cards:</strong> Unless you have a highly specific visual effect in mind, avoid nesting an <code>AtmosCard</code> inside another <code>AtmosCard</code>. This can cause conflicting collision bounds and visual behaviors that defy natural physics.</li>
           </ul>

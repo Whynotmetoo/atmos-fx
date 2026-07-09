@@ -67,9 +67,11 @@ const CSS_CONTENT = `
     pointer-events: none;
   }
   [data-atmos-layer='weather-background'] {
+    filter: blur(1px);
     z-index: 0;
   }
   [data-atmos-layer='weather-foreground'] {
+    filter: blur(1px);
     z-index: 3;
   }
   [data-atmos-layer='liquid'] {

@@ -187,6 +187,7 @@ onUnmounted(() => {
 
 - **Camadas e gotejamento**: a precipitação é desenhada em primeiro plano e no fundo. Partículas em primeiro plano colidem com os cards, e gotas destacadas podem atingir outras superfícies abaixo.
 - **Gathering proporcional à largura**: cards mais largos demoram mais para reunir a água (`1250ms + 2.8ms × pixel CSS`, limitado a `5500ms`; em `300px`, leva `2090ms`). As fases seguintes mantêm duração fixa.
+- **Vidro no nível do contêiner**: para obter o melhor resultado no modo glass, aplique em contêineres HTML de bloco, como `div`, `section`, `article` ou `form`. Envolva inputs, imagens, SVGs e texto inline em vez de marcá-los diretamente.
 - **Evite superfícies largas demais**: um card muito largo funciona como guarda-chuva e reduz a chuva que chega aos elementos inferiores.
 - **Não aninhe cards sem um motivo visual claro**: limites de colisão sobrepostos tendem a gerar movimentos pouco naturais.
 - **Modos de `transMode`**:

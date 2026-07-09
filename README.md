@@ -188,6 +188,7 @@ To ensure visually realistic atmosphere effects, here are some guidelines to fol
 
 - **Particle Layering & Dripping**: Particles are rendered in foreground and background layers. Foreground particles are blocked by collidable `AtmosCard` elements. If `liquidDripping` is enabled on a card, the accumulated rainwater will drip down and correctly collide with any collidable `AtmosCard`s positioned below it.
 - **Width-aware Gathering**: Wider cards spend longer in Gathering (`1250ms + 2.8ms` per CSS pixel, capped at `5500ms`; `300px` takes `2090ms`). Later drip phases keep fixed durations.
+- **Container-level Glass**: For the best glass mode results, put glass mode on block-level HTML containers such as `div`, `section`, `article`, or `form`. Wrap inputs, images, SVGs, and inline text instead of marking them directly.
 - **Avoid Wide Blocking Cards**: A very wide collidable `AtmosCard` will act like an umbrella, blocking most of the foreground rain. This prevents rain from reaching the elements below it, significantly reducing their rain splash animations. Unless this "umbrella" effect is specifically intended, avoid overly wide collision surfaces.
 - **Avoid Nesting Cards**: Unless you have a highly specific visual effect in mind, avoid nesting an `AtmosCard` directly inside another `AtmosCard`. This can cause conflicting collision bounds and visual behaviors that defy natural physics.
 - **Card Modes (`transMode`)**:

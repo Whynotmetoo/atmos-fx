@@ -8,6 +8,7 @@ import {
 
 const showcaseRoot = document.querySelector('#showcase-stage') as HTMLElement
 const playgroundRoot = document.querySelector('#playground-stage') as HTMLElement
+const PLAYGROUND_INFO_COPY_KEY = 'playground-info-copy'
 
 // ----------------------------------------------------
 // 1. Showcase Stage State & Setup
@@ -189,12 +190,13 @@ function updateReactCodePreview() {
   const atmosFxPropsStr = props.join('\n' + indent)
 
   const cardOpacityProp = p.surfaceMode === 'opacity' ? ` opacity={${p.opacity.toFixed(2)}}` : ''
+  const playgroundInfoCopy = TRANSLATIONS[currentLang][PLAYGROUND_INFO_COPY_KEY]
 
   const code = `<AtmosFx
   ${atmosFxPropsStr}
 >
   <AtmosCard transMode="${p.surfaceMode}"${cardOpacityProp}${p.preset === 'rain' ? ` liquidDripping={${p.liquidDripping}}` : ''}>
-    <div>A high-performance DOM-aware WebGL atmosphere engine.</div>
+    <div>${playgroundInfoCopy}</div>
   </AtmosCard>
 
   <AtmosCard transMode="${p.surfaceMode}"${cardOpacityProp}>
@@ -210,6 +212,11 @@ function updateReactCodePreview() {
 }
 
 function applyPlayground() {
+  const infoCopy = document.querySelector('#playground-info-copy') as HTMLElement | null
+  if (infoCopy) {
+    infoCopy.textContent = TRANSLATIONS[currentLang][PLAYGROUND_INFO_COPY_KEY]
+  }
+
   // Display preset conditional options
   ;(document.querySelector('#liquid-dripping-container') as HTMLElement).style.display = playgroundState.preset === 'rain' ? 'flex' : 'none'
 
@@ -420,3 +427,26 @@ document.querySelectorAll('.lang-dropdown-item').forEach(item => {
 
 // Initialize language based on browser preference
 setLanguage(resolveLanguage(navigator.language || 'en'))
+
+// Bind micro-card slider updates (Brightness, Volume, Haptic)
+const microSliders = ['brightness', 'volume', 'haptic']
+microSliders.forEach(id => {
+  const slider = document.querySelector(`#micro-range-${id}`) as HTMLInputElement
+  const valueLabel = document.querySelector(`#micro-val-${id}`) as HTMLElement
+  if (slider && valueLabel) {
+    slider.addEventListener('input', () => {
+      valueLabel.textContent = `${slider.value}%`
+    })
+  }
+})
+
+// Bind grid button toggles (Wi-Fi, Bluetooth, AirDrop, DND)
+const gridButtons = ['wifi', 'bluetooth', 'airdrop', 'dnd']
+gridButtons.forEach(id => {
+  const btn = document.querySelector(`#btn-${id}`)
+  if (btn) {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active')
+    })
+  }
+})
