@@ -90,14 +90,12 @@ describe('Atmosphere React adapter', () => {
         <AtmosFx
           preset="rain"
           liquidDripping={false}
-          liquidGatheringPoint={0.42}
         />,
       )
     })
     expect(spy).toHaveBeenCalledWith(expect.any(HTMLDivElement), expect.objectContaining({
       preset: 'rain',
       liquidDripping: false,
-      liquidGatheringPoint: 0.42,
     }))
     await act(async () => {
       reactRoot.unmount()
@@ -284,7 +282,7 @@ describe('Atmosphere React adapter', () => {
       reactRoot.render(
         <AtmosFx
           preset="rain"
-          liquidGatheringPoint={0.42}
+          speed={1.5}
         />,
       )
     })
@@ -293,14 +291,14 @@ describe('Atmosphere React adapter', () => {
       reactRoot.render(
         <AtmosFx
           preset="rain"
-          liquidGatheringPoint={undefined}
+          speed={2.5}
         />,
       )
     })
 
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        liquidGatheringPoint: undefined,
+        speed: 2.5,
       }),
     )
 

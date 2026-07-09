@@ -13,7 +13,6 @@ describe('normalizeAtmosphereOptions', () => {
       hailBounce: 0.5,
       bottomCollision: true,
       liquidDripping: true,
-      liquidGatheringPoint: undefined,
     })
   })
 
@@ -79,19 +78,5 @@ describe('normalizeAtmosphereOptions', () => {
     })
   })
 
-  it('clamps an explicit liquid gathering point while preserving random-by-default behavior', () => {
-    expect(normalizeAtmosphereOptions().liquidGatheringPoint).toBeUndefined()
-    expect(
-      normalizeAtmosphereOptions({ liquidGatheringPoint: 0.2 })
-        .liquidGatheringPoint,
-    ).toBe(0.33)
-    expect(
-      normalizeAtmosphereOptions({ liquidGatheringPoint: 0.8 })
-        .liquidGatheringPoint,
-    ).toBe(0.66)
-    expect(
-      normalizeAtmosphereOptions({ liquidGatheringPoint: 0.5 })
-        .liquidGatheringPoint,
-    ).toBe(0.5)
-  })
+
 })

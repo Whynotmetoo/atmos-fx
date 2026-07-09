@@ -155,7 +155,6 @@ onUnmounted(() => {
 | `opacity` | `number` | `0.1` | `data-atmos-opacity` 元素的默认背景不透明度，限制在 `0` 到 `1`。 |
 | `bottomCollision` | `boolean` | `true` | 决定粒子是否与容器底部边缘发生碰撞。 |
 | `liquidDripping` | `boolean` | `true` | 全局开关水汽凝结与滴落动画（仅在 Rain 模式下生效）。 |
-| `liquidGatheringPoint` | `number` | 随机 | 设置水平汇合点，范围为 `0.33` 到 `0.66`；默认按卡片稳定随机。 |
 | `pauseWhenHidden` | `boolean` | `true` | 当 document 不可见或根元素滑出视口时自动暂停动画。 |
 | `respectReducedMotion`| `boolean` | `true` | 遵循操作系统的 `prefers-reduced-motion` 设置。 |
 | `injectStyles` | `boolean` | `true` | 自动注入默认规则；自行加载 `atmos-fx/styles.css` 时可关闭。 |
@@ -167,7 +166,7 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | 应用于卡片的特定透明风格。 |
 | `liquidDripping` | `boolean` | `true` | 开关水汽凝结与滴落动画。 |
-| `liquidGatheringPoint` | `number` | 继承 / 随机 | 覆盖当前卡片的汇合点，范围为 `0.33` 到 `0.66`。 |
+| `liquidGatheringPoint` | `number` | 随机 | 覆盖当前卡片的汇合点，范围为 `0.33` 到 `0.66`。 |
 | `asChild` | `boolean` | `false` | 将属性合并到底层子元素上以避免额外渲染一层包装元素。 |
 | `opacity` | `number` | `0.1` | `transMode="opacity"` 使用的卡片背景不透明度；glass 和 solid 模式会忽略它。 |
 | `alpha` | `number` | `0.12` | `transMode="glass"` 使用的卡片背景不透明度；opacity 和 solid 模式会忽略它。 |

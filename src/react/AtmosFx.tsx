@@ -34,7 +34,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
     pauseWhenHidden,
     respectReducedMotion,
     liquidDripping,
-    liquidGatheringPoint,
     injectStyles,
     styleNonce,
     ...elementProps
@@ -95,7 +94,7 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
         nextOptions.liquidDripping = liquidDripping
       }
 
-      nextOptions.liquidGatheringPoint = liquidGatheringPoint
+
 
       if (injectStyles !== undefined) {
         nextOptions.injectStyles = injectStyles
@@ -120,7 +119,6 @@ export const AtmosFx = forwardRef<HTMLDivElement, AtmosFxProps>(function AtmosFx
       pauseWhenHidden,
       respectReducedMotion,
       liquidDripping,
-      liquidGatheringPoint,
       injectStyles,
       styleNonce,
     ],
