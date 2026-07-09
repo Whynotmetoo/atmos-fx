@@ -146,7 +146,7 @@ onUnmounted(() => {
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `preset` | `'rain' \| 'snow' \| 'hail'` | `'rain'` | 应用预设的物理和视觉属性。 |
-| `density` | `number` | `0.585` | 控制单位面积内的粒子数量；0 表示关闭粒子，1 表示使用当前 quality 档位的完整密度。 |
+| `density` | `number` | `0.65` | 控制单位面积内的粒子数量；0 表示关闭粒子，1 表示使用当前 quality 档位的完整密度。 |
 | `speed` | `number` | `1.0` | 非负的重力和垂直下落速度系数。 |
 | `wind` | `number` | `-0.12` | 影响水平方向摆动和粒子漂移的系数。 |
 | `color` | `string` | `'rgba(220, 235, 255, 0.72)'` | 浏览器支持的 CSS 颜色，用于降水和雨水液体，并保留 alpha 通道。 |

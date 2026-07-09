@@ -5,7 +5,7 @@ describe('normalizeAtmosphereOptions', () => {
   it('applies rain defaults', () => {
     expect(normalizeAtmosphereOptions()).toMatchObject({
       preset: 'rain',
-      density: 0.585,
+      density: 0.65,
       quality: 'auto',
       opacity: 0.1,
       alpha: 0.12,
@@ -70,7 +70,7 @@ describe('normalizeAtmosphereOptions', () => {
         hailBounce: undefined,
       } as any),
     ).toMatchObject({
-      density: 0.585,
+      density: 0.65,
       opacity: 0.1,
       alpha: 0.12,
       snowAccumulation: 0.55,

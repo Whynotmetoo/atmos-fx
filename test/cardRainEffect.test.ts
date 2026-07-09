@@ -10,7 +10,7 @@ const rainMocks = vi.hoisted(() => {
     ready = Promise.resolve()
     start = vi.fn(() => this)
     stop = vi.fn(() => this)
-    setDensity = vi.fn(() => this)
+    setDensity = vi.fn((_density: number) => this)
     isReady = vi.fn(() => true)
     getSize = vi.fn(() => ({ width: 200, height: 100 }))
     render = vi.fn()
@@ -90,6 +90,8 @@ describe('card rain controller', () => {
 
     expect(rainMocks.effects).toHaveLength(2)
     expect(rainMocks.effects[0]).not.toBe(rainMocks.effects[1])
+    expect(rainMocks.effects[0]?.setDensity.mock.calls[0]?.[0]).toBeCloseTo(0.585)
+    expect(rainMocks.effects[1]?.setDensity.mock.calls[0]?.[0]).toBeCloseTo(0.585)
     expect(rainMocks.renderers).toHaveLength(1)
     expect(requestFrame).toHaveBeenCalledTimes(1)
 
@@ -108,6 +110,8 @@ describe('card rain controller', () => {
     expect(root.querySelectorAll('[data-atmos-layer="card-rain"]')).toHaveLength(2)
     expect(rainMocks.effects).toHaveLength(2)
     expect(rainMocks.effects.every(effect => effect.start.mock.calls.length >= 2)).toBe(true)
+    expect(rainMocks.effects[0]?.setDensity.mock.calls.at(-1)?.[0]).toBeCloseTo(0.585)
+    expect(rainMocks.effects[1]?.setDensity.mock.calls.at(-1)?.[0]).toBeCloseTo(0.585)
 
     controller.destroy()
     expect(rainMocks.renderers[0]?.destroy).toHaveBeenCalledTimes(1)

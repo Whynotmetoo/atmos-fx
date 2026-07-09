@@ -2,7 +2,7 @@ import type { AtmosphereOptions, AtmospherePreset } from './types'
 
 export const DEFAULT_OPTIONS = {
   preset: 'rain',
-  density: 0.585,
+  density: 0.65,
   speed: 1,
   wind: -0.12,
   color: 'rgba(220, 235, 255, 0.72)',
@@ -26,7 +26,7 @@ export const DEFAULT_OPTIONS = {
 
 export const PRESET_OPTIONS = {
   rain: {
-    density: 0.585,
+    density: 0.65,
     speed: 1,
     wind: -0.12,
     color: 'rgba(220, 235, 255, 0.72)',
