@@ -187,6 +187,7 @@ onUnmounted(() => {
 
 - **Capas y agua**: la precipitación se dibuja en primer plano y fondo. Las partículas de primer plano chocan con las tarjetas y el agua desprendida puede caer sobre otras superficies inferiores.
 - **Gathering según el ancho**: las tarjetas más anchas tardan más en reunir el agua (`1250ms + 2.8ms × píxel CSS`, con un máximo de `5500ms`; una tarjeta de `300px` tarda `2090ms`). Las fases posteriores conservan una duración fija.
+- **Cristal a nivel de contenedor**: para obtener el mejor resultado en modo glass, aplícalo a contenedores HTML de bloque como `div`, `section`, `article` o `form`. Envuelve inputs, imágenes, SVGs y texto inline en vez de marcarlos directamente.
 - **Evita superficies demasiado anchas**: una tarjeta muy ancha actúa como un paraguas y deja menos lluvia para las superficies inferiores.
 - **No anides tarjetas sin una razón visual clara**: los límites de colisión pueden solaparse y producir movimientos poco naturales.
 - **Modos de `transMode`**:
