@@ -42,6 +42,27 @@ showcaseAtmosphere.start()
 
 const showcaseVideo = document.querySelector('.showcase-video') as HTMLVideoElement | null
 if (showcaseVideo) {
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+  const handleMotionPreference = () => {
+    if (motionQuery.matches) {
+      showcaseVideo.pause()
+    } else {
+      showcaseVideo.play().catch(() => {
+        // Handle autoplay policy restriction gracefully
+      })
+    }
+  }
+
+  handleMotionPreference()
+
+  try {
+    motionQuery.addEventListener('change', handleMotionPreference)
+  } catch (e) {
+    // Support older browsers
+    motionQuery.addListener(handleMotionPreference)
+  }
+
   showcaseVideo.playbackRate = SHOWCASE_VIDEO_PLAYBACK_RATE
   showcaseVideo.addEventListener('loadedmetadata', () => {
     showcaseVideo.playbackRate = SHOWCASE_VIDEO_PLAYBACK_RATE
