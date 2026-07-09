@@ -150,7 +150,6 @@ onUnmounted(() => {
 | `opacity` | `number` | `0.1` | `data-atmos-opacity` 要素の既定背景不透明度です。0 から 1 に収まるよう補正されます。 |
 | `bottomCollision` | `boolean` | `true` | ルートコンテナの下端で降水を衝突させるかを決めます。 |
 | `liquidDripping` | `boolean` | `true` | 雨モードの凝結・集約・滴下アニメーションをまとめて切り替えます。 |
-| `liquidGatheringPoint` | `number` | カードごとに固定ランダム | 横方向の集約位置を `0.33` から `0.66` で指定します。 |
 | `pauseWhenHidden` | `boolean` | `true` | document が非表示、またはルートが viewport 外に出たとき自動停止します。 |
 | `respectReducedMotion` | `boolean` | `true` | OS の `prefers-reduced-motion` を尊重してエフェクトを停止します。 |
 | `injectStyles` | `boolean` | `true` | 既定 CSS を自動挿入します。`atmos-fx/styles.css` を自分で読む場合は false にします。 |
@@ -162,7 +161,7 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | カードのガラス、半透明、ソリッド表示を切り替えます。どのモードでも衝突面として機能します。 |
 | `liquidDripping` | `boolean` | `true` | このカードだけ雨水の凝結と滴下を切り替えます。 |
-| `liquidGatheringPoint` | `number` | 継承 / 固定ランダム | このカードの集約位置を `0.33` から `0.66` で上書きします。 |
+| `liquidGatheringPoint` | `number` | 固定ランダム | このカードの集約位置を `0.33` から `0.66` で上書きします。 |
 | `asChild` | `boolean` | `false` | 余分な div を作らず、属性や ref を 1 つの子要素へマージします。 |
 | `opacity` | `number` | `0.1` | `transMode="opacity"` のカード背景不透明度です。 |
 | `alpha` | `number` | `0.12` | `transMode="glass"` のカード背景不透明度です。 |

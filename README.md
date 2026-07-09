@@ -149,7 +149,6 @@ onUnmounted(() => {
 | `opacity` | `number` | `0.1` | Fallback background opacity for elements marked with `data-atmos-opacity`, clamped from `0` to `1`. |
 | `bottomCollision` | `boolean` | `true` | Determines whether particles collide with the bottom edge of the container. |
 | `liquidDripping` | `boolean` | `true` | Globally toggles the water condensation and dripping animation (only in Rain mode). |
-| `liquidGatheringPoint` | `number` | Random | Sets the horizontal liquid gathering point from `0.33` to `0.66`. The default is stable-random per card. |
 | `pauseWhenHidden` | `boolean` | `true` | Automatically pause animation when document is hidden or the root element is out of the viewport. |
 | `respectReducedMotion`| `boolean` | `true` | Honors OS `prefers-reduced-motion` settings. |
 | `injectStyles` | `boolean` | `true` | Injects the default rules; disable it when loading `atmos-fx/styles.css` yourself. |
@@ -161,7 +160,7 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | Specifies card integration style. |
 | `liquidDripping` | `boolean` | `true` | Toggles the water condensation and dripping animation. |
-| `liquidGatheringPoint` | `number` | Inherits / Random | Overrides the liquid gathering point for this card from `0.33` to `0.66`. |
+| `liquidGatheringPoint` | `number` | Random | Overrides the stable-random gathering point for this card from `0.33` to `0.66`. |
 | `asChild` | `boolean` | `false` | Merges properties onto the underlying child element to avoid rendering an extra wrapper element. |
 | `opacity` | `number` | `0.1` | Background opacity used by `transMode="opacity"`; ignored by glass and solid modes. |
 | `alpha` | `number` | `0.12` | Background opacity (alpha) used by `transMode="glass"`; ignored by opacity and solid modes. |

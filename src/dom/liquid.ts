@@ -98,7 +98,6 @@ function createRandomGatheringPoint(): number {
 
 function getCardGatheringPoint(
   element: HTMLElement | undefined,
-  configuredPoint: number | undefined,
   randomPoint: number,
 ): number {
   const cardValue = element?.dataset.atmosLiquidGatheringPoint
@@ -109,9 +108,7 @@ function getCardGatheringPoint(
     }
   }
 
-  return configuredPoint === undefined
-    ? randomPoint
-    : clampGatheringPoint(configuredPoint)
+  return randomPoint
 }
 
 export function getLiquidWaveCenter(
@@ -584,7 +581,6 @@ export function createLiquidDripsController(
         }
         const gatheringPoint = getCardGatheringPoint(
           target.element,
-          options.liquidGatheringPoint,
           drip.randomGatheringPoint,
         )
         drip.dripX =

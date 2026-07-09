@@ -52,7 +52,7 @@ describe('liquid gathering', () => {
     expect(rightCenter).toBeCloseTo(expectedX)
   })
 
-  it('supports global and per-card gathering point configuration', () => {
+  it('respects card-specific gathering point dataset overrides', () => {
     const root = document.createElement('div')
     const card = document.createElement('div')
     root.append(card)
@@ -69,16 +69,9 @@ describe('liquid gathering', () => {
       bottom: 90,
     }
 
-    liquid.sync(
-      normalizeAtmosphereOptions({ liquidGatheringPoint: 0.4 }),
-      [target],
-    )
-    liquid.update(0)
-    expect(getDropletCx(root.querySelector('.atmos-liquid-droplet'))).toBe('134.0')
-
     card.dataset.atmosLiquidGatheringPoint = '0.6'
     liquid.sync(
-      normalizeAtmosphereOptions({ liquidGatheringPoint: 0.4 }),
+      normalizeAtmosphereOptions(),
       [target],
     )
     liquid.update(0)

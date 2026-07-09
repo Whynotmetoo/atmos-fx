@@ -1624,11 +1624,7 @@ onUnmounted(() => {
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
                 <td data-i18n-key="api-desc-globalLiquidDripping">Enables rainwater condensation, gathering, detachment, falling, and splash animation on collision targets. It only runs for rain and can be disabled per target with <code>data-atmos-liquid-dripping="false"</code>.</td>
               </tr>
-              <tr>
-                <td><code>liquidGatheringPoint</code></td>
-                <td><code>number</code> (0.33 to 0.66)</td>
-                <td data-i18n-key="api-desc-globalLiquidGatheringPoint">Sets the horizontal liquid gathering position as a normalized value from 0.33 to 0.66. When omitted, each card receives a stable random point; a card prop or data attribute can override it.</td>
-              </tr>
+
               <tr>
                 <td><code>pauseWhenHidden</code></td>
                 <td><code>boolean</code> <span class="api-badge">true</span></td>
@@ -1666,7 +1662,7 @@ onUnmounted(() => {
             <tbody>
               <tr>
                 <td><code>transMode</code></td>
-                <td><code>'glass' | 'opacity' | 'solid'</code></td>
+                <td><code>'glass' | 'opacity' | 'solid'</code> <span class="api-badge">glass</span></td>
                 <td data-i18n-key="api-desc-transMode">Maps the card to glass, opacity, or solid integration. Glass opts into managed blur, opacity applies the <code>opacity</code> prop, and solid marks the card solid; every mode remains a collision target.</td>
               </tr>
               <tr>
@@ -1677,7 +1673,7 @@ onUnmounted(() => {
               <tr>
                 <td><code>liquidGatheringPoint</code></td>
                 <td><code>number</code> (0.33 to 0.66)</td>
-                <td data-i18n-key="api-desc-liquidGatheringPoint">Overrides the global or stable-random gathering point for this card. Values are normalized across its width and clamped from 0.33 to 0.66.</td>
+                <td data-i18n-key="api-desc-liquidGatheringPoint">Overrides the stable-random gathering point for this card. Values are normalized across its width and clamped from 0.33 to 0.66.</td>
               </tr>
               <tr>
                 <td><code>asChild</code></td>

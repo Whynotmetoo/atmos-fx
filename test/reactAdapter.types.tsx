@@ -17,7 +17,6 @@ export const reactAtmosFxProps: AtmosFxProps = {
   quality: 'high',
   opacity: 0.66,
   alpha: 0.18,
-  liquidGatheringPoint: 0.5,
   className: 'weather',
   role: 'region',
   'aria-label': 'Weather atmosphere',

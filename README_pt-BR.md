@@ -150,7 +150,6 @@ onUnmounted(() => {
 | `opacity` | `number` | `0.1` | Opacidade de fundo padrão de elementos com `data-atmos-opacity`, limitada entre `0` e `1`. |
 | `bottomCollision` | `boolean` | `true` | Ativa a colisão com a borda inferior do contêiner raiz. |
 | `liquidDripping` | `boolean` | `true` | Controla globalmente a condensação, o agrupamento e o gotejamento no modo chuva. |
-| `liquidGatheringPoint` | `number` | Aleatório estável por card | Define o ponto horizontal de agrupamento entre `0.33` e `0.66`. |
 | `pauseWhenHidden` | `boolean` | `true` | Pausa quando o document fica oculto ou a raiz sai do viewport. |
 | `respectReducedMotion` | `boolean` | `true` | Respeita `prefers-reduced-motion` e interrompe o efeito quando o sistema solicita. |
 | `injectStyles` | `boolean` | `true` | Injeta os estilos básicos; desative ao carregar `atmos-fx/styles.css` manualmente. |
@@ -162,7 +161,7 @@ onUnmounted(() => {
 | --- | --- | --- | --- |
 | `transMode` | `'glass' \| 'opacity' \| 'solid'` | `'glass'` | Alterna entre vidro, transparência e aparência sólida. O card continua sendo uma superfície de colisão nos três modos. |
 | `liquidDripping` | `boolean` | `true` | Ativa ou desativa a animação de água deste card. |
-| `liquidGatheringPoint` | `number` | Herdado / aleatório estável | Sobrescreve entre `0.33` e `0.66` o ponto onde a água se reúne neste card. |
+| `liquidGatheringPoint` | `number` | Aleatório estável | Sobrescreve entre `0.33` e `0.66` o ponto onde a água se reúne neste card. |
 | `asChild` | `boolean` | `false` | Mescla atributos e refs em um único filho sem criar uma div extra. |
 | `opacity` | `number` | `0.1` | Opacidade de fundo do card no modo opacity, de 0 a 1. |
 | `alpha` | `number` | `0.12` | Opacidade de fundo do card (alpha) em modo glass, de 0 a 1. |
